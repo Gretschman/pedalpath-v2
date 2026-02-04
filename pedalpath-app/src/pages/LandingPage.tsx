@@ -47,21 +47,29 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <Link
-              to="/signup"
-              className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
-            >
-              Get Started
-            </Link>
-            <p className="mt-4 text-sm text-gray-500">
-              Week 1: Foundation - Project setup complete ✓
+          <div className="mt-8 text-center space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/demo"
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                🎨 View Demo
+              </Link>
+              <Link
+                to="/signup"
+                className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                Get Started
+              </Link>
+            </div>
+            <p className="text-sm text-gray-500">
+              Week 2: Complete - All features implemented ✓
             </p>
           </div>
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          <p>7-Week MVP Sprint | React + TypeScript + Supabase + OpenAI</p>
+          <p>React + TypeScript + Supabase + Claude AI</p>
         </div>
       </div>
     </div>
