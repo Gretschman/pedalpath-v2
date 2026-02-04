@@ -53,7 +53,7 @@ export interface BOMData {
 
 export interface SchematicAnalysisRequest {
   image_base64: string;
-  image_type: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+  image_type: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
 }
 
 export interface SchematicAnalysisResponse {

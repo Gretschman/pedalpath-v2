@@ -16,7 +16,7 @@ interface BreadboardStep {
   warning?: string;
 }
 
-export default function BreadboardGuide({ bomData, projectName = 'Your Pedal' }: BreadboardGuideProps) {
+export default function BreadboardGuide({ bomData, projectName: _projectName = 'Your Pedal' }: BreadboardGuideProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 

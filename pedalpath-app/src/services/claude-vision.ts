@@ -213,10 +213,10 @@ export async function analyzeSchematicFile(file: File): Promise<SchematicAnalysi
       mediaType = 'image/png';
     } else if (file.type === 'image/webp') {
       mediaType = 'image/webp';
-    } else if (file.type === 'application/pdf') {
-      mediaType = 'application/pdf';
+    } else if (file.type === 'image/gif') {
+      mediaType = 'image/gif';
     } else {
-      throw new Error(`Unsupported file type: ${file.type}`);
+      throw new Error(`Unsupported file type: ${file.type}. Supported types: JPEG, PNG, WEBP, GIF`);
     }
 
     // Analyze with Claude Vision

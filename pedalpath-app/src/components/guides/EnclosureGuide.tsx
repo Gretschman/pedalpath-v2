@@ -23,7 +23,7 @@ interface WiringConnection {
   notes?: string;
 }
 
-export default function EnclosureGuide({ bomData, projectName = 'Your Pedal' }: EnclosureGuideProps) {
+export default function EnclosureGuide({ bomData, projectName: _projectName = 'Your Pedal' }: EnclosureGuideProps) {
   const [selectedStep, setSelectedStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -33,7 +33,6 @@ export default function EnclosureGuide({ bomData, projectName = 'Your Pedal' }: 
   const drillHoles: DrillHole[] = [];
   let xPos = 15; // Start from left edge
   const yTop = 15; // Top row
-  const yBottom = 45; // Bottom row
 
   // Add pots
   bomData.components

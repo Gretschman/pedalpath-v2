@@ -6,7 +6,7 @@ import { supabase } from './supabase';
 export async function uploadSchematic(
   userId: string,
   file: File,
-  projectId?: string
+  _projectId?: string
 ): Promise<{ path: string; url: string } | null> {
   try {
     // Generate a unique file name
@@ -104,7 +104,7 @@ export async function initializeStorageBucket(): Promise<boolean> {
     }
 
     // Create bucket if it doesn't exist
-    const { data, error } = await supabase.storage.createBucket('schematics', {
+    const { error } = await supabase.storage.createBucket('schematics', {
       public: false,
       fileSizeLimit: 10485760, // 10MB
       allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'],

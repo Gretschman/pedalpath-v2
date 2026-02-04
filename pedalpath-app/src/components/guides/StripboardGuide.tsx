@@ -19,7 +19,7 @@ interface TrackCut {
   reason: string;
 }
 
-export default function StripboardGuide({ bomData, projectName = 'Your Pedal' }: StripboardGuideProps) {
+export default function StripboardGuide({ bomData, projectName: _projectName = 'Your Pedal' }: StripboardGuideProps) {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'placement' | 'cuts' | 'wiring'>('overview');
 
   // Estimate board size based on component count
