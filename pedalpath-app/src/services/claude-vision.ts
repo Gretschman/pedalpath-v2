@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type {
   SchematicAnalysisRequest,
   SchematicAnalysisResponse,
@@ -6,165 +5,31 @@ import type {
   BOMComponent,
 } from '../types/bom.types';
 
-// Initialize Anthropic client
-const getAnthropicClient = () => {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-  if (!apiKey || apiKey === 'your_anthropic_api_key_here') {
-    throw new Error('Anthropic API key not configured. Please add VITE_ANTHROPIC_API_KEY to your .env.local file.');
-  }
-
-  return new Anthropic({
-    apiKey,
-    dangerouslyAllowBrowser: true, // Required for client-side usage
-  });
-};
-
-// System prompt for schematic analysis
-const SCHEMATIC_ANALYSIS_PROMPT = `You are an expert in guitar effects pedal circuits and electronic schematics. Analyze this guitar effects pedal schematic and extract ALL components needed to build it.
-
-Return a structured JSON response with the following format:
-
-{
-  "components": [
-    {
-      "component_type": "resistor" | "capacitor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
-      "value": "10k" | "100nF" | "2N3904" | "TL072" | etc.,
-      "quantity": 1,
-      "reference_designators": ["R1", "R2"],
-      "confidence": 95,
-      "notes": "Optional notes about the component"
-    }
-  ],
-  "enclosure": {
-    "size": "1590B" | "125B" | "1590BB" | etc.,
-    "drill_count": 6,
-    "notes": "Recommended based on component count and controls"
-  },
-  "power": {
-    "voltage": "9V" | "18V" | "9-18V",
-    "current": "20mA",
-    "polarity": "center-negative" | "center-positive"
-  },
-  "confidence_score": 85
-}
-
-CRITICAL REQUIREMENTS:
-1. Extract EVERY component visible in the schematic including:
-   - All resistors (with values like 10k, 1M, 470Ω)
-   - All capacitors (with values like 100nF, 10µF, 47pF)
-   - All semiconductors (transistors, diodes, ICs, op-amps)
-   - Input/output jacks (typically 1/4" mono or stereo)
-   - DC power jack (typically 2.1mm barrel jack)
-   - Footswitch (typically 3PDT for true bypass)
-   - All potentiometers with taper (e.g., "100kB" for audio taper, "100kA" for linear)
-   - LEDs for indicators
-   - Any switches
-
-2. Group identical components together:
-   - If there are three 10k resistors, list as quantity: 3 with all reference designators
-
-3. Provide confidence scores (0-100) for each component based on:
-   - How clearly the value is marked
-   - Standard component marking conventions
-   - Context from the circuit
-
-4. For the enclosure recommendation:
-   - Count the number of off-board components (pots, switches, jacks, LEDs)
-   - 1590B: 3-4 knobs, compact
-   - 125B: 3-5 knobs, standard size
-   - 1590BB: 5+ knobs or complex layouts
-
-5. Standard power for guitar pedals is 9V center-negative unless marked otherwise
-
-6. Return ONLY valid JSON, no additional text or markdown formatting.`;
-
 /**
- * Analyze a schematic image using Claude Vision API
+ * Analyze a schematic image using Claude Vision API via backend
  */
 export async function analyzeSchematic(
   request: SchematicAnalysisRequest
 ): Promise<SchematicAnalysisResponse> {
   try {
-    const client = getAnthropicClient();
-
-    // Call Claude Vision API
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: request.image_type,
-                data: request.image_base64,
-              },
-            },
-            {
-              type: 'text',
-              text: SCHEMATIC_ANALYSIS_PROMPT,
-            },
-          ],
-        },
-      ],
+    // Call our backend API instead of Anthropic directly
+    const response = await fetch('/api/analyze-schematic', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
     });
 
-    // Extract text from response
-    const textContent = response.content.find((block) => block.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('No text content in Claude response');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Analysis failed: ${response.statusText}`);
     }
 
-    const rawText = textContent.text;
-
-    // Parse JSON response
-    let bomData: BOMData;
-    try {
-      // Try to extract JSON if Claude wrapped it in markdown
-      const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/) || rawText.match(/```\n([\s\S]*?)\n```/);
-      const jsonText = jsonMatch ? jsonMatch[1] : rawText;
-
-      const parsed = JSON.parse(jsonText);
-
-      bomData = {
-        components: parsed.components || [],
-        enclosure: parsed.enclosure,
-        power: parsed.power,
-        parsed_at: new Date(),
-        confidence_score: parsed.confidence_score || 0,
-      };
-    } catch (parseError) {
-      console.error('Failed to parse Claude response as JSON:', parseError);
-      console.error('Raw response:', rawText);
-
-      return {
-        success: false,
-        error: 'Failed to parse schematic analysis. The AI response was not in the expected format.',
-        raw_response: rawText,
-      };
-    }
-
-    // Validate that we got some components
-    if (!bomData.components || bomData.components.length === 0) {
-      return {
-        success: false,
-        error: 'No components detected in the schematic. Please ensure the image is clear and contains a valid schematic.',
-        raw_response: rawText,
-      };
-    }
-
-    return {
-      success: true,
-      bom_data: bomData,
-      raw_response: rawText,
-    };
+    return await response.json();
 
   } catch (error) {
-    console.error('Error analyzing schematic with Claude Vision:', error);
+    console.error('Error analyzing schematic:', error);
 
     if (error instanceof Error) {
       return {
