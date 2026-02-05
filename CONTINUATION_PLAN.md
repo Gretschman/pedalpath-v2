@@ -6,6 +6,16 @@
 
 ---
 
+## 🚨 IMPORTANT: Deployment Failed (Expected)
+
+The GitHub push triggered auto-deploy on Vercel, which **failed** because the `ANTHROPIC_API_KEY` environment variable isn't configured yet.
+
+**First thing tomorrow**: Add the API key to Vercel and redeploy (instructions below).
+
+**Deployment error**: https://vercel.com/robert-frankels-projects/pedalpath-v2/2AQpWKJZZ2SfQoBDrpuVTh9ZQb6u
+
+---
+
 ## What Was Completed Tonight
 
 ### Phase 2: iOS Backend Migration (CRITICAL - COMPLETED)
@@ -39,17 +49,24 @@ npm install
 ```
 
 #### 2. Configure Vercel Environment Variables
-**CRITICAL**: Must be done before deploy works!
+**🚨 CRITICAL - DEPLOYMENT FAILED WITHOUT THIS! 🚨**
 
-Go to: Vercel Dashboard → Project Settings → Environment Variables
+**Where to find your Anthropic API key:**
+- Check local: `cat /home/rob/git/pedalpath-v2/pedalpath-app/.env.local`
+- Or get from: https://console.anthropic.com/settings/keys
+- It looks like: `sk-ant-api03-...`
 
-Add:
-- **Variable Name**: `ANTHROPIC_API_KEY`
-- **Value**: `<your-actual-anthropic-api-key>`
-- **Environment**: Production, Preview, Development
+**Add to Vercel:**
+1. Go to: https://vercel.com/robert-frankels-projects/pedalpath-v2/settings/environment-variables
+2. Click "Add New"
+3. Fill in:
+   - **Variable Name**: `ANTHROPIC_API_KEY`
+   - **Value**: `sk-ant-api03-...` (paste your key)
+   - **Environments**: Check all three boxes (Production, Preview, Development)
+4. Click "Save"
 
-Remove (if exists):
-- `VITE_ANTHROPIC_API_KEY` (no longer needed on client-side)
+**Remove old client-side key (if exists):**
+- Look for `VITE_ANTHROPIC_API_KEY` and delete it (no longer needed)
 
 #### 3. Deploy to Vercel
 ```bash
