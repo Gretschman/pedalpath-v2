@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { Camera, Image as ImageIcon, Upload, X, Check } from 'lucide-react'
+import { Camera, Image as ImageIcon, Upload, X, Check, Loader2 } from 'lucide-react'
+import { prepareFileForUpload } from '../../utils/image-utils'
 
 interface SchematicUploadProps {
   onUploadComplete?: (file: File) => void
@@ -11,17 +12,19 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [uploadMethod, setUploadMethod] = useState<'camera' | 'photo' | 'file' | null>(null)
+  const [processing, setProcessing] = useState(false)
+  const [processingStatus, setProcessingStatus] = useState<string>('')
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const acceptedFileTypes = 'image/png,image/jpeg,image/jpg,application/pdf'
+  const acceptedFileTypes = 'image/png,image/jpeg,image/jpg,image/webp,application/pdf'
   const maxFileSize = 10 * 1024 * 1024 // 10MB
 
   const validateFile = (file: File): string | null => {
     if (!acceptedFileTypes.split(',').includes(file.type)) {
-      return 'Please upload a PNG, JPG, or PDF file'
+      return 'Please upload a PNG, JPG, WebP, or PDF file'
     }
     if (file.size > maxFileSize) {
       return 'File size must be less than 10MB'
@@ -29,25 +32,41 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
     return null
   }
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     const error = validateFile(file)
     if (error) {
       alert(error)
       return
     }
 
-    setSelectedFile(file)
+    setProcessing(true)
+    setProcessingStatus('Preparing file...')
 
-    // Create preview for images
-    if (file.type.startsWith('image/')) {
-      const url = URL.createObjectURL(file)
+    try {
+      // Prepare file: compress if needed, convert PDF to image
+      const result = await prepareFileForUpload(file)
+
+      if (result.wasConverted) {
+        setProcessingStatus('Converted PDF to image')
+      } else if (result.wasCompressed) {
+        setProcessingStatus(`Compressed image (${(result.originalSize / 1024 / 1024).toFixed(1)}MB → ${(result.finalSize / 1024 / 1024).toFixed(1)}MB)`)
+      }
+
+      setSelectedFile(result.file)
+
+      // Create preview for images
+      const url = URL.createObjectURL(result.file)
       setPreviewUrl(url)
-    } else {
-      setPreviewUrl(null)
-    }
 
-    if (onUploadComplete) {
-      onUploadComplete(file)
+      if (onUploadComplete) {
+        onUploadComplete(result.file)
+      }
+    } catch (error) {
+      console.error('Error processing file:', error)
+      alert('Failed to process file. Please try a different file.')
+    } finally {
+      setProcessing(false)
+      setProcessingStatus('')
     }
   }
 
@@ -106,13 +125,26 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  // Show processing state
+  if (processing) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center py-12">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
+          <p className="text-gray-600 text-lg font-medium">{processingStatus}</p>
+          <p className="text-gray-500 text-sm mt-2">This may take a few seconds...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (selectedFile) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center text-green-600">
             <Check className="w-6 h-6 mr-2" />
-            <span className="font-semibold">File uploaded successfully</span>
+            <span className="font-semibold">File ready for analysis</span>
           </div>
           <button
             onClick={handleClear}
@@ -252,7 +284,7 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
           Or drag and drop your file here
         </p>
         <p className="text-sm text-gray-600">
-          PNG, JPG, or PDF • Max 10MB
+          PNG, JPG, WebP, or PDF • Max 10MB
         </p>
       </div>
 
@@ -260,8 +292,8 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
       <div className="bg-white rounded-xl shadow p-6">
         <h3 className="font-semibold text-gray-900 mb-3">Accepted formats:</h3>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Images: PNG, JPG, JPEG</li>
-          <li>• Documents: PDF</li>
+          <li>• Images: PNG, JPG, JPEG, WebP</li>
+          <li>• Documents: PDF (will be converted to image)</li>
           <li>• Max file size: 10MB</li>
         </ul>
       </div>

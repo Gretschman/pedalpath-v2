@@ -4,25 +4,104 @@ import type {
   BOMComponent,
 } from '../types/bom.types';
 
+const API_TIMEOUT = 60000; // 60 seconds for AI analysis
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff
+
 /**
- * Analyze a schematic image using Claude Vision API via backend
+ * Fetch with timeout support
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeout: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again with a clearer image or smaller file.');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Check if error is retryable
+ */
+function isRetryableError(error: any, response?: Response): boolean {
+  // Don't retry client errors (4xx)
+  if (response && response.status >= 400 && response.status < 500) {
+    return false;
+  }
+
+  // Retry on network errors or server errors (5xx)
+  if (!response || response.status >= 500) {
+    return true;
+  }
+
+  // Retry on timeout
+  if (error instanceof Error && error.message.includes('timed out')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Analyze a schematic image using Claude Vision API via backend with retry logic
  */
 export async function analyzeSchematic(
-  request: SchematicAnalysisRequest
+  request: SchematicAnalysisRequest,
+  retryCount: number = 0
 ): Promise<SchematicAnalysisResponse> {
   try {
-    // Call our backend API instead of Anthropic directly
-    const response = await fetch('/api/analyze-schematic', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // Determine API URL based on environment
+    const apiUrl = window.location.hostname === 'localhost'
+      ? '/api/analyze-schematic' // Will be proxied by Vite in dev
+      : '/api/analyze-schematic'; // Vercel serverless function in production
+
+    // Call our backend API with timeout
+    const response = await fetchWithTimeout(
+      apiUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
       },
-      body: JSON.stringify(request),
-    });
+      API_TIMEOUT
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Analysis failed: ${response.statusText}`);
+      const error = new Error(errorData.error || `Analysis failed: ${response.statusText}`);
+
+      // Check if we should retry
+      if (retryCount < MAX_RETRIES && isRetryableError(error, response)) {
+        console.log(`Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+        await sleep(RETRY_DELAYS[retryCount]);
+        return analyzeSchematic(request, retryCount + 1);
+      }
+
+      throw error;
     }
 
     return await response.json();
@@ -30,10 +109,17 @@ export async function analyzeSchematic(
   } catch (error) {
     console.error('Error analyzing schematic:', error);
 
+    // Check if we should retry
+    if (retryCount < MAX_RETRIES && isRetryableError(error)) {
+      console.log(`Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      await sleep(RETRY_DELAYS[retryCount]);
+      return analyzeSchematic(request, retryCount + 1);
+    }
+
     if (error instanceof Error) {
       return {
         success: false,
-        error: `Analysis failed: ${error.message}`,
+        error: `Analysis failed: ${error.message}${retryCount > 0 ? ` (after ${retryCount} retries)` : ''}`,
       };
     }
 
