@@ -8,13 +8,15 @@ export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn, resetPassword } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
 
     try {
@@ -22,6 +24,26 @@ export default function SignInPage() {
       navigate('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first')
+      return
+    }
+
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    try {
+      await resetPassword(email)
+      setSuccess('Password reset email sent! Check your inbox.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email')
     } finally {
       setLoading(false)
     }
@@ -49,6 +71,12 @@ export default function SignInPage() {
             </div>
           )}
 
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -66,9 +94,18 @@ export default function SignInPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <input
                 id="password"
                 type="password"
