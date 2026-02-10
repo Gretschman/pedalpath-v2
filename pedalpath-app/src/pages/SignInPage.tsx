@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Guitar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../services/supabase'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -10,8 +11,33 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn, resetPassword } = useAuth()
+  const { signIn, resetPassword, user } = useAuth()
   const navigate = useNavigate()
+
+  // Clear any invalid sessions on mount
+  useEffect(() => {
+    const clearInvalidSession = async () => {
+      try {
+        // If there's a session error, clear it
+        const { error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          await supabase.auth.signOut()
+        }
+      } catch (err) {
+        // Silently clear any auth errors
+        await supabase.auth.signOut()
+      }
+    }
+
+    clearInvalidSession()
+  }, [])
+
+  // Redirect if already signed in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard')
+    }
+  }, [user, navigate])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
