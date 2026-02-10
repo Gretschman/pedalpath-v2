@@ -1,7 +1,6 @@
 import type {
   SchematicAnalysisRequest,
   SchematicAnalysisResponse,
-  BOMData,
   BOMComponent,
 } from '../types/bom.types';
 
