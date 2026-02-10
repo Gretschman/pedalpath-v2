@@ -5,6 +5,7 @@ import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
 import DashboardPage from './pages/DashboardPage'
 import UploadPage from './pages/UploadPage'
+import ResultsPage from './pages/ResultsPage'
 import DemoPage from './pages/DemoPage'
 
 function App() {
@@ -27,6 +28,14 @@ function App() {
         element={
           <ProtectedRoute>
             <UploadPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/results/:schematicId"
+        element={
+          <ProtectedRoute>
+            <ResultsPage />
           </ProtectedRoute>
         }
       />

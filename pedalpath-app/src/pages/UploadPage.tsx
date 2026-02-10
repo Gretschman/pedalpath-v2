@@ -1,9 +1,37 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import SchematicUpload from '../components/schematic/SchematicUpload'
+import { processSchematic } from '../services/schematic-processor'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function UploadPage() {
-  const handleUploadComplete = (file: File) => {
-    console.log('File uploaded:', file.name)
-    // TODO: Process file and send to AI for analysis
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const { user } = useAuth()
+
+  const handleUploadComplete = async (file: File) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Create temporary project ID
+      const projectId = crypto.randomUUID()
+      const userId = user?.id || 'temp-user-id'
+
+      // Process schematic
+      const result = await processSchematic(projectId, file, userId)
+
+      if (result.success && result.schematicId) {
+        navigate(`/results/${result.schematicId}`)
+      } else {
+        setError(result.error || 'Analysis failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -18,7 +46,21 @@ export default function UploadPage() {
           </p>
         </div>
 
-        <SchematicUpload onUploadComplete={handleUploadComplete} />
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+            <p className="text-gray-600 text-lg font-medium">Analyzing schematic with AI...</p>
+            <p className="text-gray-500 text-sm mt-2">This usually takes 5-10 seconds</p>
+          </div>
+        ) : (
+          <SchematicUpload onUploadComplete={handleUploadComplete} />
+        )}
       </div>
     </div>
   )
