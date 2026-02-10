@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Grid, Scissors, Zap, CheckCircle, Info } from 'lucide-react';
 import type { BOMData } from '../../types/bom.types';
+import StripboardView from '../visualizations/StripboardView';
 
 interface StripboardGuideProps {
   bomData: BOMData;
@@ -213,8 +214,14 @@ export default function StripboardGuide({ bomData, projectName: _projectName = '
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                 <p className="text-purple-900 text-sm">
                   <strong>Note:</strong> This is a general placement guide. Refer to your working breadboard prototype
-                  for the exact layout. In a future version, we'll provide visual stripboard layouts.
+                  for the exact layout.
                 </p>
+              </div>
+
+              {/* Stripboard Visualization */}
+              <div className="mb-6">
+                <h4 className="font-semibold text-gray-900 mb-3">Visual Reference:</h4>
+                <StripboardView showDemo={true} />
               </div>
 
               <div className="space-y-3">

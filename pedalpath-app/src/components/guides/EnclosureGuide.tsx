@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Drill, Wrench, Cable, CheckCircle, Circle, AlertTriangle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Box, Drill, Wrench, Cable, CheckCircle, Circle, AlertTriangle, Printer } from 'lucide-react';
 import type { BOMData } from '../../types/bom.types';
 
 interface EnclosureGuideProps {
@@ -23,51 +23,69 @@ interface WiringConnection {
   notes?: string;
 }
 
+interface EnclosureDimensions {
+  name: string;
+  width: number;  // mm
+  height: number; // mm
+  depth: number;  // mm
+}
+
+const ENCLOSURE_SIZES: Record<string, EnclosureDimensions> = {
+  '1590B': { name: '1590B (Small)', width: 112, height: 60, depth: 31 },
+  '125B': { name: '125B (Medium)', width: 120, height: 94, depth: 34 },
+  '1590BB': { name: '1590BB (Large)', width: 119, height: 94, depth: 56 },
+};
+
 export default function EnclosureGuide({ bomData, projectName: _projectName = 'Your Pedal' }: EnclosureGuideProps) {
   const [selectedStep, setSelectedStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [selectedEnclosure, setSelectedEnclosure] = useState<string>(bomData.enclosure?.size || '1590B');
+  const printTemplateRef = useRef<HTMLDivElement>(null);
 
-  const enclosureSize = bomData.enclosure?.size || '1590B';
+  const enclosureSize = selectedEnclosure;
+  const dimensions = ENCLOSURE_SIZES[enclosureSize];
 
-  // Generate drill template based on components
+  // Generate drill template based on components with accurate positioning
   const drillHoles: DrillHole[] = [];
-  let xPos = 15; // Start from left edge
-  const yTop = 15; // Top row
+  const pots = bomData.components.filter(c => c.component_type === 'potentiometer');
+  const potCount = pots.length;
 
-  // Add pots
-  bomData.components
-    .filter(c => c.component_type === 'potentiometer')
-    .forEach((pot, idx) => {
-      drillHoles.push({
-        id: `pot-${idx}`,
-        component: `${pot.value} Pot (${pot.reference_designators.join(', ')})`,
-        diameter: '8mm',
-        x: xPos + (idx * 25),
-        y: yTop,
-        notes: 'For 16mm pot with mounting nut'
-      });
+  // Calculate proper pot spacing based on enclosure width
+  const potSpacing = potCount > 1 ? (dimensions.width - 40) / (potCount + 1) : dimensions.width / 2;
+  const potYPosition = 19; // 19mm from top edge (standard)
+
+  // Add pots with proper spacing
+  pots.forEach((pot, idx) => {
+    drillHoles.push({
+      id: `pot-${idx}`,
+      component: `${pot.value} Pot (${pot.reference_designators.join(', ')})`,
+      diameter: '8mm',
+      x: 20 + potSpacing * (idx + 1),
+      y: potYPosition,
+      notes: 'For 16mm pot with mounting nut'
     });
+  });
 
-  // Add footswitch
+  // Add footswitch (centered horizontally, lower on enclosure)
   if (bomData.components.some(c => c.component_type === 'footswitch')) {
     drillHoles.push({
       id: 'footswitch',
       component: '3PDT Footswitch',
       diameter: '12mm',
-      x: 60,
-      y: 65,
+      x: dimensions.width / 2,
+      y: dimensions.height - 19, // 19mm from bottom
       notes: 'Center of enclosure for true bypass switching'
     });
   }
 
-  // Add LED
+  // Add LED (centered horizontally, between pots and footswitch)
   if (bomData.components.some(c => c.component_type === 'led')) {
     drillHoles.push({
       id: 'led',
       component: 'LED Indicator',
       diameter: '5mm',
-      x: 60,
-      y: 25,
+      x: dimensions.width / 2,
+      y: dimensions.height / 2,
       notes: 'Above footswitch for visibility'
     });
   }
@@ -81,10 +99,10 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     drillHoles.push({
       id: 'input',
       component: 'Input Jack',
-      diameter: '11mm',
-      x: 10,
-      y: 30,
-      notes: 'Right side panel (when viewed from front)'
+      diameter: '12mm',
+      x: 15,
+      y: dimensions.height - 12,
+      notes: 'Left side panel - 12mm from bottom edge'
     });
   }
 
@@ -92,10 +110,10 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     drillHoles.push({
       id: 'output',
       component: 'Output Jack',
-      diameter: '11mm',
-      x: 110,
-      y: 30,
-      notes: 'Left side panel (when viewed from front)'
+      diameter: '12mm',
+      x: dimensions.width - 15,
+      y: dimensions.height - 12,
+      notes: 'Right side panel - 12mm from bottom edge'
     });
   }
 
@@ -103,10 +121,10 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     drillHoles.push({
       id: 'power',
       component: 'DC Power Jack',
-      diameter: '11mm',
-      x: 100,
-      y: 15,
-      notes: 'Top panel, away from audio jacks'
+      diameter: '12mm',
+      x: dimensions.width - 15,
+      y: 10,
+      notes: 'Top right corner, 10mm from top edge'
     });
   }
 
@@ -195,6 +213,171 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     });
   };
 
+  const handlePrint = () => {
+    if (printTemplateRef.current) {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Drill Template - ${enclosureSize}</title>
+              <style>
+                @media print {
+                  @page { size: A4; margin: 10mm; }
+                  body { margin: 0; padding: 0; }
+                }
+                body { font-family: Arial, sans-serif; }
+              </style>
+            </head>
+            <body>
+              ${printTemplateRef.current.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      }
+    }
+  };
+
+  // Generate SVG drill template
+  const renderDrillTemplate = () => {
+    const scale = 2; // SVG units per mm (for better resolution)
+    const svgWidth = dimensions.width * scale;
+    const svgHeight = dimensions.height * scale;
+    const rulerHeight = 20 * scale;
+
+    return (
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${svgWidth} ${svgHeight + rulerHeight}`}
+        style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}
+      >
+        {/* Enclosure outline */}
+        <rect
+          x="0"
+          y="0"
+          width={svgWidth}
+          height={svgHeight}
+          fill="#f9fafb"
+          stroke="#374151"
+          strokeWidth="3"
+          rx="4"
+        />
+
+        {/* Dimension labels */}
+        <text
+          x={svgWidth / 2}
+          y={svgHeight + rulerHeight - 5}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#374151"
+          fontWeight="bold"
+        >
+          {dimensions.width}mm × {dimensions.height}mm ({dimensions.name})
+        </text>
+
+        {/* Calibration ruler */}
+        <g transform={`translate(10, ${svgHeight + 5})`}>
+          <line x1="0" y1="0" x2={25 * scale} y2="0" stroke="#ef4444" strokeWidth="2" />
+          <text x={12.5 * scale} y="-3" textAnchor="middle" fontSize="10" fill="#ef4444" fontWeight="bold">
+            25mm
+          </text>
+          <text x={12.5 * scale} y="12" textAnchor="middle" fontSize="8" fill="#6b7280">
+            (Verify this measures 25mm)
+          </text>
+        </g>
+
+        {/* Corner markers */}
+        {[[5, 5], [svgWidth - 5, 5], [5, svgHeight - 5], [svgWidth - 5, svgHeight - 5]].map(([x, y], i) => (
+          <g key={i}>
+            <line x1={x - 8} y1={y} x2={x + 8} y2={y} stroke="#9ca3af" strokeWidth="1" />
+            <line x1={x} y1={y - 8} x2={x} y2={y + 8} stroke="#9ca3af" strokeWidth="1" />
+          </g>
+        ))}
+
+        {/* Drill holes */}
+        {drillHoles.map((hole) => {
+          const x = hole.x * scale;
+          const y = hole.y * scale;
+          const radius = (parseInt(hole.diameter) / 2) * scale;
+
+          return (
+            <g key={hole.id}>
+              {/* Crosshair */}
+              <line x1={x - 20} y1={y} x2={x + 20} y2={y} stroke="#ef4444" strokeWidth="1" strokeDasharray="2,2" />
+              <line x1={x} y1={y - 20} x2={x} y2={y + 20} stroke="#ef4444" strokeWidth="1" strokeDasharray="2,2" />
+
+              {/* Hole circle */}
+              <circle cx={x} cy={y} r={radius} fill="none" stroke="#ef4444" strokeWidth="2" />
+              <circle cx={x} cy={y} r="2" fill="#ef4444" />
+
+              {/* Label */}
+              <text
+                x={x}
+                y={y - radius - 8}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#1f2937"
+                fontWeight="bold"
+              >
+                {hole.component.split(' ')[0]}
+              </text>
+              <text
+                x={x}
+                y={y - radius - 1}
+                textAnchor="middle"
+                fontSize="7"
+                fill="#6b7280"
+              >
+                {hole.diameter}
+              </text>
+
+              {/* Measurements from edges */}
+              <text
+                x={x + radius + 5}
+                y={y + 3}
+                fontSize="7"
+                fill="#6b7280"
+              >
+                ({hole.x.toFixed(1)}, {hole.y.toFixed(1)})
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Grid (light, for reference) */}
+        {Array.from({ length: Math.floor(dimensions.width / 10) + 1 }).map((_, i) => (
+          <line
+            key={`v-${i}`}
+            x1={i * 10 * scale}
+            y1="0"
+            x2={i * 10 * scale}
+            y2={svgHeight}
+            stroke="#e5e7eb"
+            strokeWidth="0.5"
+          />
+        ))}
+        {Array.from({ length: Math.floor(dimensions.height / 10) + 1 }).map((_, i) => (
+          <line
+            key={`h-${i}`}
+            x1="0"
+            y1={i * 10 * scale}
+            x2={svgWidth}
+            y2={i * 10 * scale}
+            stroke="#e5e7eb"
+            strokeWidth="0.5"
+          />
+        ))}
+      </svg>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -203,10 +386,31 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
         <p className="text-orange-100 mb-4">
           LEGO-style assembly instructions for your final pedal build
         </p>
+
+        {/* Enclosure Size Selector */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-orange-100 mb-2">
+            Select Enclosure Size:
+          </label>
+          <select
+            value={selectedEnclosure}
+            onChange={(e) => setSelectedEnclosure(e.target.value)}
+            className="w-full md:w-auto px-4 py-2 rounded-lg bg-orange-700 text-white border-2 border-orange-500 focus:outline-none focus:border-orange-300"
+          >
+            {Object.entries(ENCLOSURE_SIZES).map(([key, enc]) => (
+              <option key={key} value={key}>
+                {enc.name} ({enc.width}×{enc.height}mm)
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="bg-orange-700 rounded-lg p-3">
-            <div className="text-xs text-orange-200">Enclosure Size</div>
-            <div className="text-lg font-bold">{enclosureSize}</div>
+            <div className="text-xs text-orange-200">Dimensions</div>
+            <div className="text-lg font-bold">
+              {dimensions.width}×{dimensions.height}×{dimensions.depth}mm
+            </div>
           </div>
           <div className="bg-orange-700 rounded-lg p-3">
             <div className="text-xs text-orange-200">Holes to Drill</div>
@@ -221,61 +425,40 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
       {/* Drill Template */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Drill className="w-6 h-6" />
-            Drilling Template
+            Drilling Template (1:1 Scale)
           </h3>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+            Print Template
+          </button>
         </div>
         <div className="p-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-900 mb-2">Drilling Safety</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">Drilling Safety & Instructions</h4>
             <ul className="space-y-1 text-blue-800 text-sm">
-              <li>• Wear safety glasses</li>
-              <li>• Secure enclosure firmly in a vice or clamp</li>
-              <li>• Start with pilot holes, step up to final size</li>
+              <li>• Wear safety glasses and secure enclosure firmly in a vice or clamp</li>
+              <li>• Start with pilot holes (2-3mm), step up to final size gradually</li>
               <li>• Use appropriate bits for aluminum (HSS or cobalt)</li>
-              <li>• Go slowly to avoid wandering or cracking</li>
+              <li>• Print template and verify scale with 25mm calibration ruler</li>
+              <li>• Tape template to enclosure, center punch each location, then drill</li>
             </ul>
           </div>
 
-          {/* Drill Template Visualization */}
-          <div className="border-2 border-gray-300 rounded-lg p-8 bg-gray-50 mb-6">
+          {/* Printable SVG Drill Template */}
+          <div ref={printTemplateRef} className="border-2 border-gray-300 rounded-lg p-8 bg-gray-50 mb-6">
             <div className="text-center text-sm text-gray-600 mb-4">
-              Top View - {enclosureSize} Enclosure
+              <strong>Drill Template - {dimensions.name}</strong>
+              <div className="text-xs text-gray-500 mt-1">
+                Print at 100% scale (no scaling) • Verify with calibration ruler
+              </div>
             </div>
-            <div className="relative bg-white border-2 border-gray-400 rounded" style={{ height: '300px' }}>
-              {drillHoles.map(hole => (
-                <div
-                  key={hole.id}
-                  className="absolute group"
-                  style={{
-                    left: `${(hole.x / 120) * 100}%`,
-                    top: `${(hole.y / 80) * 100}%`,
-                    transform: 'translate(-50%, -50%)'
-                  }}
-                >
-                  <div className="relative">
-                    <Circle
-                      className="text-red-500 cursor-help"
-                      size={hole.diameter === '12mm' ? 32 : hole.diameter === '11mm' ? 28 : 20}
-                      fill="rgba(239, 68, 68, 0.2)"
-                    />
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block">
-                      <div className="bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap">
-                        <div className="font-semibold">{hole.component}</div>
-                        <div>{hole.diameter} hole</div>
-                        <div className="text-gray-400">({hole.x}mm, {hole.y}mm)</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center text-xs text-gray-500 mt-2">
-              Hover over circles for details
-            </div>
+            {renderDrillTemplate()}
           </div>
 
           {/* Drill Hole List */}
