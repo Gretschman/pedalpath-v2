@@ -19,16 +19,30 @@ export default function UploadPage() {
       const projectId = crypto.randomUUID()
       const userId = user?.id || 'temp-user-id'
 
+      console.log('Starting upload process:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        projectId,
+        userId
+      })
+
       // Process schematic
       const result = await processSchematic(projectId, file, userId)
+
+      console.log('Process schematic result:', result)
 
       if (result.success && result.schematicId) {
         navigate(`/results/${result.schematicId}`)
       } else {
-        setError(result.error || 'Analysis failed')
+        const errorMsg = result.error || 'Analysis failed'
+        console.error('Upload failed:', errorMsg)
+        setError(errorMsg)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+      console.error('Upload error:', err)
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }

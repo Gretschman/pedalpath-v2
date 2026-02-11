@@ -9,10 +9,19 @@ export async function uploadSchematic(
   _projectId?: string
 ): Promise<{ path: string; url: string } | null> {
   try {
+    console.log('uploadSchematic called:', {
+      userId,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+
     // Generate a unique file name
     const timestamp = Date.now();
     const fileName = `${timestamp}-${file.name}`;
     const filePath = `${userId}/${fileName}`;
+
+    console.log('Uploading to path:', filePath);
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
@@ -23,14 +32,22 @@ export async function uploadSchematic(
       });
 
     if (error) {
-      console.error('Error uploading schematic:', error);
+      console.error('Supabase storage error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        statusCode: error.statusCode
+      });
       return null;
     }
+
+    console.log('Upload successful, data:', data);
 
     // Get public URL
     const { data: urlData } = supabase.storage
       .from('schematics')
       .getPublicUrl(data.path);
+
+    console.log('Public URL generated:', urlData.publicUrl);
 
     return {
       path: data.path,
@@ -38,6 +55,10 @@ export async function uploadSchematic(
     };
   } catch (error) {
     console.error('Error in uploadSchematic:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return null;
   }
 }

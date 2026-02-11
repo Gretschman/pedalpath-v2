@@ -14,17 +14,20 @@ export default function SignInPage() {
   const { signIn, resetPassword, user } = useAuth()
   const navigate = useNavigate()
 
-  // Clear any invalid sessions on mount
+  // Clear any invalid sessions on mount and suppress initial errors
   useEffect(() => {
     const clearInvalidSession = async () => {
       try {
+        // Clear any existing errors first
+        setError('')
+
         // If there's a session error, clear it
         const { error: sessionError } = await supabase.auth.getSession()
         if (sessionError) {
           await supabase.auth.signOut()
         }
       } catch (err) {
-        // Silently clear any auth errors
+        // Silently clear any auth errors - don't show to user on initial load
         await supabase.auth.signOut()
       }
     }
