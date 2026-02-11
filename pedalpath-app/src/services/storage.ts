@@ -37,6 +37,18 @@ export async function uploadSchematic(
         message: error.message,
         statusCode: error.statusCode
       });
+
+      // Provide helpful error message if bucket doesn't exist
+      if (error.message?.includes('Bucket not found')) {
+        console.error('⚠️ SETUP REQUIRED: The "schematics" storage bucket does not exist in Supabase.');
+        console.error('Please create it in your Supabase dashboard:');
+        console.error('1. Go to Storage in Supabase dashboard');
+        console.error('2. Create a new bucket named "schematics"');
+        console.error('3. Set it to private (public: false)');
+        console.error('4. Set file size limit to 10MB');
+        console.error('5. Allow mime types: image/jpeg, image/jpg, image/png, image/webp, application/pdf');
+      }
+
       return null;
     }
 

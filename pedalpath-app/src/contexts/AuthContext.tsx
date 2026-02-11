@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../services/supabase'
+import { initializeStorageBucket } from '../services/storage'
 
 interface AuthContextType {
   user: User | null
@@ -20,6 +21,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Initialize storage bucket on app startup
+    initializeStorageBucket().catch(err => {
+      console.error('Failed to initialize storage bucket:', err)
+    })
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
