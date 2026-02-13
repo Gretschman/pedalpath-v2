@@ -19,12 +19,12 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
   const photoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const acceptedFileTypes = 'image/png,image/jpeg,image/jpg,image/webp,application/pdf'
+  const acceptedFileTypes = 'image/png,image/jpeg,image/jpg,image/webp,image/gif,application/pdf'
   const maxFileSize = 10 * 1024 * 1024 // 10MB
 
   const validateFile = (file: File): string | null => {
     if (!acceptedFileTypes.split(',').includes(file.type)) {
-      return 'Please upload a PNG, JPG, WebP, or PDF file'
+      return 'Please upload a PNG, JPG, GIF, WebP, or PDF file'
     }
     if (file.size > maxFileSize) {
       return 'File size must be less than 10MB'

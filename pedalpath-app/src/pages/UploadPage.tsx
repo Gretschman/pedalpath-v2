@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import SchematicUpload from '../components/schematic/SchematicUpload'
 import { processSchematic } from '../services/schematic-processor'
 import { useAuth } from '../contexts/AuthContext'
+import Navbar from '../components/Navbar'
 
 export default function UploadPage() {
   const [loading, setLoading] = useState(false)
@@ -14,17 +15,26 @@ export default function UploadPage() {
     setLoading(true)
     setError(null)
 
+    // CRITICAL: Check authentication FIRST
+    if (!user || !user.id) {
+      setError('You must be signed in to upload schematics. Please sign in and try again.')
+      setLoading(false)
+      navigate('/signin')
+      return
+    }
+
     try {
       // Create temporary project ID
       const projectId = crypto.randomUUID()
-      const userId = user?.id || 'temp-user-id'
+      const userId = user.id // NO FALLBACK - must be authenticated
 
       console.log('Starting upload process:', {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
         projectId,
-        userId
+        userId,
+        userEmail: user.email
       })
 
       // Process schematic
@@ -50,6 +60,7 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
