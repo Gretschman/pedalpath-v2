@@ -11,7 +11,7 @@ export interface User {
 export interface Project {
   id: string
   user_id: string
-  title: string
+  name: string  // Column name in database (not 'title')
   description?: string
   schematic_url?: string
   status: 'draft' | 'in_progress' | 'completed'
