@@ -40,7 +40,7 @@ export default function UploadPage() {
         .from('projects')
         .insert({
           user_id: userId,
-          name: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+          title: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
           status: 'draft'
         })
         .select()
