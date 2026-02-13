@@ -4,6 +4,7 @@ import SchematicUpload from '../components/schematic/SchematicUpload'
 import { processSchematic } from '../services/schematic-processor'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
+import { supabase } from '../services/supabase'
 
 export default function UploadPage() {
   const [loading, setLoading] = useState(false)
@@ -24,21 +25,38 @@ export default function UploadPage() {
     }
 
     try {
-      // Create temporary project ID
-      const projectId = crypto.randomUUID()
       const userId = user.id // NO FALLBACK - must be authenticated
 
       console.log('Starting upload process:', {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
-        projectId,
         userId,
         userEmail: user.email
       })
 
-      // Process schematic
-      const result = await processSchematic(projectId, file, userId)
+      // STEP 1: Create project record in database first
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          user_id: userId,
+          name: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+          status: 'draft'
+        })
+        .select()
+        .single()
+
+      if (projectError || !project) {
+        console.error('Error creating project:', projectError)
+        setError('Failed to create project. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      console.log('Project created:', project.id)
+
+      // STEP 2: Process schematic (now project exists in DB)
+      const result = await processSchematic(project.id, file, userId)
 
       console.log('Process schematic result:', result)
 
