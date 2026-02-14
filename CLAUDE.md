@@ -23,6 +23,25 @@ PedalPath is a web application that helps guitar pedal builders analyze schemati
 
 ---
 
+## Design & UX Guidelines
+
+**PRIMARY REFERENCE**: [`UX_DESIGN_REQUIREMENTS.md`](./UX_DESIGN_REQUIREMENTS.md)
+
+**Philosophy**: "LEGO-Simple, Apple-Beautiful, Intuit-Obvious"
+- Every interaction should be visually obvious
+- Complex processes broken into discrete, satisfying steps
+- Immediate visual feedback for every action
+- Colorful, approachable, never intimidating
+
+**Key Documents**:
+- **[`UX_DESIGN_REQUIREMENTS.md`](./UX_DESIGN_REQUIREMENTS.md)** - Complete design system, colors, typography, components
+- **[`VISUAL_BREADBOARD_IMPLEMENTATION.md`](./VISUAL_BREADBOARD_IMPLEMENTATION.md)** - Plan for LEGO-style visual guides
+- **`/design-references/`** - Reference images for breadboard visualizations
+
+**CRITICAL MISSION**: Visual breadboard guides showing step-by-step component placement like LEGO instructions. Current text-based approach fails this mission completely.
+
+---
+
 ## Debugging Protocol
 
 **CRITICAL**: When encountering errors, always follow the debugging protocols documented in [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md).
