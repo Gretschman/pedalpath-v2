@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { analyzeSchematicFile } from './claude-vision';
 import { uploadSchematic } from './storage';
+import { detectImageType } from '../utils/image-utils';
 import type { BOMData, BOMComponent } from '../types/bom.types';
 
 interface ProcessSchematicResult {
@@ -24,8 +25,20 @@ export async function processSchematic(
   userId: string
 ): Promise<ProcessSchematicResult> {
   try {
+    // Step 0: Detect actual file type from content (don't trust file extension)
+    // This handles cases where files are misnamed (e.g., JPEG with .gif extension)
+    const actualMimeType = await detectImageType(file);
+    console.log(`File: ${file.name}, Declared type: ${file.type}, Actual type: ${actualMimeType}`);
+
+    // Create a new File object with the correct mime type if it differs
+    let fileToUpload = file;
+    if (actualMimeType !== file.type) {
+      console.log(`Correcting mime type from ${file.type} to ${actualMimeType}`);
+      fileToUpload = new File([file], file.name, { type: actualMimeType });
+    }
+
     // Step 1: Upload file to storage
-    const uploadResult = await uploadSchematic(userId, file, projectId);
+    const uploadResult = await uploadSchematic(userId, fileToUpload, projectId);
     if (!uploadResult) {
       return {
         success: false,
@@ -41,7 +54,7 @@ export async function processSchematic(
         storage_path: uploadResult.path,
         file_name: file.name,
         file_size: file.size,
-        mime_type: file.type,
+        mime_type: actualMimeType, // Use detected mime type, not declared
         processing_status: 'processing',
       })
       .select()
@@ -55,8 +68,8 @@ export async function processSchematic(
       };
     }
 
-    // Step 3: Analyze schematic with Claude Vision
-    const analysisResult = await analyzeSchematicFile(file);
+    // Step 3: Analyze schematic with Claude Vision (use corrected file)
+    const analysisResult = await analyzeSchematicFile(fileToUpload);
 
     if (!analysisResult.success || !analysisResult.bom_data) {
       // Update schematic status to failed

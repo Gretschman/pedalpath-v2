@@ -3,6 +3,52 @@
  */
 
 /**
+ * Detect the actual image type from file content (magic bytes)
+ * This is more reliable than trusting file extensions
+ */
+export async function detectImageType(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 4);
+      let header = '';
+      for (let i = 0; i < arr.length; i++) {
+        header += arr[i].toString(16).padStart(2, '0');
+      }
+
+      // Check magic bytes to determine actual file type
+      let type = file.type; // default to declared type
+
+      if (header.startsWith('ffd8ff')) {
+        type = 'image/jpeg';
+      } else if (header.startsWith('89504e47')) {
+        type = 'image/png';
+      } else if (header.startsWith('47494638')) {
+        type = 'image/gif';
+      } else if (header.startsWith('52494646')) {
+        // RIFF header, check for WEBP
+        const arr2 = new Uint8Array(e.target?.result as ArrayBuffer).subarray(8, 12);
+        let header2 = '';
+        for (let i = 0; i < arr2.length; i++) {
+          header2 += String.fromCharCode(arr2[i]);
+        }
+        if (header2 === 'WEBP') {
+          type = 'image/webp';
+        }
+      } else if (header.startsWith('25504446')) {
+        type = 'application/pdf';
+      }
+
+      resolve(type);
+    };
+
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsArrayBuffer(file.slice(0, 12));
+  });
+}
+
+/**
  * Compress an image file to reduce size while maintaining quality for schematic analysis
  * Target: Max 1MB for mobile optimization
  */
