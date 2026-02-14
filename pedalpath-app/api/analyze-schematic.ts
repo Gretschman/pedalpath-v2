@@ -109,30 +109,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       apiKey,
     });
 
-    // Call Claude Vision with same prompt as client-side version
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: [
+    // Try models in order of preference
+    // This ensures we use the best available model that actually works
+    const MODELS_TO_TRY = [
+      'claude-3-5-sonnet-latest',        // Always points to latest Sonnet 3.5
+      'claude-3-5-sonnet-20241022',      // Original (in case it comes back)
+      'claude-3-opus-20240229',          // Stable fallback with vision support
+      'claude-3-sonnet-20240229',        // Older but reliable
+    ];
+
+    let response;
+    let lastError;
+
+    for (const modelName of MODELS_TO_TRY) {
+      try {
+        console.log(`Attempting to use model: ${modelName}`);
+
+        response = await client.messages.create({
+          model: modelName,
+          max_tokens: 4096,
+          messages: [
             {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: image_type,
-                data: image_base64,
-              },
-            },
-            {
-              type: 'text',
-              text: SCHEMATIC_ANALYSIS_PROMPT,
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: image_type,
+                    data: image_base64,
+                  },
+                },
+                {
+                  type: 'text',
+                  text: SCHEMATIC_ANALYSIS_PROMPT,
+                },
+              ],
             },
           ],
-        },
-      ],
-    });
+        });
+
+        // If we got here, the model worked!
+        console.log(`Successfully used model: ${modelName}`);
+        break; // Exit loop on success
+
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`Model ${modelName} failed:`, error.message);
+
+        // If this is the last model in the list, throw the error
+        if (modelName === MODELS_TO_TRY[MODELS_TO_TRY.length - 1]) {
+          throw error;
+        }
+
+        // Otherwise, continue to next model
+        continue;
+      }
+    }
+
+    if (!response) {
+      throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`);
+    }
 
     // Extract text from response
     const textContent = response.content.find((block) => block.type === 'text');
@@ -187,12 +224,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error analyzing schematic:', error);
 
+    // Log detailed error information for debugging
+    console.error('Error details:', {
+      name: error?.name,
+      message: error?.message,
+      status: error?.status,
+      type: error?.type,
+      request_id: error?.request_id,
+    });
+
+    // Check if it's an Anthropic API error
+    if (error?.status === 404 && error?.message?.includes('model')) {
+      return res.status(500).json({
+        success: false,
+        error: 'The AI model is temporarily unavailable. Please try again in a few moments.',
+        details: 'Model not found - this has been logged and will be addressed.',
+      });
+    }
+
+    // Check if it's an authentication error
+    if (error?.status === 401 || error?.message?.includes('authentication')) {
+      console.error('CRITICAL: Anthropic API key authentication failed');
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error. Please contact support.',
+        details: 'API authentication failed',
+      });
+    }
+
+    // Generic error response
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'An unknown error occurred during schematic analysis.',
+      details: 'An unexpected error occurred. This has been logged.',
     });
   }
 }
