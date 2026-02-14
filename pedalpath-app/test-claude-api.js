@@ -9,6 +9,8 @@ if (!apiKey) {
 const client = new Anthropic({ apiKey });
 
 const MODELS_TO_TEST = [
+  'claude-opus-4-6',                 // Latest Opus 4.6 (Feb 2026)
+  'claude-sonnet-4-5-20250929',      // Sonnet 4.5 (Sept 2025)
   'claude-3-5-sonnet-latest',
   'claude-3-5-sonnet-20241022',
   'claude-3-opus-20240229',

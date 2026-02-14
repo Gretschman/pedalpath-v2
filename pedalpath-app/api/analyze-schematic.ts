@@ -112,10 +112,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Try models in order of preference
     // This ensures we use the best available model that actually works
     const MODELS_TO_TRY = [
-      'claude-3-5-sonnet-latest',        // Always points to latest Sonnet 3.5
-      'claude-3-5-sonnet-20241022',      // Original (in case it comes back)
-      'claude-3-opus-20240229',          // Stable fallback with vision support
-      'claude-3-sonnet-20240229',        // Older but reliable
+      'claude-opus-4-6',                 // Latest Opus 4.6 (Feb 2026)
+      'claude-sonnet-4-5-20250929',      // Sonnet 4.5 (Sept 2025)
+      'claude-3-5-sonnet-latest',        // Legacy: Latest Sonnet 3.5
+      'claude-3-5-sonnet-20241022',      // Legacy: Original
+      'claude-3-opus-20240229',          // Legacy: Stable fallback with vision support
+      'claude-3-sonnet-20240229',        // Legacy: Older but reliable
     ];
 
     let response;
