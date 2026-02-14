@@ -46,7 +46,7 @@ export async function uploadSchematic(
         console.error('2. Create a new bucket named "schematics"');
         console.error('3. Set it to private (public: false)');
         console.error('4. Set file size limit to 10MB');
-        console.error('5. Allow mime types: image/jpeg, image/jpg, image/png, image/webp, application/pdf');
+        console.error('5. Allow mime types: image/jpeg, image/jpg, image/png, image/webp, image/gif, application/pdf');
       }
 
       return null;
@@ -140,7 +140,7 @@ export async function initializeStorageBucket(): Promise<boolean> {
     const { error } = await supabase.storage.createBucket('schematics', {
       public: false,
       fileSizeLimit: 10485760, // 10MB
-      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'],
+      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
     });
 
     if (error) {
