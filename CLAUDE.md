@@ -23,6 +23,33 @@ PedalPath is a web application that helps guitar pedal builders analyze schemati
 
 ---
 
+## Debugging Protocol
+
+**CRITICAL**: When encountering errors, always follow the debugging protocols documented in [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md).
+
+### Quick Rules
+1. **Generic API errors (500, "temporarily unavailable")** → Check Vercel logs FIRST
+2. **File upload failures** → Inspect actual file content (don't trust extensions)
+3. **Model not found errors** → Check Anthropic docs for current model names
+4. **White screen errors** → Check for missing React providers (QueryClient, etc.)
+5. **Build failures** → Run `npm run build` locally, check TypeScript errors
+
+### Key Commands
+```bash
+# Check server logs immediately when errors occur
+vercel logs <deployment-url>
+
+# Inspect actual file content
+file <filename>
+
+# View recent commits for context
+git log --oneline -10
+```
+
+**See [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md) for complete protocols and lessons learned.**
+
+---
+
 ## Verification Requirements
 
 Before marking work complete:
@@ -487,19 +514,23 @@ vercel --prod --yes
 ## Session Continuity
 
 For session continuity, always check for:
-1. Latest `CONTINUATION_*.md` document in repo root
-2. Recent commit messages for context
-3. Open issues or TODOs in code comments
-4. Browser console errors from last test session
+1. **[`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md)** - Lessons learned and debugging protocols
+2. Latest `CONTINUATION_*.md` document in repo root
+3. Recent commit messages for context
+4. Open issues or TODOs in code comments
+5. Browser console errors from last test session
 
-When ending a session, create a continuation document with:
-- Current status and what's working
-- Current blockers and errors
-- Next immediate steps
-- Any SQL scripts or commands to run
-- Testing checklist
+When ending a session:
+1. **Update [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md)** with any new lessons learned
+2. Commit all changes to GitHub
+3. Create continuation document if needed with:
+   - Current status and what's working
+   - Current blockers and errors
+   - Next immediate steps
+   - Any SQL scripts or commands to run
+   - Testing checklist
 
 ---
 
-**Last Updated**: 2026-02-11
-**Current Status**: Phase A infrastructure setup (RLS policies needed)
+**Last Updated**: 2026-02-13
+**Current Status**: Core functionality working - Upload, Analysis, Results display all operational
