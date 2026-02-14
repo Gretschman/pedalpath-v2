@@ -111,13 +111,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Try models in order of preference
     // This ensures we use the best available model that actually works
+    // All models listed support vision (text and image input)
     const MODELS_TO_TRY = [
-      'claude-opus-4-6',                 // Latest Opus 4.6 (Feb 2026)
-      'claude-sonnet-4-5-20250929',      // Sonnet 4.5 (Sept 2025)
-      'claude-3-5-sonnet-latest',        // Legacy: Latest Sonnet 3.5
-      'claude-3-5-sonnet-20241022',      // Legacy: Original
-      'claude-3-opus-20240229',          // Legacy: Stable fallback with vision support
-      'claude-3-sonnet-20240229',        // Legacy: Older but reliable
+      'claude-sonnet-4-5-20250929',      // Sonnet 4.5 (Sept 2025) - best balance of speed/intelligence
+      'claude-opus-4-6',                 // Latest Opus 4.6 (Feb 2026) - most intelligent
+      'claude-haiku-4-5-20251001',       // Haiku 4.5 (Oct 2025) - fastest
+      'claude-opus-4-5-20251101',        // Legacy: Opus 4.5 (Nov 2025)
+      'claude-sonnet-4-20250514',        // Legacy: Sonnet 4 (May 2025)
+      'claude-3-7-sonnet-20250219',      // Legacy: Sonnet 3.7 (Feb 2025)
+      'claude-3-5-sonnet-20241022',      // Legacy: Sonnet 3.5 (Oct 2024)
+      'claude-3-opus-20240229',          // Legacy: Opus 3 (Feb 2024)
     ];
 
     let response;
