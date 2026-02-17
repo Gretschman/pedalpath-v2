@@ -1,0 +1,103 @@
+/**
+ * BreadboardBase Styling
+ *
+ * Provides hover effects, animations, and responsive styling
+ * for the breadboard component.
+ */
+
+.breadboard-base {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background: transparent;
+  /* Subtle drop shadow for depth */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Hole interactions */
+.hole {
+  transition: all 0.2s ease;
+}
+
+.hole:hover {
+  filter: brightness(1.3);
+  cursor: pointer;
+}
+
+.hole:hover circle {
+  stroke: #FFD700;
+  stroke-width: 1;
+}
+
+/* Highlighted holes (pulsing effect) */
+.hole-highlighted {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Power rail styling */
+.power-rail line {
+  transition: stroke-width 0.2s ease;
+}
+
+.power-rail:hover line {
+  stroke-width: 10;
+}
+
+/* Label styling */
+.labels text {
+  user-select: none;
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Responsive scaling */
+@media (max-width: 768px) {
+  .breadboard-base {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Terminal strip rows */
+.terminal-strip .row-a,
+.terminal-strip .row-b,
+.terminal-strip .row-c,
+.terminal-strip .row-d,
+.terminal-strip .row-e {
+  /* Upper section - could add specific styling if needed */
+}
+
+.terminal-strip .row-f,
+.terminal-strip .row-g,
+.terminal-strip .row-h,
+.terminal-strip .row-i,
+.terminal-strip .row-j {
+  /* Lower section - could add specific styling if needed */
+}
+
+/* Accessibility: Focus states for keyboard navigation */
+.hole:focus {
+  outline: 2px solid #FFD700;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .breadboard-base {
+    filter: none;
+    max-width: 100%;
+  }
+
+  .hole:hover {
+    filter: none;
+  }
+}

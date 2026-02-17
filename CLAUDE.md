@@ -1,133 +1,86 @@
 # PedalPath v2 - Claude Development Guide
 
+**Last Updated**: 2026-02-16
+**Current Phase**: Visual Overhaul Phase 1 ✅ COMPLETE | Phase 2 Ready to Start
+**Status**: Production-ready foundation with 156 tests passing
+
+---
+
+## 🚀 Current Project Status (CRITICAL - READ FIRST)
+
+### Phase 1 Visual Overhaul: COMPLETE ✅
+**Completed**: 2026-02-16
+**Delivered**: 3,516 lines of production code, 156 tests (100% passing)
+
+**What We Just Built:**
+1. **Component Decoders** - Resistor & capacitor value ↔ visual spec conversion
+2. **Breadboard Base** - Photorealistic 830/400-point breadboard SVG component
+3. **Test Suite** - Comprehensive coverage (121 decoder + 35 breadboard tests)
+4. **Documentation** - Complete handoff docs for Phase 2
+
+**Key Files**:
+- `/visual-overhaul-2026/` - All visual overhaul project files
+- `/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md` - **START HERE for Phase 2**
+- `/visual-overhaul-2026/3-implementation/phase1-decoders/STATUS.md` - Current status
+
+### Immediate Next Steps:
+**Phase 2** - Component SVG Rendering & Integration (5-6 days estimated)
+- **Work Stream C**: Create ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG components
+- **Work Stream D**: Integrate with BreadboardGrid, connect to BOM pipeline
+
+**See**: `/visual-overhaul-2026/DELEGATION_GUIDE.md` for Worker C & D instructions
+
+---
+
 ## Project Overview
 
-PedalPath is a web application that helps guitar pedal builders analyze schematics using AI vision. Users upload schematic images, and Claude Vision analyzes them to generate Bill of Materials (BOM), enclosure recommendations, and power requirements.
+PedalPath is a web application that helps guitar pedal builders analyze schematics using AI vision. Users upload schematic images, and Claude Vision analyzes them to generate Bill of Materials (BOM), enclosure recommendations, power requirements, and **realistic visual build guides**.
 
-**Primary Goal**: Make schematic upload reliable and seamless on both mobile and desktop devices.
+**Primary Goal**: Make DIY pedal building accessible through photorealistic breadboard visualizations and step-by-step guides.
 
----
-
-## Workflow
-
-### For Complex Tasks
-- Start complex tasks in Plan mode using `EnterPlanMode` tool
-- Get plan approval before implementation
-- Break large changes into reviewable chunks
-- Document architectural decisions in continuation documents
-
-### For Simple Tasks
-- Direct implementation for small fixes and tweaks
-- Single-file changes or obvious bug fixes
-- UI text updates or styling adjustments
+**Critical Mission**: Replace text-based build instructions with LEGO-style visual guides showing exact component placement with color-coded parts matching real components.
 
 ---
 
-## Design & UX Guidelines
+## 🎯 Project Goals & Vision
 
-**PRIMARY REFERENCE**: [`UX_DESIGN_REQUIREMENTS.md`](./UX_DESIGN_REQUIREMENTS.md)
+### The Problem We Solve
+DIY pedal building is intimidating for beginners because:
+- Schematics are hard to read
+- Components look confusing (color bands, markings)
+- Build instructions are text-heavy
+- No visual feedback until you're done
 
-**Philosophy**: "LEGO-Simple, Apple-Beautiful, Intuit-Obvious"
-- Every interaction should be visually obvious
-- Complex processes broken into discrete, satisfying steps
-- Immediate visual feedback for every action
-- Colorful, approachable, never intimidating
-
-**Key Documents**:
-- **[`UX_DESIGN_REQUIREMENTS.md`](./UX_DESIGN_REQUIREMENTS.md)** - Complete design system, colors, typography, components
-- **[`VISUAL_BREADBOARD_IMPLEMENTATION.md`](./VISUAL_BREADBOARD_IMPLEMENTATION.md)** - Plan for LEGO-style visual guides
-- **`/design-references/`** - Reference images for breadboard visualizations
-
-**CRITICAL MISSION**: Visual breadboard guides showing step-by-step component placement like LEGO instructions. Current text-based approach fails this mission completely.
-
----
-
-## Debugging Protocol
-
-**CRITICAL**: When encountering errors, always follow the debugging protocols documented in [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md).
-
-### Quick Rules
-1. **Generic API errors (500, "temporarily unavailable")** → Check Vercel logs FIRST
-2. **File upload failures** → Inspect actual file content (don't trust extensions)
-3. **Model not found errors** → Check Anthropic docs for current model names
-4. **White screen errors** → Check for missing React providers (QueryClient, etc.)
-5. **Build failures** → Run `npm run build` locally, check TypeScript errors
-
-### Key Commands
-```bash
-# Check server logs immediately when errors occur
-vercel logs <deployment-url>
-
-# Inspect actual file content
-file <filename>
-
-# View recent commits for context
-git log --oneline -10
-```
-
-**See [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md) for complete protocols and lessons learned.**
-
----
-
-## Verification Requirements
-
-Before marking work complete:
-
-### Code Quality
-- Run `npm run build` after significant code changes (catches TypeScript errors)
-- Run `npm run lint` before committing
-- Fix any TypeScript or ESLint errors
-
-### Testing
-- For UI changes: Verify in browser using `npm run dev` (http://localhost:5174)
-- For API changes: Test with browser DevTools Network tab or console logs
-- Check browser console for errors (F12 → Console)
-- Test on both desktop and mobile viewports
-
-### Before Committing
-- Review all changed files with `git diff`
-- Ensure no sensitive data (API keys, tokens) in code
-- Check that imports resolve correctly
-- Verify no unused imports or variables
-
----
-
-## Permissions
-
-Use `/permissions` to allow common operations without prompts:
-
-```
-npm run dev
-npm run build
-npm run lint
-git add
-git commit
-git push
-vercel --prod --yes
-```
+### Our Solution
+1. **AI Schematic Analysis** - Upload schematic → instant BOM
+2. **Visual Component Recognition** - Show what resistor color bands look like
+3. **Interactive Breadboard Guides** - LEGO-instruction-style step-by-step placement
+4. **Realistic Rendering** - Components look exactly like real parts
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Styling
-- **React Router v7** - Client-side routing
-- **Lucide React** - Icon library
+- **React 19** - UI framework
+- **TypeScript 5.9** - Type safety
+- **Vite 7** - Build tool (fast!)
+- **Tailwind CSS 3.4** - Styling
+- **React Router v7** - Routing
+- **Lucide React** - Icons
+- **Vitest 4** - Testing framework (NEW)
 
 ### Backend & Services
-- **Supabase** - Authentication, database (PostgreSQL), file storage
-- **Claude Vision API** - Schematic analysis (Anthropic)
-- **Vercel** - Hosting and serverless functions
+- **Supabase** - Auth, PostgreSQL DB, file storage
+- **Claude API (Anthropic)** - Schematic analysis (Claude 4.5 Sonnet)
+- **Vercel** - Hosting & serverless functions
 
 ### Key Libraries
-- `@supabase/supabase-js` - Supabase client
 - `@anthropic-ai/sdk` - Claude API client
-- `react-hook-form` + `zod` - Form handling and validation
-- `@tanstack/react-query` - Data fetching and caching
+- `@supabase/supabase-js` - Supabase client
+- `react-hook-form` + `zod` - Form handling
+- `@tanstack/react-query` - Data fetching
+- `vitest` - Unit testing
 
 ---
 
@@ -135,70 +88,206 @@ vercel --prod --yes
 
 ```
 pedalpath-v2/
-├── pedalpath-app/               # Main application
-│   ├── api/                     # Vercel serverless functions
-│   │   └── analyze-schematic.ts # Claude Vision API endpoint
+├── pedalpath-app/                      # Main application
+│   ├── api/                            # Vercel serverless functions
+│   │   └── analyze-schematic.ts        # Claude Vision API endpoint
 │   ├── src/
-│   │   ├── components/          # React components
-│   │   │   ├── guides/          # Build guides (enclosure, etc.)
-│   │   │   ├── schematic/       # Schematic upload components
-│   │   │   ├── visualizations/  # BreadboardGrid, StripboardView
-│   │   │   └── ProtectedRoute.tsx
-│   │   ├── contexts/            # React contexts
-│   │   │   └── AuthContext.tsx  # Authentication state
-│   │   ├── pages/               # Page components
+│   │   ├── components/
+│   │   │   ├── guides/                 # Build guides
+│   │   │   ├── schematic/              # Upload components
+│   │   │   └── visualizations/         # ← NEW: BreadboardBase, component SVGs
+│   │   │       ├── BreadboardBase.tsx  # ← NEW: Photorealistic breadboard
+│   │   │       ├── BreadboardBase.css  # ← NEW
+│   │   │       └── components-svg/     # ← PHASE 2: Resistor/Cap/IC SVGs
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx
+│   │   ├── pages/
 │   │   │   ├── LandingPage.tsx
-│   │   │   ├── SignInPage.tsx
-│   │   │   ├── SignUpPage.tsx
-│   │   │   ├── DashboardPage.tsx
-│   │   │   ├── UploadPage.tsx
-│   │   │   └── ResultsPage.tsx
-│   │   ├── services/            # API and business logic
-│   │   │   ├── supabase.ts      # Supabase client
-│   │   │   ├── storage.ts       # File upload to Supabase Storage
-│   │   │   ├── claude-vision.ts # Claude Vision API calls
-│   │   │   └── schematic-processor.ts # End-to-end upload flow
-│   │   ├── types/               # TypeScript type definitions
-│   │   ├── utils/               # Utility functions
-│   │   │   └── image-utils.ts   # Image compression, PDF conversion
-│   │   ├── App.tsx              # App routing
-│   │   └── main.tsx             # App entry point
-│   ├── .env.local               # Environment variables (not in git)
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-├── CONTINUATION_*.md            # Session continuation documents
-└── CLAUDE.md                    # This file
+│   │   │   ├── ResultsPage.tsx
+│   │   │   ├── BreadboardDemo.tsx      # ← NEW: Demo page
+│   │   │   └── ...
+│   │   ├── services/                   # API integration
+│   │   ├── types/
+│   │   │   └── component-specs.types.ts # ← NEW: Component type definitions
+│   │   ├── utils/
+│   │   │   ├── decoders/               # ← NEW: Resistor/capacitor decoders
+│   │   │   │   ├── resistor-decoder.ts # ← NEW: IEC 60062 compliant
+│   │   │   │   ├── capacitor-decoder.ts # ← NEW: Multi-format
+│   │   │   │   ├── ic-decoder.ts       # ← NEW: Stub
+│   │   │   │   ├── diode-decoder.ts    # ← NEW: Stub
+│   │   │   │   └── index.ts            # ← NEW: Barrel export
+│   │   │   ├── breadboard-utils.ts     # ← NEW: Coordinate calculations
+│   │   │   ├── image-utils.ts
+│   │   │   └── __tests__/              # ← NEW: Test files
+│   │   └── vitest.config.ts            # ← NEW: Test configuration
+│   └── package.json
+├── visual-overhaul-2026/               # ← NEW: Visual overhaul project
+│   ├── 1-requirements/
+│   ├── 2-technical-design/
+│   ├── 3-implementation/
+│   │   └── phase1-decoders/
+│   │       ├── STATUS.md               # ← Current status
+│   │       └── HANDOFF.md              # ← Phase 2 integration guide
+│   ├── 4-testing-qa/
+│   ├── reference-code/                 # Python reference implementations
+│   ├── DELEGATION_GUIDE.md             # Worker assignment templates
+│   ├── README.md
+│   └── START_HERE.md
+├── archive/                            # Superseded docs moved here
+├── docs/                               # Organized documentation
+│   ├── knowledge-base/
+│   └── design/
+├── README.md                           # Project README
+└── CLAUDE.md                           # This file
 ```
 
 ---
 
-## Key Files & Their Responsibilities
+## 🧪 Testing (NEW)
 
-### Upload Flow
-1. **`SchematicUpload.tsx`** - File picker UI component
-2. **`image-utils.ts`** - Compress images, convert PDFs to images
-3. **`storage.ts`** - Upload files to Supabase Storage
-4. **`schematic-processor.ts`** - Orchestrates entire upload process:
-   - Upload to storage
-   - Create database records
-   - Call Claude Vision API
-   - Save BOM data
-5. **`claude-vision.ts`** - Claude Vision API integration (with retry logic)
-6. **`api/analyze-schematic.ts`** - Vercel serverless function (API endpoint)
+### Run Tests
+```bash
+cd /home/rob/git/pedalpath-v2/pedalpath-app
 
-### Authentication
-- **`AuthContext.tsx`** - Manages user session, sign in/out, password reset
-- **`ProtectedRoute.tsx`** - Route guard for authenticated pages
-- **`SignInPage.tsx` / `SignUpPage.tsx`** - Auth UI
+# Run all tests
+npm test
 
-### Data Display
-- **`ResultsPage.tsx`** - Shows BOM, enclosure, power requirements
-- **`DashboardPage.tsx`** - User's projects list
+# Run in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test -- resistor-decoder
+
+# Run with UI
+npm test:ui
+
+# Coverage report
+npm test:coverage
+```
+
+### Test Structure
+- **Decoder tests**: `src/utils/decoders/__tests__/`
+- **Utility tests**: `src/utils/__tests__/`
+- **Component tests**: (Phase 2) `src/components/**/__tests__/`
+
+### Current Test Coverage
+- **156 tests total** (100% passing)
+  - 61 resistor decoder tests
+  - 60 capacitor decoder tests
+  - 35 breadboard utility tests
+
+---
+
+## 🎨 Visual Overhaul Architecture
+
+### Phase 1: Foundation (✅ COMPLETE)
+**Deliverables**: Component decoders + breadboard base
+
+**Key Exports**:
+```typescript
+// Decoders
+import {
+  encodeResistor,      // Value → color bands
+  decodeResistor,      // Bands → value
+  encodeCapacitor,     // Value → marking codes
+  decodeCapacitor,     // Marking → value
+  formatOhms,          // 47000 → "47 kΩ"
+  formatCapacitance    // 47000pF → "47 nF"
+} from '@/utils/decoders';
+
+// Breadboard
+import BreadboardBase from '@/components/visualizations/BreadboardBase';
+import {
+  holeToCoordinates,   // "a15" → { x, y }
+  getConnectedHoles,   // "a15" → ["a15", "b15", ...]
+  isValidHoleId        // Validation
+} from '@/utils/breadboard-utils';
+
+// Types
+import type {
+  ResistorSpec,
+  CapacitorSpec,
+  EncodedResistor,
+  EncodedCapacitor
+} from '@/types/component-specs.types';
+```
+
+**Usage Example**:
+```typescript
+// Get resistor color bands
+const spec = encodeResistor(47000, 1.0);  // 47kΩ ±1%
+// → { bands5: ['yellow', 'violet', 'black', 'red', 'brown'] }
+
+// Render breadboard
+<BreadboardBase
+  size="830"
+  highlightHoles={['a15', 'a16']}
+  onHoleClick={(id) => console.log(id)}
+/>
+
+// Get hole position
+const coords = holeToCoordinates('a15', LAYOUT_830);
+// → { x: 407.6, y: 100 }
+```
+
+### Phase 2: Component SVG Rendering (IN PROGRESS)
+**Goal**: Create realistic component SVGs using decoder specs
+
+**Files to Create**:
+- `ResistorSVG.tsx` - Renders resistor with accurate color bands
+- `CapacitorSVG.tsx` - Different shapes for ceramic/film/electrolytic
+- `ICSVG.tsx` - Black DIP package with pin numbers
+- `DiodeSVG.tsx` - Glass body with cathode band
+- `WireSVG.tsx` - Colored wire routing
+
+**See**: `/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md`
+
+### Phase 3: Mobile & Polish (FUTURE)
+- Responsive breakpoints for all 23 components
+- Touch zoom/pan for breadboard
+- Stripboard enhancement
 
 ---
 
 ## Common Patterns
+
+### Using Decoders
+```typescript
+import { encodeResistor, decodeCapacitor } from '@/utils/decoders';
+
+// Encode: Get component visual spec from value
+const resistor = encodeResistor(47000, 1.0);
+console.log(resistor.bands5);  // Color bands array
+console.log(resistor.toleranceColor);  // 'brown'
+
+// Decode: Parse component marking
+const cap = decodeCapacitor('473J250');
+console.log(cap.capacitance.nf);  // 47
+console.log(cap.capType);  // 'film_box'
+console.log(cap.polarized);  // false
+```
+
+### Breadboard Coordinate System
+```typescript
+import { holeToCoordinates, getConnectedHoles } from '@/utils/breadboard-utils';
+
+// Get hole position
+const start = holeToCoordinates('a15', LAYOUT_830);
+const end = holeToCoordinates('a20', LAYOUT_830);
+
+// Render component spanning holes
+<ResistorSVG
+  startX={start.x}
+  startY={start.y}
+  endX={end.x}
+  endY={end.y}
+  spec={resistorSpec}
+/>
+
+// Check which holes are connected
+const connected = getConnectedHoles('a15', '830');
+// → ['a15', 'b15', 'c15', 'd15', 'e15']
+```
 
 ### Supabase Client Usage
 ```typescript
@@ -216,15 +305,9 @@ const { data, error } = await supabase
   .insert({ field: value })
   .select()
   .single()
-
-// Update
-const { error } = await supabase
-  .from('table_name')
-  .update({ field: newValue })
-  .eq('id', recordId)
 ```
 
-### Authentication Check
+### Authentication
 ```typescript
 import { useAuth } from '../contexts/AuthContext'
 
@@ -238,23 +321,88 @@ function MyComponent() {
 }
 ```
 
-### File Upload Pattern
-```typescript
-// 1. Prepare file (compress/convert)
-const prepared = await prepareFileForUpload(file)
+---
 
-// 2. Upload to storage
-const result = await uploadSchematic(userId, prepared.file, projectId)
+## Git Workflow
 
-// 3. Process schematic (creates DB records, analyzes)
-const processResult = await processSchematic(projectId, prepared.file, userId)
+### Before Committing
+```bash
+# Run tests
+npm test -- --run
+
+# Check for TypeScript errors
+npm run build
+
+# Lint code
+npm run lint
+
+# Check git status
+git status
+
+# Review changes
+git diff
 ```
+
+### Committing Changes (Anthropic Standards)
+```bash
+cd /home/rob/git/pedalpath-v2
+
+# Stage all changes
+git add -A
+
+# Commit with descriptive message + co-author
+git commit -m "$(cat <<'EOF'
+Add Phase 1 visual overhaul foundation
+
+Implements component decoders and breadboard base:
+- Resistor decoder: IEC 60062 compliant, E-series validation
+- Capacitor decoder: Multi-format (EIA, alphanumeric, R-decimal)
+- BreadboardBase: Photorealistic 830/400-point SVG component
+- Test suite: 156 tests, 100% passing
+
+Closes visual-overhaul Phase 1. Ready for Phase 2 component SVGs.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+EOF
+)"
+
+# Push to GitHub
+git push origin main
+```
+
+### Commit Message Standards
+- **Imperative mood**: "Add feature" not "Added feature"
+- **First line**: Brief summary (<50 chars)
+- **Body**: What + Why (not how - that's in the code)
+- **Co-author**: Always include for AI pair programming
+- **Reference**: Link to issues, phases, or docs
+
+---
+
+## Deployment
+
+### Vercel Production
+```bash
+cd /home/rob/git/pedalpath-v2/pedalpath-app
+vercel --prod --yes
+```
+
+- **Auto-deploy** on push to `main` branch
+- **Production URL**: https://pedalpath-app.vercel.app
+- **Environment variables**: Configured in Vercel dashboard
+
+### Pre-Deployment Checklist
+- [ ] All tests passing (`npm test -- --run`)
+- [ ] Build succeeds (`npm run build`)
+- [ ] No TypeScript errors
+- [ ] No sensitive data in code
+- [ ] Environment variables configured in Vercel
 
 ---
 
 ## Environment Variables
 
-Located in `/pedalpath-app/.env.local` (not committed to git):
+Located in `/pedalpath-app/.env.local` (NOT in git):
 
 ```bash
 # Supabase
@@ -268,126 +416,25 @@ VITE_ANTHROPIC_API_KEY=sk-ant-api03-...
 VERCEL_OIDC_TOKEN=eyJ...
 ```
 
-**Security Note**: Never commit `.env.local` to git. API keys are prefixed with `VITE_` to be available in browser code.
+**Security**: Never commit `.env.local`. Use `VITE_` prefix for browser-accessible vars.
 
 ---
 
 ## Database Schema
 
 ### Core Tables
-
-**projects**
-- `id` (uuid, PK)
-- `user_id` (uuid, FK to auth.users)
-- `name` (text)
-- `schematic_url` (text)
-- `status` (text: draft, in_progress, completed)
-- Timestamps
-
-**schematics**
-- `id` (uuid, PK)
-- `project_id` (uuid, FK)
-- `storage_path` (text) - Path in Supabase Storage
-- `file_name` (text)
-- `file_size` (int)
-- `mime_type` (text)
-- `processing_status` (text: processing, completed, failed)
-- `processing_error` (text, nullable)
-- `ai_confidence_score` (int, nullable)
-- Timestamps
-
-**bom_items**
-- `id` (uuid, PK)
-- `schematic_id` (uuid, FK)
-- `component_type` (text: resistor, capacitor, ic, etc.)
-- `value` (text)
-- `quantity` (int)
-- `reference_designators` (text[])
-- `part_number` (text, nullable)
-- `supplier` (text, nullable)
-- `supplier_url` (text, nullable)
-- `confidence` (numeric, nullable)
-- `verified` (boolean)
-- `notes` (text, nullable)
-
-**enclosure_recommendations**
-- `id` (uuid, PK)
-- `schematic_id` (uuid, FK)
-- `size` (text: 1590B, 125B, 1590BB, etc.)
-- `drill_count` (int, nullable)
-- `notes` (text, nullable)
-
-**power_requirements**
-- `id` (uuid, PK)
-- `schematic_id` (uuid, FK)
-- `voltage` (text: 9V, 18V, etc.)
-- `current` (text, nullable)
-- `polarity` (text: center_negative, center_positive)
+- **projects** - User's pedal projects
+- **schematics** - Uploaded schematic files
+- **bom_items** - Bill of materials components
+- **enclosure_recommendations** - Enclosure size suggestions
+- **power_requirements** - Power supply specs
 
 ### Row Level Security (RLS)
-
-All tables have RLS policies that ensure:
+- All tables have RLS policies
 - Users can only access their own data
-- Data is linked through foreign keys (projects → schematics → bom_items, etc.)
-- Authenticated users can INSERT, SELECT, UPDATE, DELETE their own records
+- Foreign keys enforce data relationships
 
----
-
-## Supabase Storage
-
-### Bucket: `schematics`
-- **Path structure**: `{userId}/{timestamp}-{filename}`
-- **Access**: Private (requires authentication)
-- **File size limit**: 10MB
-- **Allowed types**: image/jpeg, image/jpg, image/png, image/webp, application/pdf
-- **RLS policies**: Users can only upload/read/update/delete files in their own folder
-
----
-
-## Git Workflow
-
-### Committing Changes
-```bash
-# Check status
-git status
-
-# Stage all changes
-git add -A
-
-# Commit with co-author
-git commit -m "$(cat <<'EOF'
-Brief description of changes
-
-Detailed explanation if needed.
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-EOF
-)"
-
-# Push to main
-git push origin main
-```
-
-### Commit Message Guidelines
-- Use imperative mood ("Add feature" not "Added feature")
-- First line: brief summary (50 chars or less)
-- Body: detailed explanation of what and why
-- Always include co-author line for Claude contributions
-
----
-
-## Deployment
-
-### Vercel
-```bash
-# Deploy to production
-cd /home/rob/git/pedalpath-v2/pedalpath-app
-vercel --prod --yes
-```
-
-- Auto-deploys on git push to main (connected via Vercel GitHub integration)
-- Production URL: https://pedalpath-app.vercel.app
-- Environment variables configured in Vercel dashboard
+**See**: Previous CONTINUATION docs for SQL migrations
 
 ---
 
@@ -400,156 +447,199 @@ cd /home/rob/git/pedalpath-v2/pedalpath-app
 # Install dependencies
 npm install
 
-# Start dev server (usually runs on :5174)
+# Development server (http://localhost:5174)
 npm run dev
 
-# Build for production (also runs TypeScript type checking)
+# Run tests
+npm test
+
+# Build for production
 npm run build
 
-# Run linter
+# Lint code
 npm run lint
 
-# Check git status
+# Git operations
 git status
-
-# View git diff
 git diff
+git log --oneline -10
 
-# Deploy to Vercel
+# Deploy
 vercel --prod --yes
 ```
 
 ---
 
-## Development Best Practices
+## Design & UX Guidelines
 
-### Code Style
-- Use TypeScript for type safety
-- Prefer functional components with hooks
-- Use async/await for promises
-- Handle errors gracefully with try/catch
-- Add console.log for debugging (remove before production)
+**PRIMARY REFERENCE**: `/visual-overhaul-2026/1-requirements/`
 
-### Security
-- Never commit API keys or secrets
-- Always validate user input
-- Use RLS policies for database access
-- Sanitize file uploads
-- Use HTTPS for all API calls
+**Philosophy**: "LEGO-Simple, Apple-Beautiful, Intuit-Obvious"
+- Every interaction visually obvious
+- Complex processes → discrete steps
+- Immediate visual feedback
+- Colorful, approachable, never intimidating
 
-### Performance
-- Compress images before upload (max 1MB)
-- Convert PDFs to images on frontend
-- Use lazy loading for heavy components
-- Implement retry logic for API calls
-- Cache API responses when appropriate
+**Visual Standards**:
+- **Breadboard**: White plastic (#F5F5F5), red/blue power rails, metallic holes
+- **Components**: Match real parts exactly (resistor color codes per IEC 60062)
+- **Layout**: 2.54mm hole spacing (standard IC pitch)
+- **Labels**: Sans-serif, 8-12pt, #666666
 
-### User Experience
-- Show loading states during operations
-- Display clear error messages
-- Provide feedback for user actions
-- Mobile-first responsive design
-- Test on both mobile and desktop
+**See**: `/visual-overhaul-2026/1-requirements/breadboard-specifications.md`
 
 ---
 
-## Troubleshooting
+## Debugging Protocol
 
-### Common Issues
+**When errors occur**:
 
-**Issue**: Upload fails with "Bucket not found"
-- **Fix**: Create `schematics` bucket in Supabase Storage dashboard
+1. **Check test suite first**
+   ```bash
+   npm test -- --run
+   ```
 
-**Issue**: Upload fails with "Row Level Security policy violation"
-- **Fix**: Add RLS policies to database tables (see CONTINUATION documents)
+2. **Check build**
+   ```bash
+   npm run build
+   ```
 
-**Issue**: Claude Vision API timeout
-- **Fix**: Retry logic is implemented (3 attempts with exponential backoff)
+3. **Check browser console** (F12 → Console)
 
-**Issue**: Large images fail to upload
-- **Fix**: Image compression automatically reduces to 1MB max
+4. **Check Vercel logs**
+   ```bash
+   vercel logs <deployment-url>
+   ```
 
-**Issue**: Port 5173 already in use
-- **Note**: Vite will auto-increment to 5174, 5175, etc.
+5. **Check git history** for context
+   ```bash
+   git log --oneline -10
+   ```
 
----
-
-## Important Notes
-
-### File Upload Limits
-- **Max file size**: 10MB (configured in Supabase Storage)
-- **Images compressed to**: 1MB max (before upload)
-- **PDF conversion**: PDFs converted to JPEG on frontend before upload
-
-### API Rate Limits
-- **Claude Vision API**: Check Anthropic dashboard for current limits
-- **Supabase**: Generous free tier limits
-
-### Browser Compatibility
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Mobile browsers supported
-- PDF.js requires modern JavaScript features
-
----
-
-## Phase Roadmap
-
-### ✅ Phase 3 (Completed)
-- BreadboardGrid visualization
-- StripboardView visualization
-- Enhanced EnclosureGuide with printable templates
-
-### ✅ Phase A (Completed - Code Only)
-- Image compression
-- PDF-to-image conversion
-- Timeout handling
-- Retry logic with exponential backoff
-- Forgot password functionality
-
-### 🔄 Phase A (In Progress - Infrastructure)
-- Configure Supabase RLS policies ← **CURRENT BLOCKER**
-- Test end-to-end upload flow
-
-### 📋 Phase B (Future)
-- Better error messages
-- Progress indicators
-- Image validation
-- Thumbnail preview
-- Retry UI
-- Cancel upload functionality
-
----
-
-## Resources
-
-- **Supabase Dashboard**: https://supabase.com/dashboard
-- **Vercel Dashboard**: https://vercel.com/dashboard
-- **Anthropic API Docs**: https://docs.anthropic.com
-- **Project Repo**: https://github.com/Gretschman/pedalpath-v2
-- **Production Site**: https://pedalpath-app.vercel.app
+**See**: `DEBUGGING_PROTOCOL.md` for complete protocols
 
 ---
 
 ## Session Continuity
 
-For session continuity, always check for:
-1. **[`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md)** - Lessons learned and debugging protocols
-2. Latest `CONTINUATION_*.md` document in repo root
-3. Recent commit messages for context
-4. Open issues or TODOs in code comments
-5. Browser console errors from last test session
+### Starting a New Session
+1. Read this `CLAUDE.md` file (you're here!)
+2. Check `/visual-overhaul-2026/3-implementation/phase1-decoders/STATUS.md`
+3. Read `/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md` for Phase 2
+4. Check recent git commits: `git log --oneline -10`
+5. Run tests to verify everything works: `npm test -- --run`
 
-When ending a session:
-1. **Update [`DEBUGGING_PROTOCOL.md`](./DEBUGGING_PROTOCOL.md)** with any new lessons learned
-2. Commit all changes to GitHub
-3. Create continuation document if needed with:
-   - Current status and what's working
-   - Current blockers and errors
-   - Next immediate steps
-   - Any SQL scripts or commands to run
-   - Testing checklist
+### Ending a Session
+1. **Run all tests**: `npm test -- --run`
+2. **Commit all changes** with descriptive message
+3. **Push to GitHub**: `git push origin main`
+4. **Update STATUS.md** with current progress
+5. **Create continuation doc** if mid-feature
+
+**Document Structure**:
+- Current status (what's working)
+- Current blockers (what's not)
+- Next steps (immediate actions)
+- Testing checklist
 
 ---
 
-**Last Updated**: 2026-02-13
-**Current Status**: Core functionality working - Upload, Analysis, Results display all operational
+## Important Files for Context
+
+### Must-Read Documents
+1. **`/visual-overhaul-2026/START_HERE.md`** - Visual overhaul overview
+2. **`/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md`** - Phase 2 integration guide
+3. **`/visual-overhaul-2026/3-implementation/phase1-decoders/STATUS.md`** - Current status
+4. **`/visual-overhaul-2026/DELEGATION_GUIDE.md`** - Worker templates
+5. **`/visual-overhaul-2026/reference-code/README.md`** - Python reference code
+
+### Quick Reference
+- **Test files**: `src/utils/**/__tests__/*.test.ts`
+- **Type definitions**: `src/types/component-specs.types.ts`
+- **Decoders**: `src/utils/decoders/*.ts`
+- **Breadboard**: `src/components/visualizations/BreadboardBase.tsx`
+- **Utils**: `src/utils/breadboard-utils.ts`
+
+---
+
+## Phase Roadmap
+
+### ✅ Phase 1: Foundation (COMPLETE - 2026-02-16)
+- Component decoders (resistor, capacitor)
+- Breadboard base component (830/400-point)
+- Coordinate system utilities
+- 156 tests passing
+
+### 🔄 Phase 2: Component SVG Rendering (CURRENT)
+**Work Stream C**: Create component SVG library
+- ResistorSVG with color bands
+- CapacitorSVG with type variants
+- ICSVG with pin numbers
+- DiodeSVG, WireSVG
+
+**Work Stream D**: Breadboard integration
+- Update BreadboardGrid to use BreadboardBase
+- Overlay component SVGs
+- Connect to BOM pipeline
+
+**Estimated**: 5-6 days
+
+### 📋 Phase 3: Mobile & Polish (FUTURE)
+- Mobile responsive breakpoints (23 components)
+- Touch zoom/pan on breadboard
+- Stripboard enhancements
+- Performance optimization
+
+### 📋 Phase 4: Production Launch (FUTURE)
+- Payment integration (Stripe)
+- Advanced features (auto-routing, etc.)
+- User testing & feedback
+- Marketing & launch
+
+---
+
+## Resources
+
+- **GitHub**: https://github.com/Gretschman/pedalpath-v2
+- **Production**: https://pedalpath-app.vercel.app
+- **Supabase Dashboard**: https://supabase.com/dashboard
+- **Vercel Dashboard**: https://vercel.com/dashboard
+- **Anthropic API Docs**: https://docs.anthropic.com
+- **Claude 4.5 Model**: `claude-sonnet-4-5-20250929`
+
+---
+
+## Quick Start for New Workers
+
+### Phase 2 - Worker C (Component SVGs)
+```bash
+# 1. Read integration guide
+cat /home/rob/git/pedalpath-v2/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md
+
+# 2. Check decoders work
+cd /home/rob/git/pedalpath-v2/pedalpath-app
+npm test -- decoders
+
+# 3. Start implementing ResistorSVG
+# Create: src/components/visualizations/components-svg/ResistorSVG.tsx
+```
+
+### Phase 2 - Worker D (Integration)
+```bash
+# 1. Read integration guide
+cat /home/rob/git/pedalpath-v2/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md
+
+# 2. Test breadboard component
+npm run dev
+# Navigate to /breadboard-demo
+
+# 3. Start integration
+# Update: src/components/visualizations/BreadboardGrid.tsx
+```
+
+---
+
+**Last Updated**: 2026-02-16 23:00 UTC
+**Current Phase**: Phase 1 Complete ✅ | Phase 2 Ready 🚀
+**Test Status**: 156/156 passing (100%)
+**Production Status**: Foundation ready, components in progress

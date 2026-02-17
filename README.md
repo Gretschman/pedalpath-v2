@@ -14,7 +14,7 @@ PedalPath is a web application that makes building guitar effects pedals simple 
   - Potentiometers with proper tapers
   - Enclosure recommendations
 - **Visual Build Guides**: Step-by-step LEGO-style instructions
-  - Breadboard prototyping guide
+  - Breadboard prototyping guide with realistic component visuals
   - Stripboard/veroboard layouts
   - Enclosure drilling templates
   - Off-board wiring diagrams
@@ -23,17 +23,24 @@ PedalPath is a web application that makes building guitar effects pedals simple 
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS (mobile-first responsive)
 - **Backend**: Supabase (PostgreSQL + Auth + Storage)
 - **AI**: Anthropic Claude 3.5 Sonnet Vision API
 - **Deployment**: Vercel
 
 ## Project Status
 
-- ✅ Week 1: Foundation (Authentication, Database, Upload UI)
-- 🔄 Week 2: AI Integration & BOM Display (IN PROGRESS)
-- ⏳ Week 3: Visual Build Guides
-- ⏳ Week 4-7: Polish, Testing, Launch
+**Current Phase:** Visual Overhaul (February 2026)
+
+- ✅ Week 1-2: Foundation complete (Auth, Database, Upload, AI Integration)
+- 🔄 **Week 3-4: Visual Overhaul** (IN PROGRESS)
+  - Realistic breadboard visualization
+  - Component decoder system (resistor color bands, etc.)
+  - Mobile responsiveness (23 components being fixed)
+- ⏳ Week 5-6: Integration & Testing
+- ⏳ Week 7: Polish & Launch
+
+See `/visual-overhaul-2026/` for active implementation workspace.
 
 ## Getting Started
 
@@ -101,42 +108,65 @@ pedalpath-v2/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── bom/           # Bill of Materials components
-│   │   │   │   ├── BOMTable.tsx
-│   │   │   │   └── BOMExport.tsx
 │   │   │   ├── guides/        # Build guide components
-│   │   │   │   ├── BreadboardGuide.tsx
-│   │   │   │   ├── StripboardGuide.tsx
-│   │   │   │   └── EnclosureGuide.tsx
+│   │   │   ├── visualizations/ # Breadboard/stripboard rendering
 │   │   │   ├── schematic/
-│   │   │   │   └── SchematicUpload.tsx
 │   │   │   └── ProtectedRoute.tsx
 │   │   ├── contexts/
 │   │   │   └── AuthContext.tsx
 │   │   ├── pages/
-│   │   │   ├── LandingPage.tsx
-│   │   │   ├── SignInPage.tsx
-│   │   │   ├── SignUpPage.tsx
-│   │   │   ├── DashboardPage.tsx
-│   │   │   └── UploadPage.tsx
 │   │   ├── services/
 │   │   │   ├── supabase.ts
-│   │   │   ├── claude-vision.ts      # AI schematic analysis
-│   │   │   ├── storage.ts            # File storage
-│   │   │   └── schematic-processor.ts # Full processing pipeline
+│   │   │   ├── claude-vision.ts
+│   │   │   ├── storage.ts
+│   │   │   └── schematic-processor.ts
+│   │   ├── utils/
+│   │   │   └── decoders/      # Component decoders (NEW)
 │   │   ├── types/
-│   │   │   ├── database.types.ts
-│   │   │   └── bom.types.ts
 │   │   └── lib/
-│   │       └── utils.ts
 │   └── package.json
+│
 ├── supabase/
 │   └── migrations/
-│       ├── 001_initial_schema.sql
-│       └── 002_add_storage_and_bom.sql
+│
+├── visual-overhaul-2026/       # Active implementation workspace
+│   ├── 1-requirements/         # Component specs, design requirements
+│   ├── 2-technical-design/     # Architecture documents
+│   ├── 3-implementation/       # Phase tracking (4 phases)
+│   └── 4-testing-qa/          # Test plans and QA
+│
+├── docs/
+│   ├── knowledge-base/         # Component, breadboard, stripboard specs
+│   └── design/                 # UX design requirements
+│
+├── archive/                    # Superseded planning docs
+│   ├── planning-docs/
+│   ├── database-migrations/
+│   └── old-sessions/
+│
+├── CLAUDE.md                   # Instructions for Claude Code
 ├── PEDALPATH_PRD.md           # Product Requirements
 ├── PEDALPATH_ARCHITECTURE.md  # Technical Architecture
-└── README.md
+└── README.md                  # This file
 ```
+
+## Active Documentation
+
+**Current Work:**
+- `/visual-overhaul-2026/START_HERE.md` - Visual overhaul quick start
+- `/visual-overhaul-2026/DELEGATION_GUIDE.md` - Multi-AI coordination
+
+**Core Specs:**
+- `PEDALPATH_PRD.md` - Product requirements and vision
+- `PEDALPATH_ARCHITECTURE.md` - System architecture
+- `CLAUDE.md` - Claude Code instructions and project context
+
+**Reference Materials:**
+- `docs/knowledge-base/` - Component, breadboard, stripboard specs
+- `docs/design/` - UX design requirements
+
+**Archive:**
+- `archive/` - Superseded planning docs, old migrations, session notes
 
 ## How It Works
 
@@ -157,12 +187,12 @@ User reviews the generated Bill of Materials:
 - Mark components as verified
 - Export to CSV/PDF
 
-### 4. Build Guides
-System generates visual step-by-step guides:
-- Breadboard prototype layout
-- Stripboard/veroboard coordinates
-- Enclosure drill template
-- Off-board wiring diagrams
+### 4. Visual Build Guides
+System generates step-by-step guides with realistic visuals:
+- **Breadboard prototype**: Realistic board with components showing actual color bands, polarities
+- **Stripboard layout**: Component placement with copper trace visualization
+- **Enclosure template**: Drilling coordinates and mounting specs
+- **Off-board wiring**: Jack and switch connection diagrams
 
 ### 5. Build & Track
 User follows guides and tracks progress through the build
@@ -189,7 +219,18 @@ npm run dev      # Start development server
 npm run build    # Build for production
 npm run preview  # Preview production build
 npm run lint     # Lint code
+npm run test     # Run test suite
 ```
+
+### Current Development Focus
+
+**Visual Overhaul (February 2026):**
+- Phase 1: Component decoders + realistic breadboard base
+- Phase 2: Component SVG library + integration
+- Phase 3: Mobile responsiveness (23 components)
+- Phase 4: End-to-end integration + testing
+
+See `/visual-overhaul-2026/` for detailed implementation workspace.
 
 ### Database Migrations
 
@@ -197,6 +238,8 @@ To create a new migration:
 1. Create a new file in `supabase/migrations/`
 2. Name it with the next number: `003_description.sql`
 3. Run it in Supabase Dashboard > SQL Editor
+
+Completed migrations are archived in `archive/database-migrations/`.
 
 ## Contributing
 

@@ -1,0 +1,50 @@
+visual-overhaul-2026/
+├── README.md                                    # Project overview and quick start
+├── DELEGATION_GUIDE.md                          # How to assign work to AI workers
+│
+├── 1-requirements/                              # WHAT we're building
+│   ├── component-visual-specs.md                # Exact component appearance specs
+│   ├── breadboard-specifications.md             # Breadboard layout and dimensions
+│   ├── mobile-responsive-requirements.md        # Mobile breakpoint patterns
+│   └── breadboard-reference-images/             # Real breadboard photos
+│       ├── breadboard-ref-1.png                 # 830-point blank board
+│       ├── breadboard-ref-2.png                 # Early build stage
+│       ├── breadboard-ref-3.png                 # Mid-stage build
+│       └── breadboard-ref-4.png                 # Advanced build
+│
+├── 2-technical-design/                          # HOW we're building it
+│   ├── decoder-system-design.md                 # Component decoder architecture
+│   └── breadboard-base-architecture.md          # SVG breadboard implementation
+│
+├── 3-implementation/                            # WHERE we build it (4 phases)
+│   ├── phase1-decoders/                         # PHASE 1: Foundation (BLOCKING)
+│   │   ├── README.md                            # Work Streams A & B instructions
+│   │   └── STATUS.md                            # Progress tracking
+│   │
+│   ├── phase2-components/                       # PHASE 2: Component Rendering
+│   │   └── (Work Streams C & D)
+│   │
+│   ├── phase3-mobile/                           # PHASE 3: Mobile Responsiveness
+│   │   ├── README.md                            # Work Streams E, F, G, H
+│   │   ├── navigation/                          # Work Stream E
+│   │   ├── pages/                               # Work Stream F
+│   │   ├── data-display/                        # Work Stream G
+│   │   └── visualizations/                      # Work Stream H
+│   │
+│   └── phase4-integration/                      # PHASE 4: Integration & Testing
+│       └── (Work Streams I & J)
+│
+└── 4-testing-qa/                                # HOW we verify it works
+    ├── test-plan.md                             # Comprehensive testing strategy
+    └── visual-comparisons/                      # Screenshot comparisons
+
+SUMMARY:
+- 11 markdown documentation files
+- 4 breadboard reference images
+- 11 directories for organized implementation
+- ~1.3MB total size
+- Ready for multi-AI parallel execution
+
+ACTUAL IMPLEMENTATION CODE GOES IN:
+/home/rob/git/pedalpath-v2/pedalpath-app/src/
+(This workspace contains planning/docs, not code)
