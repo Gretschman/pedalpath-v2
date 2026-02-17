@@ -23,12 +23,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Storage bucket should be created via Supabase dashboard, not at runtime
     // initializeStorageBucket() removed - causes RLS errors
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    // Get initial session with error handling for corrupted tokens
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        // If there's an error (corrupted token), clear the session
+        if (error) {
+          console.warn('Invalid session detected, clearing...', error.message)
+          await supabase.auth.signOut()
+          setSession(null)
+          setUser(null)
+        } else {
+          setSession(session)
+          setUser(session?.user ?? null)
+        }
+      } catch (err) {
+        // Catch any unexpected errors and force clear auth state
+        console.error('Auth initialization error:', err)
+        try {
+          await supabase.auth.signOut()
+        } catch (signOutErr) {
+          // If signOut fails, manually clear storage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('supabase.auth.token')
+            sessionStorage.removeItem('supabase.auth.token')
+          }
+        }
+        setSession(null)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
