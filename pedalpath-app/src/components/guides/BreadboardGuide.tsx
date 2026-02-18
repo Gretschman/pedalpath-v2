@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import type { BOMData } from '../../types/bom.types';
-import BreadboardGrid from '../visualizations/BreadboardGrid';
+import BomBreadboardView from '../visualizations/BomBreadboardView';
 
 interface BreadboardGuideProps {
   bomData: BOMData;
@@ -261,8 +261,8 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
           {/* Breadboard Visualization (for relevant steps) */}
           {(currentStepData.number === 2 || currentStepData.number === 3) && (
             <div className="my-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Visual Reference:</h4>
-              <BreadboardGrid showDemo={true} />
+              <h4 className="font-semibold text-gray-900 mb-3">Your Components on a Breadboard:</h4>
+              <BomBreadboardView bomData={bomData} />
             </div>
           )}
 
