@@ -13,6 +13,8 @@ export type { CapacitorSVGProps } from './CapacitorSVG';
 export { default as ICSVG } from './ICSVG';
 export type { ICSVGProps } from './ICSVG';
 
+export { default as DiodeSVG } from './DiodeSVG';
+export type { DiodeSVGProps } from './DiodeSVG';
+
 // Future exports:
-// export { default as DiodeSVG } from './DiodeSVG';
 // export { default as WireSVG } from './WireSVG';

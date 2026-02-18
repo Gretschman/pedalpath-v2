@@ -31,8 +31,8 @@ export {
 // IC decoder
 export { decodeIC, listKnownICs } from './ic-decoder';
 
-// Diode decoder (stub)
-export { decodeDiode, decodeLED } from './diode-decoder';
+// Diode decoder
+export { decodeDiode, decodeLED, getLEDGlowColor, getCathodeMarkColor, listKnownDiodes } from './diode-decoder';
 
 // Re-export types for convenience
 export type {
