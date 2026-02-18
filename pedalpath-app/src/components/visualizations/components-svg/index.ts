@@ -7,8 +7,10 @@
 export { default as ResistorSVG } from './ResistorSVG';
 export type { ResistorSVGProps } from './ResistorSVG';
 
+export { default as CapacitorSVG } from './CapacitorSVG';
+export type { CapacitorSVGProps } from './CapacitorSVG';
+
 // Future exports:
-// export { default as CapacitorSVG } from './CapacitorSVG';
 // export { default as ICSVG } from './ICSVG';
 // export { default as DiodeSVG } from './DiodeSVG';
 // export { default as WireSVG } from './WireSVG';

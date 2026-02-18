@@ -109,7 +109,7 @@ const ResistorDemo: React.FC = () => {
                 height: '100%',
                 pointerEvents: 'none',
               }}
-              viewBox="0 0 1700 600"
+              viewBox={`0 0 ${LAYOUT_830.totalWidth} ${LAYOUT_830.totalHeight}`}
             >
               {DEMO_RESISTORS.map((resistor, index) => {
                 const startCoords = holeToCoordinates(resistor.startHole, LAYOUT_830);

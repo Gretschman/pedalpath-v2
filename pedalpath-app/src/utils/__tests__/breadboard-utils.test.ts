@@ -20,45 +20,45 @@ describe('breadboard-utils', () => {
   describe('holeToCoordinates', () => {
     it('calculates correct position for terminal strip hole a1', () => {
       const coords = holeToCoordinates('a1', LAYOUT_830);
-      expect(coords).toEqual({ x: 50, y: 100 });
+      expect(coords).toEqual({ x: 50, y: 80 });
     });
 
     it('calculates correct position for terminal strip hole a15', () => {
       const coords = holeToCoordinates('a15', LAYOUT_830);
       expect(coords.x).toBeCloseTo(405.6, 1);
-      expect(coords.y).toBe(100);
+      expect(coords.y).toBe(80);
     });
 
     it('calculates correct position for row f (after center gap)', () => {
       const coords = holeToCoordinates('f1', LAYOUT_830);
       expect(coords.x).toBe(50);
-      // Row f is index 5, so: 100 + (5 * 25.4) + 25.4 (center gap)
-      expect(coords.y).toBeCloseTo(252.4, 1);
+      // Row f is index 5, so: 80 + (5 * 25.4) + 25.4 (center gap)
+      expect(coords.y).toBeCloseTo(232.4, 1);
     });
 
     it('calculates correct position for row j (last row)', () => {
       const coords = holeToCoordinates('j1', LAYOUT_830);
       expect(coords.x).toBe(50);
-      // Row j is index 9, so: 100 + (9 * 25.4) + 25.4 (center gap)
-      expect(coords.y).toBeCloseTo(354.0, 1);
+      // Row j is index 9, so: 80 + (9 * 25.4) + 25.4 (center gap)
+      expect(coords.y).toBeCloseTo(334.0, 1);
     });
 
     it('calculates correct position for positive power rail', () => {
       const coords = holeToCoordinates('+10', LAYOUT_830);
       expect(coords.x).toBeCloseTo(278.6, 1);
-      expect(coords.y).toBe(30);
+      expect(coords.y).toBe(20);
     });
 
     it('calculates correct position for ground power rail', () => {
       const coords = holeToCoordinates('-10', LAYOUT_830);
       expect(coords.x).toBeCloseTo(278.6, 1);
-      expect(coords.y).toBe(60);
+      expect(coords.y).toBe(45);
     });
 
     it('handles 400-point breadboard coordinates', () => {
       const coords = holeToCoordinates('a30', LAYOUT_400);
       expect(coords.x).toBeCloseTo(786.6, 1);
-      expect(coords.y).toBe(100);
+      expect(coords.y).toBe(80);
     });
   });
 

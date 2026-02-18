@@ -33,17 +33,17 @@ export const LAYOUT_830: BreadboardLayout = {
   holeSpacing: 25.4,
   centerGap: 25.4,
   powerRailY: {
-    topPositive: 30,
-    topGround: 60,
-    bottomGround: 490,
-    bottomPositive: 520,
+    topPositive: 20,
+    topGround: 45,
+    bottomGround: 345,
+    bottomPositive: 370,
   },
   terminalStripStart: {
     x: 50,
-    y: 100,
+    y: 80,
   },
   totalWidth: 1700,
-  totalHeight: 600,
+  totalHeight: 420,
 };
 
 export const LAYOUT_400: BreadboardLayout = {
