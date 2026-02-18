@@ -41,14 +41,14 @@ export function PricingModal({ isOpen, onClose, onSelectPlan, reason = 'limit_re
         </button>
 
         {/* Header */}
-        <div className="p-8 text-center border-b">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{title}</h2>
-          <p className="text-lg text-gray-600">{subtitle}</p>
+        <div className="p-4 sm:p-8 text-center border-b">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+          <p className="text-base sm:text-lg text-gray-600">{subtitle}</p>
         </div>
 
         {/* Pricing cards */}
-        <div className="p-8">
-          <div className="grid md:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PRICING_PLANS.map((plan) => {
               const isSelected = selectedPlanId === plan.id;
               const isFree = plan.id === 'free';

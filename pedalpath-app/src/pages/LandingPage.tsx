@@ -9,7 +9,7 @@ export default function LandingPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-600 rounded-2xl mb-6 shadow-lg">
             <Guitar className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             PedalPath
           </h1>
           <p className="text-xl text-gray-600 mb-2">

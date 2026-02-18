@@ -63,12 +63,12 @@ export default function ResultsPage() {
                 <ArrowLeft size={24} />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Analysis Results</h1>
-                <p className="text-sm text-gray-600">Your pedal schematic analysis</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Analysis Results</h1>
+                <p className="text-sm text-gray-600 hidden sm:block">Your pedal schematic analysis</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium text-sm">
+              <span className="hidden sm:inline bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium text-sm">
                 AI Confidence: {bomData.confidence_score}%
               </span>
               <button
@@ -96,10 +96,10 @@ export default function ResultsPage() {
       {/* Tab Navigation */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex overflow-x-auto">
             <button
               onClick={() => setActiveTab('bom')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 py-4 px-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'bom'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -109,7 +109,7 @@ export default function ResultsPage() {
             </button>
             <button
               onClick={() => setActiveTab('breadboard')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 py-4 px-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'breadboard'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -119,7 +119,7 @@ export default function ResultsPage() {
             </button>
             <button
               onClick={() => setActiveTab('stripboard')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 py-4 px-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'stripboard'
                   ? 'border-purple-500 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -129,7 +129,7 @@ export default function ResultsPage() {
             </button>
             <button
               onClick={() => setActiveTab('enclosure')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 py-4 px-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'enclosure'
                   ? 'border-orange-500 text-orange-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

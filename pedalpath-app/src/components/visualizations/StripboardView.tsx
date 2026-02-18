@@ -455,7 +455,7 @@ const StripboardView: React.FC<StripboardViewProps> = ({
   return (
     <div className="w-full space-y-4">
       {/* View mode toggle buttons */}
-      <div className="flex gap-2 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center">
         <button
           onClick={() => handleViewModeChange('component')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${

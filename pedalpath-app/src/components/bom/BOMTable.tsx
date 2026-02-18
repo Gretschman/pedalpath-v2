@@ -144,7 +144,124 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile: card list */}
+          <div className="sm:hidden divide-y divide-gray-100">
+            {components.map((component) => {
+              const isEditing = editingId === component.id;
+              return (
+                <div
+                  key={component.id}
+                  className={`p-4 space-y-3 ${component.verified ? 'bg-green-50' : ''}`}
+                >
+                  {/* Value + Qty row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editForm.value || ''}
+                          onChange={(e) => setEditForm({ ...editForm, value: e.target.value })}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-900">{component.value}</div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editForm.quantity || 0}
+                          onChange={(e) => setEditForm({ ...editForm, quantity: parseInt(e.target.value) })}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm w-16"
+                        />
+                      ) : (
+                        <span className="text-sm text-gray-600">×{component.quantity}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* References */}
+                  <div className="flex flex-wrap gap-1">
+                    {component.reference_designators.map((ref) => (
+                      <span
+                        key={ref}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        {ref}
+                      </span>
+                    ))}
+                    {component.confidence && (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getConfidenceColor(component.confidence)}`}>
+                        {component.confidence}%
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.notes || ''}
+                      onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                      placeholder="Add notes..."
+                      className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+                    />
+                  ) : (
+                    component.notes && (
+                      <div className="text-sm text-gray-500">{component.notes}</div>
+                    )
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-3">
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={() => saveEditing(component.id!)}
+                          className="flex items-center gap-1 px-3 py-2 text-sm text-white bg-green-600 rounded-lg"
+                        >
+                          <Check size={16} />
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg"
+                        >
+                          <X size={16} />
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(component)}
+                          className="flex items-center gap-1 px-3 py-2 text-sm text-blue-700 bg-blue-50 rounded-lg"
+                        >
+                          <Edit2 size={16} />
+                          Edit
+                        </button>
+                        {component.supplier_url && (
+                          <a
+                            href={component.supplier_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 px-3 py-2 text-sm text-green-700 bg-green-50 rounded-lg"
+                          >
+                            <ExternalLink size={16} />
+                            Buy
+                          </a>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
