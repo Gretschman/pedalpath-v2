@@ -16,5 +16,5 @@ export type { ICSVGProps } from './ICSVG';
 export { default as DiodeSVG } from './DiodeSVG';
 export type { DiodeSVGProps } from './DiodeSVG';
 
-// Future exports:
-// export { default as WireSVG } from './WireSVG';
+export { default as WireSVG } from './WireSVG';
+export type { WireSVGProps, WireColor } from './WireSVG';

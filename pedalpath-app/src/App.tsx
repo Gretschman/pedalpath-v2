@@ -12,6 +12,7 @@ import ResistorDemo from './pages/ResistorDemo'
 import CapacitorDemo from './pages/CapacitorDemo'
 import ICDemo from './pages/ICDemo'
 import DiodeDemo from './pages/DiodeDemo'
+import WireDemo from './pages/WireDemo'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/capacitor-demo" element={<CapacitorDemo />} />
       <Route path="/ic-demo" element={<ICDemo />} />
       <Route path="/diode-demo" element={<DiodeDemo />} />
+      <Route path="/wire-demo" element={<WireDemo />} />
       <Route
         path="/dashboard"
         element={
