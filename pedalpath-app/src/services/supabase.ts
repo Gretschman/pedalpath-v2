@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Strip whitespace/newlines — env vars stored in Vercel can have embedded line breaks
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').trim()
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').replace(/\s+/g, '')
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
