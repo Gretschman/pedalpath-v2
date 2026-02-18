@@ -40,3 +40,17 @@ export interface Component {
   notes?: string
   created_at: string
 }
+
+export interface Schematic {
+  id: string
+  project_id: string
+  storage_path: string
+  file_name: string
+  processing_status: 'pending' | 'processing' | 'completed' | 'failed'
+  ai_confidence_score: number | null
+  uploaded_at: string
+}
+
+export interface ProjectWithSchematics extends Project {
+  schematics: Pick<Schematic, 'id' | 'ai_confidence_score' | 'processing_status'>[]
+}

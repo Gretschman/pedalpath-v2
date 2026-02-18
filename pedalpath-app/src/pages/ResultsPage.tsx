@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../services/supabase';
 import { ArrowLeft, Upload, Save } from 'lucide-react';
 import { getBOMData } from '../services/schematic-processor';
 import BOMTable from '../components/bom/BOMTable';
@@ -19,6 +20,43 @@ export default function ResultsPage() {
     queryFn: () => getBOMData(schematicId!),
     enabled: !!schematicId,
   });
+
+  const queryClient = useQueryClient()
+
+  const { data: projectData } = useQuery({
+    queryKey: ['schematic-project', schematicId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schematics')
+        .select('project_id, projects(status)')
+        .eq('id', schematicId!)
+        .single()
+      if (error) throw error
+      return data as unknown as { project_id: string; projects: { status: string } | null }
+    },
+    enabled: !!schematicId,
+  })
+
+  const projectId = projectData?.project_id
+  const isAlreadySaved = projectData?.projects?.status === 'completed'
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error('No project ID')
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', projectId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['schematic-project', schematicId] })
+    },
+  })
+
+  const isSaved = isAlreadySaved || saveMutation.isSuccess
+  const isSaving = saveMutation.isPending
 
   if (isLoading) {
     return (
@@ -72,14 +110,18 @@ export default function ResultsPage() {
                 AI Confidence: {bomData.confidence_score}%
               </span>
               <button
-                onClick={() => {
-                  // TODO: Implement save project functionality
-                  console.log('Save project');
-                }}
-                className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => { if (!isSaved && !isSaving) saveMutation.mutate() }}
+                disabled={isSaved || isSaving}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  isSaved
+                    ? 'bg-green-100 text-green-700 cursor-default'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
                 <Save size={18} />
-                <span className="hidden sm:inline">Save Project</span>
+                <span className="hidden sm:inline">
+                  {isSaved ? 'Saved ✓' : isSaving ? 'Saving...' : 'Save Project'}
+                </span>
               </button>
               <button
                 onClick={() => navigate('/upload')}
