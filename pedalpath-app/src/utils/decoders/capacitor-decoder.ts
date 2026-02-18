@@ -51,8 +51,9 @@ const VOLTAGE_CODES: Record<string, number> = {
   '3A': 1000, '3B': 1250, '3C': 1600, '3D': 2000, '3E': 2500,
 };
 
-// Reverse: voltage → common code
-const VOLTAGE_TO_CODE: Record<number, string> = Object.fromEntries(
+// Reverse: voltage → common code (reserved for future use)
+// @ts-expect-error - Reserved for future encoding feature
+const _VOLTAGE_TO_CODE: Record<number, string> = Object.fromEntries(
   Object.entries(VOLTAGE_CODES).map(([k, v]) => [v, k])
 );
 
@@ -69,13 +70,15 @@ const UNIT_TO_PF: Record<string, number> = {
   mf: 1_000_000.0,   // old notation, sometimes seen
 };
 
-// Standard capacitor values in the E12 series (significands)
-const E12_CAP_VALUES: readonly number[] = [
+// Standard capacitor values in the E12 series (significands) (reserved for future use)
+// @ts-expect-error - Reserved for future validation feature
+const _E12_CAP_VALUES: readonly number[] = [
   1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2,
 ];
 
-// Common film cap voltages
-const COMMON_VOLTAGES: readonly number[] = [
+// Common film cap voltages (reserved for future use)
+// @ts-expect-error - Reserved for future validation feature
+const _COMMON_VOLTAGES: readonly number[] = [
   25, 50, 63, 100, 160, 200, 250, 400, 500, 630, 1000,
 ];
 

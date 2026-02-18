@@ -184,9 +184,11 @@ export function getConnectedHoles(holeId: string, size: '830' | '400'): string[]
   const col = holeId.substring(1);
 
   // Rows a-e connected, rows f-j connected
-  const rowGroup: readonly RowName[] = (['a', 'b', 'c', 'd', 'e'] as const).includes(row)
-    ? ['a', 'b', 'c', 'd', 'e']
-    : ['f', 'g', 'h', 'i', 'j'];
+  const leftGroup: readonly RowName[] = ['a', 'b', 'c', 'd', 'e'];
+  const rightGroup: readonly RowName[] = ['f', 'g', 'h', 'i', 'j'];
+  const rowGroup: readonly RowName[] = leftGroup.includes(row)
+    ? leftGroup
+    : rightGroup;
 
   return rowGroup.map(r => `${r}${col}`);
 }

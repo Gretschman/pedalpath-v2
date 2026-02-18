@@ -5,7 +5,7 @@
  * Allows testing different sizes, highlighting, and interactions.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import BreadboardBase from '../components/visualizations/BreadboardBase';
 
 export default function BreadboardDemo() {

@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { getLayout, type BreadboardLayout, ROW_NAMES, type RowName } from '@/utils/breadboard-utils';
+import { getLayout, type BreadboardLayout, ROW_NAMES } from '@/utils/breadboard-utils';
 import './BreadboardBase.css';
 
 export interface BreadboardBaseProps {
@@ -176,7 +176,7 @@ function PowerRails({
   y,
   columns,
   type,
-  position,
+  position: _position,
   config,
   highlightHoles,
   onHoleClick,
@@ -305,7 +305,7 @@ function Hole({
       className={`hole ${highlighted ? 'hole-highlighted' : ''}`}
       data-hole-id={id}
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{ cursor: onClick !== undefined ? 'pointer' : 'default' }}
     >
       {/* Metallic rim */}
       <circle

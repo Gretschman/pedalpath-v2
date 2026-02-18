@@ -7,6 +7,8 @@ import DashboardPage from './pages/DashboardPage'
 import UploadPage from './pages/UploadPage'
 import ResultsPage from './pages/ResultsPage'
 import DemoPage from './pages/DemoPage'
+import BreadboardDemo from './pages/BreadboardDemo'
+import ResistorDemo from './pages/ResistorDemo'
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
       <Route path="/signin" element={<SignInPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/demo" element={<DemoPage />} />
+      <Route path="/breadboard-demo" element={<BreadboardDemo />} />
+      <Route path="/resistor-demo" element={<ResistorDemo />} />
       <Route
         path="/dashboard"
         element={
