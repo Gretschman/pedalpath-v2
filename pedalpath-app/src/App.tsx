@@ -10,6 +10,7 @@ import DemoPage from './pages/DemoPage'
 import BreadboardDemo from './pages/BreadboardDemo'
 import ResistorDemo from './pages/ResistorDemo'
 import CapacitorDemo from './pages/CapacitorDemo'
+import ICDemo from './pages/ICDemo'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/breadboard-demo" element={<BreadboardDemo />} />
       <Route path="/resistor-demo" element={<ResistorDemo />} />
       <Route path="/capacitor-demo" element={<CapacitorDemo />} />
+      <Route path="/ic-demo" element={<ICDemo />} />
       <Route
         path="/dashboard"
         element={

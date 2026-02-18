@@ -28,8 +28,8 @@ export {
   formatCapacitance,
 } from './capacitor-decoder';
 
-// IC decoder (stub)
-export { decodeIC } from './ic-decoder';
+// IC decoder
+export { decodeIC, listKnownICs } from './ic-decoder';
 
 // Diode decoder (stub)
 export { decodeDiode, decodeLED } from './diode-decoder';
