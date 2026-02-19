@@ -30,20 +30,20 @@ export const LAYOUT_830: BreadboardLayout = {
   columns: 63,
   rowsPerSection: 5,
   sections: 2,
-  holeSpacing: 25.4,
-  centerGap: 25.4,
+  holeSpacing: 24,
+  centerGap: 48,
   powerRailY: {
-    topPositive: 20,
-    topGround: 45,
-    bottomGround: 345,
-    bottomPositive: 370,
+    topGround: 126,      // blue (−) rail, outer (closer to board edge)
+    topPositive: 190,    // red (+) rail, inner (closer to terminal strip)
+    bottomPositive: 552, // red (+) rail, inner (just below row j)
+    bottomGround: 616,   // blue (−) rail, outer (outside photo crop, not visible)
   },
   terminalStripStart: {
-    x: 50,
-    y: 80,
+    x: 103,
+    y: 239,
   },
   totalWidth: 1700,
-  totalHeight: 420,
+  totalHeight: 566,
 };
 
 export const LAYOUT_400: BreadboardLayout = {

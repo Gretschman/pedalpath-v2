@@ -53,10 +53,16 @@ export default function ResultsPage() {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.invalidateQueries({ queryKey: ['schematic-project', schematicId] })
     },
+    onError: (err) => {
+      console.error('Save project failed:', err)
+    },
   })
 
   const isSaved = isAlreadySaved || saveMutation.isSuccess
   const isSaving = saveMutation.isPending
+  const saveError = saveMutation.isError
+    ? (saveMutation.error instanceof Error ? saveMutation.error.message : 'Save failed — please try again')
+    : null
 
   if (isLoading) {
     return (
@@ -109,20 +115,23 @@ export default function ResultsPage() {
               <span className="hidden sm:inline bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium text-sm">
                 AI Confidence: {bomData.confidence_score}%
               </span>
-              <button
-                onClick={() => { if (!isSaved && !isSaving) saveMutation.mutate() }}
-                disabled={isSaved || isSaving}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  isSaved
-                    ? 'bg-green-100 text-green-700 cursor-default'
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={() => { if (!isSaved && !isSaving) saveMutation.mutate() }}
+                  disabled={isSaved || isSaving || !projectId}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    isSaved ? 'bg-green-100 text-green-700 cursor-default'
+                    : saveError ? 'bg-red-100 text-red-700 hover:bg-red-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Save size={18} />
-                <span className="hidden sm:inline">
-                  {isSaved ? 'Saved ✓' : isSaving ? 'Saving...' : 'Save Project'}
-                </span>
-              </button>
+                  }`}
+                >
+                  <Save size={18} />
+                  <span className="hidden sm:inline">
+                    {isSaved ? 'Saved ✓' : isSaving ? 'Saving...' : !projectId ? 'Loading...' : saveError ? 'Save Failed' : 'Save Project'}
+                  </span>
+                </button>
+                {saveError && <p className="text-red-600 text-xs">{saveError}</p>}
+              </div>
               <button
                 onClick={() => navigate('/upload')}
                 className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"

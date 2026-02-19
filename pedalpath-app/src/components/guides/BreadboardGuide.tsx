@@ -258,10 +258,10 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
             </div>
           )}
 
-          {/* Breadboard Visualization (for relevant steps) */}
-          {(currentStepData.number === 2 || currentStepData.number === 3) && (
+          {/* Breadboard Visualization — shown for all build steps */}
+          {currentStepData.number >= 2 && currentStepData.number <= 9 && (
             <div className="my-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Your Components on a Breadboard:</h4>
+              <h4 className="font-semibold text-gray-900 mb-3">Your Components on the Breadboard:</h4>
               <BomBreadboardView bomData={bomData} />
             </div>
           )}

@@ -159,14 +159,15 @@ export async function processSchematic(
       })
       .eq('id', schematic.id);
 
-    // Step 6: Update project with schematic URL and component count
-    await supabase
+    // Step 6: Update project status to in_progress
+    const { error: projectUpdateError } = await supabase
       .from('projects')
-      .update({
-        schematic_url: uploadResult.url,
-        status: 'in_progress',
-      })
+      .update({ status: 'in_progress' })
       .eq('id', projectId);
+    if (projectUpdateError) {
+      console.error('Warning: project status update failed:', projectUpdateError)
+      // Non-fatal — return success anyway since BOM data is saved
+    }
 
     return {
       success: true,

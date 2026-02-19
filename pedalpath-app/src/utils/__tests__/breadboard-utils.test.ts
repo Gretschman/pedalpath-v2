@@ -20,45 +20,45 @@ describe('breadboard-utils', () => {
   describe('holeToCoordinates', () => {
     it('calculates correct position for terminal strip hole a1', () => {
       const coords = holeToCoordinates('a1', LAYOUT_830);
-      expect(coords).toEqual({ x: 50, y: 80 });
+      expect(coords).toEqual({ x: 103, y: 239 });
     });
 
     it('calculates correct position for terminal strip hole a15', () => {
       const coords = holeToCoordinates('a15', LAYOUT_830);
-      expect(coords.x).toBeCloseTo(405.6, 1);
-      expect(coords.y).toBe(80);
+      expect(coords.x).toBe(439); // 103 + 14 * 24
+      expect(coords.y).toBe(239);
     });
 
     it('calculates correct position for row f (after center gap)', () => {
       const coords = holeToCoordinates('f1', LAYOUT_830);
-      expect(coords.x).toBe(50);
-      // Row f is index 5, so: 80 + (5 * 25.4) + 25.4 (center gap)
-      expect(coords.y).toBeCloseTo(232.4, 1);
+      expect(coords.x).toBe(103);
+      // Row f is index 5, so: 239 + (5 * 24) + 48 (center gap)
+      expect(coords.y).toBe(407);
     });
 
     it('calculates correct position for row j (last row)', () => {
       const coords = holeToCoordinates('j1', LAYOUT_830);
-      expect(coords.x).toBe(50);
-      // Row j is index 9, so: 80 + (9 * 25.4) + 25.4 (center gap)
-      expect(coords.y).toBeCloseTo(334.0, 1);
+      expect(coords.x).toBe(103);
+      // Row j is index 9, so: 239 + (9 * 24) + 48 (center gap)
+      expect(coords.y).toBe(503);
     });
 
     it('calculates correct position for positive power rail', () => {
       const coords = holeToCoordinates('+10', LAYOUT_830);
-      expect(coords.x).toBeCloseTo(278.6, 1);
-      expect(coords.y).toBe(20);
+      expect(coords.x).toBe(319); // 103 + 9 * 24
+      expect(coords.y).toBe(190);
     });
 
     it('calculates correct position for ground power rail', () => {
       const coords = holeToCoordinates('-10', LAYOUT_830);
-      expect(coords.x).toBeCloseTo(278.6, 1);
-      expect(coords.y).toBe(45);
+      expect(coords.x).toBe(319); // 103 + 9 * 24
+      expect(coords.y).toBe(126);
     });
 
     it('handles 400-point breadboard coordinates', () => {
       const coords = holeToCoordinates('a30', LAYOUT_400);
-      expect(coords.x).toBeCloseTo(786.6, 1);
-      expect(coords.y).toBe(80);
+      expect(coords.x).toBe(799); // 103 + 29 * 24
+      expect(coords.y).toBe(239);
     });
   });
 
@@ -228,14 +228,14 @@ describe('breadboard-utils', () => {
       const layout830 = getLayout('830');
       const layout400 = getLayout('400');
       expect(layout830.holeSpacing).toBe(layout400.holeSpacing);
-      expect(layout830.holeSpacing).toBe(25.4);
+      expect(layout830.holeSpacing).toBe(24);
     });
 
     it('both layouts have same center gap', () => {
       const layout830 = getLayout('830');
       const layout400 = getLayout('400');
       expect(layout830.centerGap).toBe(layout400.centerGap);
-      expect(layout830.centerGap).toBe(25.4);
+      expect(layout830.centerGap).toBe(48);
     });
   });
 
@@ -254,7 +254,7 @@ describe('breadboard-utils', () => {
       expect(LAYOUT_830.columns).toBe(63);
       expect(LAYOUT_830.rowsPerSection).toBe(5);
       expect(LAYOUT_830.sections).toBe(2);
-      expect(LAYOUT_830.holeSpacing).toBe(25.4);
+      expect(LAYOUT_830.holeSpacing).toBe(24);
     });
 
     it('LAYOUT_400 has correct dimensions', () => {
@@ -265,9 +265,10 @@ describe('breadboard-utils', () => {
 
     it('power rail Y coordinates are correctly ordered', () => {
       const { powerRailY } = LAYOUT_830;
-      expect(powerRailY.topPositive).toBeLessThan(powerRailY.topGround);
-      expect(powerRailY.topGround).toBeLessThan(powerRailY.bottomGround);
-      expect(powerRailY.bottomGround).toBeLessThan(powerRailY.bottomPositive);
+      // Standard breadboard layout: outer ground rail above inner positive rail
+      expect(powerRailY.topGround).toBeLessThan(powerRailY.topPositive);
+      expect(powerRailY.topPositive).toBeLessThan(powerRailY.bottomPositive);
+      expect(powerRailY.bottomPositive).toBeLessThan(powerRailY.bottomGround);
     });
   });
 });

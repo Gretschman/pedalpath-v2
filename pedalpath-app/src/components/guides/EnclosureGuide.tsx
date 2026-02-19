@@ -46,7 +46,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   const dimensions = ENCLOSURE_SIZES[enclosureSize];
 
   // Generate drill template based on components with accurate positioning
-  const drillHoles: DrillHole[] = [];
+  // faceHoles = top face of enclosure (pots, footswitch, LED)
+  const faceHoles: DrillHole[] = [];
   const pots = bomData.components.filter(c => c.component_type === 'potentiometer');
   const potCount = pots.length;
 
@@ -56,7 +57,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
   // Add pots with proper spacing
   pots.forEach((pot, idx) => {
-    drillHoles.push({
+    faceHoles.push({
       id: `pot-${idx}`,
       component: `${pot.value} Pot (${pot.reference_designators.join(', ')})`,
       diameter: '8mm',
@@ -68,7 +69,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
   // Add footswitch (centered horizontally, lower on enclosure)
   if (bomData.components.some(c => c.component_type === 'footswitch')) {
-    drillHoles.push({
+    faceHoles.push({
       id: 'footswitch',
       component: '3PDT Footswitch',
       diameter: '12mm',
@@ -80,7 +81,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
   // Add LED (centered horizontally, between pots and footswitch)
   if (bomData.components.some(c => c.component_type === 'led')) {
-    drillHoles.push({
+    faceHoles.push({
       id: 'led',
       component: 'LED Indicator',
       diameter: '5mm',
@@ -90,43 +91,47 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     });
   }
 
-  // Add jacks (side mounting)
-  const inputJack = bomData.components.find(c => c.component_type === 'input-jack');
-  const outputJack = bomData.components.find(c => c.component_type === 'output-jack');
-  const dcJack = bomData.components.find(c => c.component_type === 'dc-jack');
+  // Side-panel holes: jacks go on separate panels, not the top face
+  // Side panels are dimensions.height × dimensions.depth (e.g., 60×31 for 1590B)
+  // End panel is dimensions.width × dimensions.depth
+  const hasInputJack = !!bomData.components.find(c => c.component_type === 'input-jack');
+  const hasOutputJack = !!bomData.components.find(c => c.component_type === 'output-jack');
+  const hasDCJack = !!bomData.components.find(c => c.component_type === 'dc-jack');
 
-  if (inputJack) {
-    drillHoles.push({
-      id: 'input',
-      component: 'Input Jack',
-      diameter: '12mm',
-      x: 15,
-      y: dimensions.height - 12,
-      notes: 'Left side panel - 12mm from bottom edge'
-    });
-  }
+  const sidePanelCenterX = dimensions.height / 2; // centered along side panel width
+  const sidePanelCenterY = dimensions.depth / 2;  // centered in panel height (depth)
 
-  if (outputJack) {
-    drillHoles.push({
-      id: 'output',
-      component: 'Output Jack',
-      diameter: '12mm',
-      x: dimensions.width - 15,
-      y: dimensions.height - 12,
-      notes: 'Right side panel - 12mm from bottom edge'
-    });
-  }
+  const inputSideHole: DrillHole = {
+    id: 'input',
+    component: 'Input Jack',
+    diameter: '9.5mm',
+    x: sidePanelCenterX,
+    y: sidePanelCenterY,
+    notes: 'Centered on left side panel (1/4" mono jack)'
+  };
+  const outputSideHole: DrillHole = {
+    id: 'output',
+    component: 'Output Jack',
+    diameter: '9.5mm',
+    x: sidePanelCenterX,
+    y: sidePanelCenterY,
+    notes: 'Centered on right side panel (1/4" mono jack)'
+  };
+  const dcEndHole: DrillHole = {
+    id: 'power',
+    component: 'DC Power Jack',
+    diameter: '7.5mm',
+    x: dimensions.width / 2,
+    y: dimensions.depth / 2,
+    notes: 'Centered on top end panel (2.1mm barrel jack)'
+  };
 
-  if (dcJack) {
-    drillHoles.push({
-      id: 'power',
-      component: 'DC Power Jack',
-      diameter: '12mm',
-      x: dimensions.width - 15,
-      y: 10,
-      notes: 'Top right corner, 10mm from top edge'
-    });
-  }
+  const allDrillHoles = [
+    ...faceHoles,
+    ...(hasInputJack ? [inputSideHole] : []),
+    ...(hasOutputJack ? [outputSideHole] : []),
+    ...(hasDCJack ? [dcEndHole] : []),
+  ];
 
   // Wiring connections (3PDT standard)
   const wiringConnections: WiringConnection[] = [
@@ -244,136 +249,150 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     }
   };
 
-  // Generate SVG drill template
-  const renderDrillTemplate = () => {
-    const scale = 2; // SVG units per mm (for better resolution)
-    const svgWidth = dimensions.width * scale;
-    const svgHeight = dimensions.height * scale;
-    const rulerHeight = 20 * scale;
+  // Generate SVG drill template — professional engineering drawing style
+  const renderDrillTemplate = (
+    holes: DrillHole[],
+    panelW: number,
+    panelH: number,
+    _title: string
+  ) => {
+    // px per mm — 3.7795 ≈ 96 dpi / 25.4 mm/in gives true 1:1 at 96dpi
+    const PX_PER_MM = 3.7795;
+    const margin = 40; // px margin around enclosure for labels
+    const rulerArea = 30; // px below enclosure for calibration ruler
+
+    const encW = panelW * PX_PER_MM;
+    const encH = panelH * PX_PER_MM;
+    const svgW = encW + margin * 2;
+    const svgH = encH + margin * 2 + rulerArea;
+
+    // Convert hole mm coords to SVG coords (offset by margin)
+    const toX = (mm: number) => margin + mm * PX_PER_MM;
+    const toY = (mm: number) => margin + mm * PX_PER_MM;
+
+    // Assign a short label letter for each hole
+    const holeLabels = holes.map((_, i) => String.fromCharCode(65 + i)); // A, B, C…
 
     return (
       <svg
         width="100%"
-        height="100%"
-        viewBox={`0 0 ${svgWidth} ${svgHeight + rulerHeight}`}
-        style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        style={{ maxWidth: '700px', margin: '0 auto', display: 'block', background: '#ffffff' }}
       >
-        {/* Enclosure outline */}
+        {/* ── Background ── */}
+        <rect x={0} y={0} width={svgW} height={svgH} fill="#ffffff" />
+
+        {/* ── 10mm grid (light blue — engineering paper style) ── */}
+        {Array.from({ length: Math.ceil(panelW / 10) + 1 }).map((_, i) => (
+          <line key={`v${i}`}
+            x1={toX(i * 10)} y1={margin}
+            x2={toX(i * 10)} y2={margin + encH}
+            stroke="#dbeafe" strokeWidth="0.5"
+          />
+        ))}
+        {Array.from({ length: Math.ceil(panelH / 10) + 1 }).map((_, i) => (
+          <line key={`h${i}`}
+            x1={margin} y1={toY(i * 10)}
+            x2={margin + encW} y2={toY(i * 10)}
+            stroke="#dbeafe" strokeWidth="0.5"
+          />
+        ))}
+
+        {/* ── Panel outline ── */}
         <rect
-          x="0"
-          y="0"
-          width={svgWidth}
-          height={svgHeight}
-          fill="#f9fafb"
-          stroke="#374151"
-          strokeWidth="3"
-          rx="4"
+          x={margin} y={margin}
+          width={encW} height={encH}
+          fill="#f8fafc"
+          stroke="#1e293b"
+          strokeWidth="2"
+          rx="3"
         />
 
-        {/* Dimension labels */}
-        <text
-          x={svgWidth / 2}
-          y={svgHeight + rulerHeight - 5}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#374151"
-          fontWeight="bold"
-        >
-          {dimensions.width}mm × {dimensions.height}mm ({dimensions.name})
-        </text>
-
-        {/* Calibration ruler */}
-        <g transform={`translate(10, ${svgHeight + 5})`}>
-          <line x1="0" y1="0" x2={25 * scale} y2="0" stroke="#ef4444" strokeWidth="2" />
-          <text x={12.5 * scale} y="-3" textAnchor="middle" fontSize="10" fill="#ef4444" fontWeight="bold">
-            25mm
-          </text>
-          <text x={12.5 * scale} y="12" textAnchor="middle" fontSize="8" fill="#6b7280">
-            (Verify this measures 25mm)
-          </text>
-        </g>
-
-        {/* Corner markers */}
-        {[[5, 5], [svgWidth - 5, 5], [5, svgHeight - 5], [svgWidth - 5, svgHeight - 5]].map(([x, y], i) => (
-          <g key={i}>
-            <line x1={x - 8} y1={y} x2={x + 8} y2={y} stroke="#9ca3af" strokeWidth="1" />
-            <line x1={x} y1={y - 8} x2={x} y2={y + 8} stroke="#9ca3af" strokeWidth="1" />
+        {/* ── Corner registration marks ── */}
+        {[
+          [margin, margin],
+          [margin + encW, margin],
+          [margin, margin + encH],
+          [margin + encW, margin + encH],
+        ].map(([cx, cy], i) => (
+          <g key={`corner-${i}`}>
+            <line x1={cx - 10} y1={cy} x2={cx + 10} y2={cy} stroke="#64748b" strokeWidth="0.8" />
+            <line x1={cx} y1={cy - 10} x2={cx} y2={cy + 10} stroke="#64748b" strokeWidth="0.8" />
           </g>
         ))}
 
-        {/* Drill holes */}
-        {drillHoles.map((hole) => {
-          const x = hole.x * scale;
-          const y = hole.y * scale;
-          const radius = (parseInt(hole.diameter) / 2) * scale;
+        {/* ── Width dimension line (top) ── */}
+        <line x1={margin} y1={margin - 14} x2={margin + encW} y2={margin - 14} stroke="#64748b" strokeWidth="0.8" />
+        <line x1={margin} y1={margin - 18} x2={margin} y2={margin - 10} stroke="#64748b" strokeWidth="0.8" />
+        <line x1={margin + encW} y1={margin - 18} x2={margin + encW} y2={margin - 10} stroke="#64748b" strokeWidth="0.8" />
+        <text x={margin + encW / 2} y={margin - 16} textAnchor="middle" fontSize="9" fill="#374151" fontWeight="bold">
+          {panelW}mm
+        </text>
+
+        {/* ── Height dimension line (left) ── */}
+        <line x1={margin - 14} y1={margin} x2={margin - 14} y2={margin + encH} stroke="#64748b" strokeWidth="0.8" />
+        <line x1={margin - 18} y1={margin} x2={margin - 10} y2={margin} stroke="#64748b" strokeWidth="0.8" />
+        <line x1={margin - 18} y1={margin + encH} x2={margin - 10} y2={margin + encH} stroke="#64748b" strokeWidth="0.8" />
+        <text
+          x={margin - 16} y={margin + encH / 2}
+          textAnchor="middle" fontSize="9" fill="#374151" fontWeight="bold"
+          transform={`rotate(-90 ${margin - 16} ${margin + encH / 2})`}
+        >
+          {panelH}mm
+        </text>
+
+        {/* ── Drill holes ── */}
+        {holes.map((hole, i) => {
+          const cx = toX(hole.x);
+          const cy = toY(hole.y);
+          const r = (parseFloat(hole.diameter) / 2) * PX_PER_MM;
+          const label = holeLabels[i];
 
           return (
             <g key={hole.id}>
-              {/* Crosshair */}
-              <line x1={x - 20} y1={y} x2={x + 20} y2={y} stroke="#ef4444" strokeWidth="1" strokeDasharray="2,2" />
-              <line x1={x} y1={y - 20} x2={x} y2={y + 20} stroke="#ef4444" strokeWidth="1" strokeDasharray="2,2" />
+              {/* Full-span crosshair lines (dashed, stop at hole edge) */}
+              <line x1={margin} y1={cy} x2={cx - r} y2={cy}
+                stroke="#94a3b8" strokeWidth="0.6" strokeDasharray="3,2" />
+              <line x1={cx + r} y1={cy} x2={margin + encW} y2={cy}
+                stroke="#94a3b8" strokeWidth="0.6" strokeDasharray="3,2" />
+              <line x1={cx} y1={margin} x2={cx} y2={cy - r}
+                stroke="#94a3b8" strokeWidth="0.6" strokeDasharray="3,2" />
+              <line x1={cx} y1={cy + r} x2={cx} y2={margin + encH}
+                stroke="#94a3b8" strokeWidth="0.6" strokeDasharray="3,2" />
 
-              {/* Hole circle */}
-              <circle cx={x} cy={y} r={radius} fill="none" stroke="#ef4444" strokeWidth="2" />
-              <circle cx={x} cy={y} r="2" fill="#ef4444" />
+              {/* Hole circle at true diameter */}
+              <circle cx={cx} cy={cy} r={r} fill="white" stroke="#dc2626" strokeWidth="1.5" />
 
-              {/* Label */}
-              <text
-                x={x}
-                y={y - radius - 8}
-                textAnchor="middle"
-                fontSize="9"
-                fill="#1f2937"
-                fontWeight="bold"
-              >
-                {hole.component.split(' ')[0]}
-              </text>
-              <text
-                x={x}
-                y={y - radius - 1}
-                textAnchor="middle"
-                fontSize="7"
-                fill="#6b7280"
-              >
-                {hole.diameter}
+              {/* Center punch mark */}
+              <circle cx={cx} cy={cy} r={1.5} fill="#dc2626" />
+
+              {/* Short crosshair inside hole */}
+              <line x1={cx - 5} y1={cy} x2={cx + 5} y2={cy} stroke="#dc2626" strokeWidth="0.8" />
+              <line x1={cx} y1={cy - 5} x2={cx} y2={cy + 5} stroke="#dc2626" strokeWidth="0.8" />
+
+              {/* Letter badge */}
+              <circle cx={cx + r + 8} cy={cy} r={7} fill="#dc2626" />
+              <text x={cx + r + 8} y={cy + 3.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">
+                {label}
               </text>
 
-              {/* Measurements from edges */}
-              <text
-                x={x + radius + 5}
-                y={y + 3}
-                fontSize="7"
-                fill="#6b7280"
-              >
-                ({hole.x.toFixed(1)}, {hole.y.toFixed(1)})
+              {/* X dimension from left edge */}
+              <text x={cx} y={margin + encH + 12} textAnchor="middle" fontSize="7" fill="#374151">
+                {label}: x={hole.x}
               </text>
             </g>
           );
         })}
 
-        {/* Grid (light, for reference) */}
-        {Array.from({ length: Math.floor(dimensions.width / 10) + 1 }).map((_, i) => (
-          <line
-            key={`v-${i}`}
-            x1={i * 10 * scale}
-            y1="0"
-            x2={i * 10 * scale}
-            y2={svgHeight}
-            stroke="#e5e7eb"
-            strokeWidth="0.5"
-          />
-        ))}
-        {Array.from({ length: Math.floor(dimensions.height / 10) + 1 }).map((_, i) => (
-          <line
-            key={`h-${i}`}
-            x1="0"
-            y1={i * 10 * scale}
-            x2={svgWidth}
-            y2={i * 10 * scale}
-            stroke="#e5e7eb"
-            strokeWidth="0.5"
-          />
-        ))}
+        {/* ── Calibration ruler (25mm reference) ── */}
+        <g transform={`translate(${margin}, ${margin + encH + rulerArea - 8})`}>
+          <line x1={0} y1={0} x2={25 * PX_PER_MM} y2={0} stroke="#dc2626" strokeWidth="1.5" />
+          <line x1={0} y1={-4} x2={0} y2={4} stroke="#dc2626" strokeWidth="1.5" />
+          <line x1={25 * PX_PER_MM} y1={-4} x2={25 * PX_PER_MM} y2={4} stroke="#dc2626" strokeWidth="1.5" />
+          <text x={12.5 * PX_PER_MM} y={-6} textAnchor="middle" fontSize="8" fill="#dc2626" fontWeight="bold">
+            ← 25mm calibration →
+          </text>
+        </g>
       </svg>
     );
   };
@@ -414,7 +433,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
           </div>
           <div className="bg-orange-700 rounded-lg p-3">
             <div className="text-xs text-orange-200">Holes to Drill</div>
-            <div className="text-lg font-bold">{drillHoles.length}</div>
+            <div className="text-lg font-bold">{allDrillHoles.length}</div>
           </div>
           <div className="bg-orange-700 rounded-lg p-3">
             <div className="text-xs text-orange-200">Wire Connections</div>
@@ -450,44 +469,165 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
             </ul>
           </div>
 
-          {/* Printable SVG Drill Template */}
-          <div ref={printTemplateRef} className="border-2 border-gray-300 rounded-lg p-8 bg-gray-50 mb-6">
-            <div className="text-center text-sm text-gray-600 mb-4">
-              <strong>Drill Template - {dimensions.name}</strong>
+          {/* Printable SVG Drill Templates — one per panel */}
+          <div ref={printTemplateRef} className="space-y-8 mb-6">
+            <div className="text-center text-sm text-gray-600">
+              <strong>Drill Templates - {dimensions.name}</strong>
               <div className="text-xs text-gray-500 mt-1">
                 Print at 100% scale (no scaling) • Verify with calibration ruler
               </div>
             </div>
-            {renderDrillTemplate()}
+
+            {/* TOP FACE */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+              <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                Top Face — {dimensions.width}×{dimensions.height}mm (pots, footswitch, LED)
+              </h4>
+              {renderDrillTemplate(faceHoles, dimensions.width, dimensions.height, 'Top Face')}
+            </div>
+
+            {/* SIDE PANELS */}
+            {(hasInputJack || hasOutputJack) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {hasInputJack && (
+                  <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                      Left Side Panel — Input Jack ({dimensions.height}×{dimensions.depth}mm)
+                    </h4>
+                    {renderDrillTemplate([inputSideHole], dimensions.height, dimensions.depth, 'Left Side')}
+                  </div>
+                )}
+                {hasOutputJack && (
+                  <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                      Right Side Panel — Output Jack ({dimensions.height}×{dimensions.depth}mm)
+                    </h4>
+                    {renderDrillTemplate([outputSideHole], dimensions.height, dimensions.depth, 'Right Side')}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* END PANEL for DC */}
+            {hasDCJack && (
+              <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                  Top End Panel — DC Power Jack ({dimensions.width}×{dimensions.depth}mm)
+                </h4>
+                {renderDrillTemplate([dcEndHole], dimensions.width, dimensions.depth, 'Top End')}
+              </div>
+            )}
           </div>
 
-          {/* Drill Hole List */}
+          {/* Drill Hole List grouped by panel */}
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-900">Drilling Order</h4>
-            {drillHoles.map((hole, idx) => (
-              <div key={hole.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-orange-100 text-orange-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <h5 className="font-semibold text-gray-900">{hole.component}</h5>
-                        <div className="text-sm text-gray-600 mt-1">
-                          Diameter: <span className="font-medium">{hole.diameter}</span> |
-                          Position: <span className="font-medium">X: {hole.x}mm, Y: {hole.y}mm</span>
+
+            {faceHoles.length > 0 && (
+              <>
+                <p className="text-sm font-medium text-gray-700 mt-2">Top Face</p>
+                {faceHoles.map((hole, idx) => (
+                  <div key={hole.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-orange-100 text-orange-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-gray-900">{hole.component}</h5>
+                            <div className="text-sm text-gray-600 mt-1">
+                              Diameter: <span className="font-medium">{hole.diameter}</span> |
+                              Position: <span className="font-medium">X: {hole.x}mm, Y: {hole.y}mm</span>
+                            </div>
+                            {hole.notes && (
+                              <div className="text-sm text-gray-700 mt-2 italic">{hole.notes}</div>
+                            )}
+                          </div>
                         </div>
-                        {hole.notes && (
-                          <div className="text-sm text-gray-700 mt-2 italic">{hole.notes}</div>
-                        )}
                       </div>
+                      <Circle className="w-6 h-6 text-gray-300" />
                     </div>
                   </div>
-                  <Circle className="w-6 h-6 text-gray-300" />
+                ))}
+              </>
+            )}
+
+            {(hasInputJack || hasOutputJack) && (
+              <>
+                <p className="text-sm font-medium text-gray-700 mt-2">Side Panels</p>
+                {hasInputJack && (
+                  <div key="input" className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">L</div>
+                          <div>
+                            <h5 className="font-semibold text-gray-900">{inputSideHole.component}</h5>
+                            <div className="text-sm text-gray-600 mt-1">
+                              Diameter: <span className="font-medium">{inputSideHole.diameter}</span> |
+                              Position: <span className="font-medium">X: {inputSideHole.x}mm, Y: {inputSideHole.y}mm</span>
+                            </div>
+                            {inputSideHole.notes && (
+                              <div className="text-sm text-gray-700 mt-2 italic">{inputSideHole.notes}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Circle className="w-6 h-6 text-gray-300" />
+                    </div>
+                  </div>
+                )}
+                {hasOutputJack && (
+                  <div key="output" className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">R</div>
+                          <div>
+                            <h5 className="font-semibold text-gray-900">{outputSideHole.component}</h5>
+                            <div className="text-sm text-gray-600 mt-1">
+                              Diameter: <span className="font-medium">{outputSideHole.diameter}</span> |
+                              Position: <span className="font-medium">X: {outputSideHole.x}mm, Y: {outputSideHole.y}mm</span>
+                            </div>
+                            {outputSideHole.notes && (
+                              <div className="text-sm text-gray-700 mt-2 italic">{outputSideHole.notes}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Circle className="w-6 h-6 text-gray-300" />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {hasDCJack && (
+              <>
+                <p className="text-sm font-medium text-gray-700 mt-2">End Panel</p>
+                <div key="power" className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-yellow-100 text-yellow-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">DC</div>
+                        <div>
+                          <h5 className="font-semibold text-gray-900">{dcEndHole.component}</h5>
+                          <div className="text-sm text-gray-600 mt-1">
+                            Diameter: <span className="font-medium">{dcEndHole.diameter}</span> |
+                            Position: <span className="font-medium">X: {dcEndHole.x}mm, Y: {dcEndHole.y}mm</span>
+                          </div>
+                          {dcEndHole.notes && (
+                            <div className="text-sm text-gray-700 mt-2 italic">{dcEndHole.notes}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Circle className="w-6 h-6 text-gray-300" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              </>
+            )}
           </div>
         </div>
       </div>

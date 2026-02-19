@@ -24,7 +24,7 @@
   cursor: pointer;
 }
 
-.hole:hover circle {
+.hole:hover rect {
   stroke: #FFD700;
   stroke-width: 1;
 }

@@ -57,65 +57,14 @@ export function BreadboardBase({
       xmlns="http://www.w3.org/2000/svg"
       style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
     >
-      {/* Definitions for reusable elements */}
-      <defs>
-        {/* Hole gradient for depth effect */}
-        <radialGradient id="holeGradient">
-          <stop offset="0%" stopColor="#333333" />
-          <stop offset="70%" stopColor="#1a1a1a" />
-          <stop offset="100%" stopColor="#000000" />
-        </radialGradient>
-
-        {/* Metallic rim gradient */}
-        <radialGradient id="rimGradient">
-          <stop offset="0%" stopColor="#999999" />
-          <stop offset="50%" stopColor="#666666" />
-          <stop offset="100%" stopColor="#444444" />
-        </radialGradient>
-
-        {/* Subtle texture pattern */}
-        <pattern id="texturePattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="#F5F5F5" />
-          <circle cx="2" cy="2" r="0.5" fill="#E0E0E0" />
-          <circle cx="12" cy="8" r="0.5" fill="#E0E0E0" />
-          <circle cx="7" cy="15" r="0.5" fill="#E0E0E0" />
-          <circle cx="17" cy="12" r="0.5" fill="#E0E0E0" />
-        </pattern>
-      </defs>
-
-      {/* Board base */}
-      <rect
+      {/* Photo background — replaces hand-drawn SVG board */}
+      <image
+        href={size === '830' ? '/breadboard-830.jpg' : '/breadboard-400.jpg'}
         x="0"
         y="0"
         width={viewBoxWidth}
         height={viewBoxHeight}
-        fill="#F5F5F5"
-        rx="10"
-        ry="10"
-      />
-
-      {/* Subtle texture overlay */}
-      <rect
-        x="0"
-        y="0"
-        width={viewBoxWidth}
-        height={viewBoxHeight}
-        fill="url(#texturePattern)"
-        opacity="0.03"
-      />
-
-      {/* Board shadow (subtle depth) */}
-      <rect
-        x="5"
-        y="5"
-        width={viewBoxWidth}
-        height={viewBoxHeight}
-        fill="none"
-        stroke="#CCCCCC"
-        strokeWidth="1"
-        rx="10"
-        ry="10"
-        opacity="0.3"
+        preserveAspectRatio="none"
       />
 
       {/* Power Rails - TOP */}
@@ -202,8 +151,8 @@ function PowerRails({
         x2={startX + columns * holeSpacing + 20}
         y2={y}
         stroke={color}
-        strokeWidth="8"
-        opacity="0.7"
+        strokeWidth="3"
+        opacity="0.85"
       />
 
       {/* Holes */}
@@ -286,7 +235,7 @@ function TerminalStrip({
   );
 }
 
-/** Individual hole rendering */
+/** Individual hole rendering — transparent click target + highlight ring over photo */
 function Hole({
   id,
   x,
@@ -307,32 +256,27 @@ function Hole({
       onClick={onClick}
       style={{ cursor: onClick !== undefined ? 'pointer' : 'default' }}
     >
-      {/* Metallic rim */}
-      <circle
-        cx={x}
-        cy={y}
-        r="5.5"
-        fill="url(#rimGradient)"
+      {/* Invisible click target */}
+      <rect
+        x={x - 7}
+        y={y - 7}
+        width={14}
+        height={14}
+        fill="transparent"
       />
 
-      {/* Hole interior */}
-      <circle
-        cx={x}
-        cy={y}
-        r="4"
-        fill="url(#holeGradient)"
-      />
-
-      {/* Highlight overlay */}
+      {/* Golden highlight ring — only shown when hole is occupied/selected */}
       {highlighted && (
-        <circle
-          cx={x}
-          cy={y}
-          r="7"
+        <rect
+          x={x - 7}
+          y={y - 7}
+          width={14}
+          height={14}
+          rx={2}
           fill="none"
           stroke="#FFD700"
           strokeWidth="2"
-          opacity="0.8"
+          opacity="0.85"
         />
       )}
     </g>
