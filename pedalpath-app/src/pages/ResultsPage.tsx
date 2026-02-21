@@ -23,22 +23,39 @@ export default function ResultsPage() {
 
   const queryClient = useQueryClient()
 
-  const { data: projectData } = useQuery({
-    queryKey: ['schematic-project', schematicId],
+  // Step 1: get the project_id linked to this schematic
+  const { data: schematicRow } = useQuery({
+    queryKey: ['schematic-project-id', schematicId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('schematics')
-        .select('project_id, projects(status)')
+        .select('project_id')
         .eq('id', schematicId!)
         .single()
       if (error) throw error
-      return data as unknown as { project_id: string; projects: { status: string } | null }
+      return data as { project_id: string }
     },
     enabled: !!schematicId,
   })
 
-  const projectId = projectData?.project_id
-  const isAlreadySaved = projectData?.projects?.status === 'completed'
+  const projectId = schematicRow?.project_id
+
+  // Step 2: get the project status (separate query — avoids nested join RLS issues)
+  const { data: projectRow } = useQuery({
+    queryKey: ['project-status', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('status')
+        .eq('id', projectId!)
+        .single()
+      if (error) throw error
+      return data as { status: string }
+    },
+    enabled: !!projectId,
+  })
+
+  const isAlreadySaved = projectRow?.status === 'completed'
 
   const saveMutation = useMutation({
     mutationFn: async () => {

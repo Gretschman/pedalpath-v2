@@ -1,64 +1,47 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// System prompt for schematic analysis
-const SCHEMATIC_ANALYSIS_PROMPT = `You are an expert in guitar effects pedal circuits and electronic schematics. Analyze this guitar effects pedal schematic and extract ALL components needed to build it.
+// System prompt — sets the role/persona for Claude
+const SYSTEM_PROMPT = `You are an expert in guitar effects pedal circuits and electronic schematics. Your sole task is to analyze schematic images and extract component lists from what is actually visible in the image. You never invent, guess, or assume components that are not clearly shown in the image.`;
 
-Return a structured JSON response with the following format:
+// User prompt — the actual analysis instruction sent with the image
+const USER_PROMPT = `Analyze the guitar effects pedal schematic in the image above. Extract ALL components that are VISIBLY SHOWN in this specific image.
+
+CRITICAL: Only report components you can actually see in THIS image. Do not use prior knowledge to fill in components that are not visible. If a value is hard to read, use your best estimate with a low confidence score rather than skipping it or substituting a different component.
+
+Return a structured JSON response:
 
 {
   "components": [
     {
       "component_type": "resistor" | "capacitor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
-      "value": "10k" | "100nF" | "2N3904" | "TL072" | etc.,
+      "value": "<exact value as shown in schematic, e.g. 10k, 100nF, 2N3904, OC44>",
       "quantity": 1,
-      "reference_designators": ["R1", "R2"],
+      "reference_designators": ["R1"],
       "confidence": 95,
-      "notes": "Optional notes about the component"
+      "notes": "Optional notes about legibility or context"
     }
   ],
   "enclosure": {
-    "size": "1590B" | "125B" | "1590BB" | etc.,
+    "size": "1590B" | "125B" | "1590BB",
     "drill_count": 6,
-    "notes": "Recommended based on component count and controls"
+    "notes": "Recommended based on visible controls"
   },
   "power": {
-    "voltage": "9V" | "18V" | "9-18V",
+    "voltage": "9V",
     "current": "20mA",
     "polarity": "center-negative" | "center-positive"
   },
   "confidence_score": 85
 }
 
-CRITICAL REQUIREMENTS:
-1. Extract EVERY component visible in the schematic including:
-   - All resistors (with values like 10k, 1M, 470Ω)
-   - All capacitors (with values like 100nF, 10µF, 47pF)
-   - All semiconductors (transistors, diodes, ICs, op-amps)
-   - Input/output jacks (typically 1/4" mono or stereo)
-   - DC power jack (typically 2.1mm barrel jack)
-   - Footswitch (typically 3PDT for true bypass)
-   - All potentiometers with taper (e.g., "100kB" for audio taper, "100kA" for linear)
-   - LEDs for indicators
-   - Any switches
-
-2. Group identical components together:
-   - If there are three 10k resistors, list as quantity: 3 with all reference designators
-
-3. Provide confidence scores (0-100) for each component based on:
-   - How clearly the value is marked
-   - Standard component marking conventions
-   - Context from the circuit
-
-4. For the enclosure recommendation:
-   - Count the number of off-board components (pots, switches, jacks, LEDs)
-   - 1590B: 3-4 knobs, compact
-   - 125B: 3-5 knobs, standard size
-   - 1590BB: 5+ knobs or complex layouts
-
-5. Standard power for guitar pedals is 9V center-negative unless marked otherwise
-
-6. Return ONLY valid JSON, no additional text or markdown formatting.`;
+Requirements:
+1. Include EVERY component visible: resistors (with values), capacitors (with values), semiconductors (transistors, diodes, ICs), jacks, footswitch, potentiometers, LEDs, switches
+2. Group identical components (same type AND value) — set quantity > 1 and list all reference designators
+3. Set confidence 0-100 based on how clearly each value is marked in the image
+4. For enclosure: count off-board components (pots, switches, jacks, LEDs); 1590B=3-4 knobs, 125B=3-5 knobs, 1590BB=5+ knobs
+5. Standard pedal power is 9V center-negative unless the schematic shows otherwise
+6. Return ONLY valid JSON, no markdown or extra text`;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
@@ -133,6 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         response = await client.messages.create({
           model: modelName,
           max_tokens: 4096,
+          system: SYSTEM_PROMPT,
           messages: [
             {
               role: 'user',
@@ -147,7 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 },
                 {
                   type: 'text',
-                  text: SCHEMATIC_ANALYSIS_PROMPT,
+                  text: USER_PROMPT,
                 },
               ],
             },

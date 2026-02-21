@@ -347,6 +347,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
           const cy = toY(hole.y);
           const r = (parseFloat(hole.diameter) / 2) * PX_PER_MM;
           const label = holeLabels[i];
+          // Short name to display next to hole (first 2 words)
+          const shortName = hole.component.split('(')[0].trim().split(' ').slice(0, 2).join(' ');
 
           return (
             <g key={hole.id}>
@@ -371,14 +373,23 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               <line x1={cx} y1={cy - 5} x2={cx} y2={cy + 5} stroke="#dc2626" strokeWidth="0.8" />
 
               {/* Letter badge */}
-              <circle cx={cx + r + 8} cy={cy} r={7} fill="#dc2626" />
-              <text x={cx + r + 8} y={cy + 3.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">
+              <circle cx={cx + r + 8} cy={cy - r / 2} r={7} fill="#dc2626" />
+              <text x={cx + r + 8} y={cy - r / 2 + 3.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">
                 {label}
               </text>
 
-              {/* X dimension from left edge */}
+              {/* Component name label — always visible, below hole */}
+              <text x={cx} y={cy + r + 10} textAnchor="middle" fontSize="7" fill="#1e293b" fontWeight="600">
+                {shortName}
+              </text>
+              {/* Diameter label below name */}
+              <text x={cx} y={cy + r + 19} textAnchor="middle" fontSize="6" fill="#64748b">
+                ⌀{hole.diameter}
+              </text>
+
+              {/* X/Y coords at bottom of panel */}
               <text x={cx} y={margin + encH + 12} textAnchor="middle" fontSize="7" fill="#374151">
-                {label}: x={hole.x}
+                {label}: {hole.x},{hole.y}mm
               </text>
             </g>
           );

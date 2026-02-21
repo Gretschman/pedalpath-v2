@@ -13,13 +13,10 @@ export function useProjects() {
         .from('projects')
         .select(`id, title, status, created_at, schematics(id, ai_confidence_score, processing_status)`)
         .eq('user_id', user!.id)
+        .neq('status', 'draft')
         .order('created_at', { ascending: false })
       if (error) throw error
-      // Only show projects that have at least one schematic (upload actually started)
-      const visible = (data ?? []).filter(
-        (p: any) => (p.schematics as any[]).length > 0
-      )
-      return visible as unknown as ProjectWithSchematics[]
+      return (data ?? []) as unknown as ProjectWithSchematics[]
     },
     enabled: !!user,
   })
