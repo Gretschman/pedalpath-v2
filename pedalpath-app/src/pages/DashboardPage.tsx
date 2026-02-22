@@ -7,7 +7,8 @@ export default function DashboardPage() {
   const { projects, isLoading, error } = useProjects()
 
   const totalProjects = projects.length
-  const inProgress = projects.filter(p => p.status === 'in_progress').length
+  // Count 'draft' with schematics as in_progress — status update can fail silently
+  const inProgress = projects.filter(p => p.status === 'in_progress' || p.status === 'draft').length
   const completed = projects.filter(p => p.status === 'completed').length
 
   const formatDate = (dateString: string) =>

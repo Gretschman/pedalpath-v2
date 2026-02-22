@@ -51,9 +51,11 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   const pots = bomData.components.filter(c => c.component_type === 'potentiometer');
   const potCount = pots.length;
 
-  // Calculate proper pot spacing based on enclosure width
-  const potSpacing = potCount > 1 ? (dimensions.width - 40) / (potCount + 1) : dimensions.width / 2;
-  const potYPosition = 19; // 19mm from top edge (standard)
+  // Calculate proper pot spacing based on enclosure width.
+  // Formula: divide usable width (minus 20mm margins on each side) into (n+1) equal segments.
+  // This centers the group for any pot count, including single-pot.
+  const potSpacing = (dimensions.width - 40) / (potCount + 1);
+  const potYPosition = 25; // 25mm from top edge (standard GGG-style position)
 
   // Add pots with proper spacing
   pots.forEach((pot, idx) => {
@@ -494,7 +496,17 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               <h4 className="font-semibold text-gray-800 mb-3 text-center">
                 Top Face — {dimensions.width}×{dimensions.height}mm (pots, footswitch, LED)
               </h4>
-              {renderDrillTemplate(faceHoles, dimensions.width, dimensions.height, 'Top Face')}
+              {faceHoles.length === 0 ? (
+                <div className="text-center text-gray-500 py-8 text-sm">
+                  <p className="font-medium mb-1">No face components detected in BOM</p>
+                  <p>Pots, footswitches, and LEDs will appear here once identified in the schematic analysis.</p>
+                  <p className="mt-2 text-xs text-gray-400">
+                    Typical 125B layout: 3 pots across top (30/60/90mm), footswitch centered at 70mm from top, LED at 48mm.
+                  </p>
+                </div>
+              ) : (
+                renderDrillTemplate(faceHoles, dimensions.width, dimensions.height, 'Top Face')
+              )}
             </div>
 
             {/* SIDE PANELS */}

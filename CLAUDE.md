@@ -1,34 +1,42 @@
 # PedalPath v2 - Claude Development Guide
 
-**Last Updated**: 2026-02-16
-**Current Phase**: Visual Overhaul Phase 1 ✅ COMPLETE | Phase 2 Ready to Start
-**Status**: Production-ready foundation with 156 tests passing
+**Last Updated**: 2026-02-21
+**Current Phase**: Phase 2 ✅ COMPLETE | Phase 3 (Mobile) or Stripe Activation next
+**Status**: 168 tests passing | Both Vercel projects deployed and working
 
 ---
 
 ## 🚀 Current Project Status (CRITICAL - READ FIRST)
 
-### Phase 1 Visual Overhaul: COMPLETE ✅
-**Completed**: 2026-02-16
-**Delivered**: 3,516 lines of production code, 156 tests (100% passing)
+### Phase 2 Visual Overhaul: COMPLETE ✅
+**Completed**: 2026-02-21
+**Full session notes**: `SESSION_2026-02-21_PHASE2_COMPLETE.md`
 
-**What We Just Built:**
-1. **Component Decoders** - Resistor & capacitor value ↔ visual spec conversion
-2. **Breadboard Base** - Photorealistic 830/400-point breadboard SVG component
-3. **Test Suite** - Comprehensive coverage (121 decoder + 35 breadboard tests)
-4. **Documentation** - Complete handoff docs for Phase 2
+**What Was Built (Phase 2):**
+1. **Component SVGs** — ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG, WireSVG
+2. **BomBreadboardView** — Full pipeline: BOM → decoders → layout → SVG overlay
+3. **bom-layout.ts** — Auto-placement algorithm for all component types
+4. **BreadboardGuide** — BomBreadboardView embedded in build steps 2–9
+5. **5 Bug fixes** — Auth errors, enclosure diagram, dashboard 0-projects bug
 
-**Key Files**:
-- `/visual-overhaul-2026/` - All visual overhaul project files
-- `/visual-overhaul-2026/3-implementation/phase1-decoders/HANDOFF.md` - **START HERE for Phase 2**
-- `/visual-overhaul-2026/3-implementation/phase1-decoders/STATUS.md` - Current status
+**Deployments**: Both Vercel projects live and working
+- Primary: https://pedalpath-v2.vercel.app (deploy from `/home/rob/pedalpath-v2`)
+- Secondary: https://pedalpath-app.vercel.app (deploy from `/home/rob/pedalpath-v2/pedalpath-app`)
 
-### Immediate Next Steps:
-**Phase 2** - Component SVG Rendering & Integration (5-6 days estimated)
-- **Work Stream C**: Create ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG components
-- **Work Stream D**: Integrate with BreadboardGrid, connect to BOM pipeline
+### Immediate Next Steps (choose one):
+**Option A — Phase 3: Mobile Responsiveness**
+- Read: `/visual-overhaul-2026/3-implementation/phase3-mobile/README.md`
 
-**See**: `/visual-overhaul-2026/DELEGATION_GUIDE.md` for Worker C & D instructions
+**Option B — Stripe Activation**
+- `npm install stripe` in pedalpath-app/
+- Add env vars to both Vercel projects: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_APP_URL`
+- Create Supabase tables: `subscriptions`, `payment_transactions`
+- Create Supabase RPCs: `can_user_upload`, `increment_usage`
+- Wire `PricingModal` into `UploadPage`
+- Full checklist in `SESSION_2026-02-21_PHASE2_COMPLETE.md`
+
+**Option C — Quick Cleanup (30 min)**
+- Delete `src/components/visualizations/BreadboardGrid.tsx` (old, nothing imports it)
 
 ---
 
