@@ -56,3 +56,10 @@
 - All output files go to docs/generated/ (ephemeral, not committed)
 - All tools go in /home/rob/pedalpath-v2/tools/
 - Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
+
+## Tool Building Rules
+- Every new tool gets one line added to CLAUDE.md Tools Available section immediately after creation
+- Tools that read secrets use /home/rob/.pedalpath_env via python-dotenv
+- All output files go to docs/generated/ (ephemeral, not committed)
+- All tools go in /home/rob/pedalpath-v2/tools/
+- Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
