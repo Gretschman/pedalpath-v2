@@ -1,0 +1,33 @@
+PedalPath v2 Prerequisites Report
+Generated: 02/23/26 18:29
+============================================================
+
+[PASS]  Python 3.12.3
+[PASS]  python3 on PATH: /usr/bin/python3
+[PASS]  PyGithub
+[PASS]  python-docx
+[PASS]  python-dotenv
+[WARN]  psycopg2-binary (optional - skip for now)
+       When ready: pip install psycopg2-binary
+[PASS]  Node.js v22.20.0
+[PASS]  npm package: docx
+[PASS]  Git: git version 2.43.0
+[PASS]  git user.name: Rob
+[PASS]  git user.email: robsfrankel@gmail.com
+[WARN]  pg_dump (optional - skip for now)
+       When ready: sudo apt install postgresql-client
+[PASS]  /home/rob/.pedalpath_env exists
+       Run: nano /home/rob/.pedalpath_env   then add GITHUB_TOKEN and SUPABASE_DB_URL
+[PASS]  GITHUB_TOKEN in env file
+       Add line: GITHUB_TOKEN=ghp_your_token_here
+[PASS]  SUPABASE_DB_URL in env file
+       Add line: SUPABASE_DB_URL=postgresql://...
+[PASS]  Upload queue folder accessible
+       Expected: /home/rob/pedalpath-v2/upload-queue
+[PASS]  Repo root: /home/rob/pedalpath-v2
+[PASS]    tools/
+[PASS]    docs/generated/
+[PASS]    archive/old-sessions/
+[PASS]  Repo root clean (no stale session files)
+
+Result: 21/21 passed
