@@ -1,8 +1,8 @@
 # PedalPath v2 - Claude Development Guide
 
-**Last Updated**: 2026-02-21
-**Current Phase**: Phase 2 ✅ COMPLETE | Phase 3 (Mobile) or Stripe Activation next
-**Status**: 168 tests passing | Both Vercel projects deployed and working
+**Last Updated**: 2026-02-22
+**Current Phase**: Visual Overhaul — MAJOR REWRITE REQUIRED (see Issue #15)
+**Status**: 168 tests passing | Both Vercel projects deployed | Visual output deemed unacceptable
 
 ---
 
@@ -23,20 +23,39 @@
 - Primary: https://pedalpath-v2.vercel.app (deploy from `/home/rob/pedalpath-v2`)
 - Secondary: https://pedalpath-app.vercel.app (deploy from `/home/rob/pedalpath-v2/pedalpath-app`)
 
-### Immediate Next Steps (choose one):
-**Option A — Phase 3: Mobile Responsiveness**
-- Read: `/visual-overhaul-2026/3-implementation/phase3-mobile/README.md`
+### 🔴 CRITICAL: Visual Overhaul Needed (Issue #15)
+**Full scope in**: `SESSION_2026-02-22_SHUTDOWN.md`
 
-**Option B — Stripe Activation**
-- `npm install stripe` in pedalpath-app/
-- Add env vars to both Vercel projects: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_APP_URL`
-- Create Supabase tables: `subscriptions`, `payment_transactions`
-- Create Supabase RPCs: `can_user_upload`, `increment_usage`
-- Wire `PricingModal` into `UploadPage`
-- Full checklist in `SESSION_2026-02-21_PHASE2_COMPLETE.md`
+**Priority order for next session:**
 
-**Option C — Quick Cleanup (30 min)**
-- Delete `src/components/visualizations/BreadboardGrid.tsx` (old, nothing imports it)
+**PRIORITY 1 — Breadboard Rewrite** (Issues #15 / #10 / #9 / #11)
+- `BreadboardGuide.tsx` — complete rewrite to match Music Techknowledgy standard
+- Create `TransistorSVG.tsx` (TO-92 package, B/C/E leads)
+- Scale all component SVGs to realistic sizes
+- Show offboard components (jacks, pots) connected with colored wires
+- Reference: `Updates 02.22.26\Breadboard Images\IMG_1845.jpg`
+
+**PRIORITY 2 — Stripboard Rewrite** (Issues #15 / #2)
+- `StripboardGuide.tsx` — implement tagboardeffects.com style
+- Orange board (#F5A500), black copper strips, colored component symbols
+- Reference: `Updates 02.22.26\Layouts.Vero.Stripboard\` (32 examples)
+
+**PRIORITY 3 — Enclosure Drill Templates** (Issue #15)
+- Add all 1590-series enclosures (11 sizes, see SESSION doc)
+- Match Tayda Electronics flat-pack format
+- Reference: `Updates 02.22.26\Enclosures.Drilling\IMG_1978.PNG`
+
+**PRIORITY 4 — Offboard Wiring Diagram** (Issue #15)
+- New guide step: jacks/pot/LED/3PDT switch wiring
+- Reference: `Updates 02.22.26\Offboard Wiring\`
+
+**PRIORITY 5 — AI Accuracy** (Issue #15)
+- Add passive circuit detection (no transistors/ICs → no 9V recommendation)
+- Test against Defizzerator: `https://share.google/K3UqnENHpFvXzN0JL`
+
+**DO NOT START**: Stripe activation until visual issues are resolved
+
+**Reference materials**: `/mnt/c/Users/Rob/Dropbox/!PedalPath/Upload to Claude COde/2b Uploaded to Claude Code/Updates 02.22.26/`
 
 ---
 
