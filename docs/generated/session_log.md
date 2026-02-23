@@ -63,3 +63,34 @@
 - All output files go to docs/generated/ (ephemeral, not committed)
 - All tools go in /home/rob/pedalpath-v2/tools/
 - Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
+
+## Context From Previous Session (2026-02-21)
+
+### Current Development State
+- Phase 1 COMPLETE: Component decoders (resistor/capacitor), BreadboardBase, 156 tests
+- Phase 2 COMPLETE: All 5 SVG components, BomBreadboardView, bom-layout, 168 tests passing
+- Phase 3 NOT STARTED: Mobile responsiveness, touch zoom/pan, stripboard enhancements
+- Phase 4 NOT STARTED: Stripe payment integration, marketing, user testing
+
+### Immediate Next Development Tasks (Priority Order)
+1. Phase 3 mobile — all 23 components need responsive breakpoints, touch zoom/pan. See /visual-overhaul-2026/3-implementation/phase3-mobile/README.md
+2. Stripe integration — install stripe package, configure env vars on both Vercel projects, implement checkout. Pricing in REVENUE_SPRINT_5DAY.md
+3. Delete old BreadboardGrid.tsx — confirm nothing imports it, then delete (5 min)
+4. Code splitting — split 658KB main bundle before launch
+
+### Known Outstanding Issues
+- Stripe not installed: TypeScript warns on every build
+- Old BreadboardGrid.tsx still exists — safe to delete
+- Bundle size 658KB (180KB gzipped) — needs splitting before launch
+- IC/Diode decoders are stubs — deferred
+
+### Both Vercel Deployments Active
+- Primary: https://pedalpath-v2.vercel.app
+- Secondary: https://pedalpath-app.vercel.app
+
+### Key Source Paths
+- App source: pedalpath-app/src/
+- Component SVGs: src/components/visualizations/components-svg/
+- Decoders: src/utils/decoders/
+- Tests: src/utils/__tests__/ and src/utils/decoders/__tests__/
+- Visual overhaul docs: /visual-overhaul-2026/
