@@ -53,6 +53,7 @@ vercel --prod --yes  # deploy
 - `tools/check_prereqs.py` — checks all dev prerequisites
 - `tools/sync_github_issues.py` — pulls open GitHub issues → docs/generated/issues_current.md
 - `tools/sync_upload_queue.py` — scans upload-queue/, extracts previews → docs/generated/session_manifest.md
+- `tools/session_end.py` — stages, commits, pushes at session end (interactive or -m "msg")
 - `start_session.sh` — runs all sync tools + git status before starting Claude Code
 
 ---
