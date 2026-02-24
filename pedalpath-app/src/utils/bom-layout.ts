@@ -21,7 +21,7 @@ import type { BOMData } from '../types/bom.types';
 // Types
 // ============================================================================
 
-export type PlacementType = 'resistor' | 'capacitor' | 'ic' | 'diode' | 'led';
+export type PlacementType = 'resistor' | 'capacitor' | 'ic' | 'diode' | 'led' | 'transistor';
 
 /** Placement for inline components (resistors, capacitors, diodes) */
 export interface InlinePlacement {
@@ -42,7 +42,28 @@ export interface ICPlacement {
   pinCount: 8 | 14 | 16;
 }
 
-export type ComponentPlacement = InlinePlacement | ICPlacement;
+/**
+ * Placement for TO-92 transistors — three consecutive holes in row d.
+ * startHole = eHole and endHole = cHole for compatibility with inline code
+ * that checks p.type !== 'ic'.
+ */
+export interface TransistorPlacement {
+  type: 'transistor';
+  value: string;
+  label: string;
+  /** Emitter hole (left lead) — same as startHole */
+  eHole: string;
+  /** Base hole (center lead) */
+  bHole: string;
+  /** Collector hole (right lead) — same as endHole */
+  cHole: string;
+  /** Alias for eHole — keeps existing TypeScript narrowing happy */
+  startHole: string;
+  /** Alias for cHole — keeps existing TypeScript narrowing happy */
+  endHole: string;
+}
+
+export type ComponentPlacement = InlinePlacement | ICPlacement | TransistorPlacement;
 
 // ============================================================================
 // Main export
@@ -118,8 +139,28 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
     }
   }
 
-  // --- Diodes and LEDs (row d) ---
-  let dCol = 5;
+  // --- Transistors (row d, 3 consecutive holes: E/B/C) ---
+  let tCol = 4; // start col for emitter pin
+  const transistors = bomData.components.filter(c => c.component_type === 'transistor');
+  for (const t of transistors) {
+    for (let q = 0; q < Math.min(t.quantity, 4); q++) {
+      if (tCol + 2 > MAX_COL) break;
+      placements.push({
+        type: 'transistor',
+        value: t.value,
+        label: t.reference_designators[q] ?? t.reference_designators[0] ?? t.value,
+        eHole: `d${tCol}`,
+        bHole: `d${tCol + 1}`,
+        cHole: `d${tCol + 2}`,
+        startHole: `d${tCol}`,
+        endHole: `d${tCol + 2}`,
+      });
+      tCol += 5; // 3 holes used + 2-hole gap
+    }
+  }
+
+  // --- Diodes and LEDs (row d, after transistors) ---
+  let dCol = transistors.length > 0 ? tCol + 2 : 5;
   const diodesAndLeds = bomData.components.filter(c =>
     c.component_type === 'diode' || c.component_type === 'led'
   );

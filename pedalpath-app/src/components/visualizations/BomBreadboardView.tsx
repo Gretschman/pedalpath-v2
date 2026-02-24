@@ -1,21 +1,15 @@
 /**
  * BomBreadboardView Component
  *
- * Integrates BOM data with the photorealistic BreadboardBase visualization.
- * Uses the decoder system (Phase 1) to convert component values into visual
- * specs, auto-lays them out on the board (bom-layout utility), and renders
- * the Phase 2 component SVGs (ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG)
- * as an absolute-positioned overlay on top of BreadboardBase.
- *
- * The layout is a visual reference, not electrically routed — it shows the
- * user what their real components look like so they can identify and verify
- * them before building.
+ * Integrates BOM data with the SVG BreadboardBase visualization.
+ * Auto-lays out components, renders them as SVG overlays, and adds
+ * offboard representations for audio jacks and potentiometers.
  *
  * Phase 4 — Work Stream I: End-to-End Integration
  */
 
 import BreadboardBase from './BreadboardBase';
-import { ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG } from './components-svg';
+import { ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG, TransistorSVG } from './components-svg';
 import {
   encodeResistor,
   decodeResistor,
@@ -27,7 +21,7 @@ import {
 import { holeToCoordinates, LAYOUT_830 } from '@/utils/breadboard-utils';
 import { generateBreadboardLayout } from '@/utils/bom-layout';
 import type { BOMData } from '@/types/bom.types';
-import type { ResistorSpec, ICSpec } from '@/types/component-specs.types';
+import type { ResistorSpec, ICSpec, TransistorSpec } from '@/types/component-specs.types';
 
 // ============================================================================
 // Props
@@ -44,10 +38,6 @@ export interface BomBreadboardViewProps {
 // Helpers
 // ============================================================================
 
-/**
- * Parse a resistor value string ("10k", "4.7kΩ", "100", "1M", "330R") into
- * ohms. Returns null if the string cannot be parsed.
- */
 function parseOhms(value: string): number | null {
   const cleaned = value
     .toLowerCase()
@@ -65,19 +55,16 @@ function parseOhms(value: string): number | null {
   return n;
 }
 
-/** Convert a BOM resistor value string into a ResistorSpec, or null on failure. */
 function getResistorSpec(value: string): ResistorSpec | null {
   try {
-    const ohms = parseOhms(value) ?? 10_000; // fallback to 10 kΩ
+    const ohms = parseOhms(value) ?? 10_000;
     const encoded = encodeResistor(ohms, 5);
-    // decodeResistor takes color-band string[]; use 4-band if available
     return decodeResistor(encoded.bands4 ?? encoded.bands5);
   } catch {
     return null;
   }
 }
 
-/** Build a minimal ICSpec for ICs not in the decoder database. */
 function makeFallbackICSpec(value: string, pinCount: 8 | 14 | 16): ICSpec {
   return {
     type: 'ic',
@@ -89,22 +76,161 @@ function makeFallbackICSpec(value: string, pinCount: 8 | 14 | 16): ICSpec {
   };
 }
 
+/** Build a minimal TransistorSpec from a BOM value string. */
+function makeTransistorSpec(value: string): TransistorSpec {
+  return {
+    type: 'transistor',
+    value,
+    partNumber: value,
+    transistorType: 'bjt-npn',
+    package: 'TO-92',
+    pinout: ['E', 'B', 'C'],
+  };
+}
+
+// ============================================================================
+// Offboard Components
+// ============================================================================
+
+/**
+ * Renders input/output jacks and potentiometers outside the board area.
+ * Uses the existing 1700×566 viewBox — jacks fit in the left/right margins.
+ */
+function OffboardComponents({ bomData }: { bomData: BOMData }) {
+  const midY = 371; // vertical center of the terminal strip area
+
+  // Collect potentiometers from BOM
+  const pots = bomData.components.filter(c => c.component_type === 'potentiometer');
+
+  // Board column 1 and 63 x-coordinates
+  const col1X = LAYOUT_830.terminalStripStart.x;          // 103
+  const col63X = LAYOUT_830.terminalStripStart.x + 62 * LAYOUT_830.holeSpacing; // 1591
+
+  // Jack dimensions
+  const jackW = 46;
+  const jackH = 52;
+
+  return (
+    <g className="offboard-components">
+      {/* ── Input Jack (left of board) ───────────────────────── */}
+      <g className="input-jack">
+        {/* Green signal wire: jack → col 1 */}
+        <line
+          x1={72} y1={midY}
+          x2={col1X} y2={midY}
+          stroke="#22CC44" strokeWidth="2.5" strokeLinecap="round"
+          opacity="0.85"
+        />
+
+        {/* Jack body */}
+        <rect
+          x={12} y={midY - jackH / 2}
+          width={jackW} height={jackH}
+          fill="#444444" stroke="#222222" strokeWidth="1"
+          rx={5}
+        />
+
+        {/* Tip dot */}
+        <circle cx={35} cy={midY - 10} r={5} fill="#888888" />
+        {/* Sleeve dot */}
+        <circle cx={35} cy={midY + 10} r={5} fill="#555555" />
+
+        {/* "IN" label */}
+        <text
+          x={35} y={midY + 28}
+          textAnchor="middle"
+          fontSize="10" fontFamily="Arial, sans-serif" fontWeight="700"
+          fill="#FFFFFF"
+        >
+          IN
+        </text>
+      </g>
+
+      {/* ── Output Jack (right of board) ─────────────────────── */}
+      <g className="output-jack">
+        {/* Orange signal wire: col 63 → jack */}
+        <line
+          x1={col63X} y1={midY}
+          x2={1628} y2={midY}
+          stroke="#FF8800" strokeWidth="2.5" strokeLinecap="round"
+          opacity="0.85"
+        />
+
+        {/* Jack body */}
+        <rect
+          x={1628} y={midY - jackH / 2}
+          width={jackW} height={jackH}
+          fill="#444444" stroke="#222222" strokeWidth="1"
+          rx={5}
+        />
+
+        {/* Tip dot */}
+        <circle cx={1651} cy={midY - 10} r={5} fill="#888888" />
+        {/* Sleeve dot */}
+        <circle cx={1651} cy={midY + 10} r={5} fill="#555555" />
+
+        {/* "OUT" label */}
+        <text
+          x={1651} y={midY + 28}
+          textAnchor="middle"
+          fontSize="10" fontFamily="Arial, sans-serif" fontWeight="700"
+          fill="#FFFFFF"
+        >
+          OUT
+        </text>
+      </g>
+
+      {/* ── Potentiometers (right of board, stacked vertically) ─ */}
+      {pots.slice(0, 3).map((pot, i) => {
+        const potY = midY - 80 + i * 70;
+        const potX = 1648;
+        const refDes = pot.reference_designators[0] ?? `VR${i + 1}`;
+
+        return (
+          <g key={i} className="potentiometer">
+            {/* Gray wire from board to pot */}
+            <line
+              x1={col63X} y1={potY}
+              x2={1636} y2={potY}
+              stroke="#999999" strokeWidth="1.5" strokeLinecap="round"
+              opacity="0.7"
+            />
+            {/* Pot body (circle) */}
+            <circle cx={potX} cy={potY} r={16} fill="#888888" stroke="#555555" strokeWidth="1" />
+            {/* Wiper line */}
+            <line
+              x1={potX - 8} y1={potY}
+              x2={potX + 8} y2={potY}
+              stroke="#DDDDDD" strokeWidth="1.5"
+            />
+            {/* Label */}
+            <text
+              x={potX} y={potY + 4}
+              textAnchor="middle"
+              fontSize="8" fontFamily="Arial, sans-serif" fontWeight="600"
+              fill="#FFFFFF"
+            >
+              {refDes}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 // ============================================================================
 // Component
 // ============================================================================
 
-/**
- * Renders a photorealistic breadboard populated with the components from a
- * real BOM analysis. Each component is decoded to its visual spec and drawn
- * using the Phase 2 SVG component library.
- */
 export default function BomBreadboardView({ bomData, className = '' }: BomBreadboardViewProps) {
   const placements = generateBreadboardLayout(bomData);
   const { totalWidth, totalHeight } = LAYOUT_830;
 
-  // Collect all endpoint holes for highlighting on the base board
+  // Collect highlighted holes for the base board
   const highlightHoles: string[] = placements.flatMap(p => {
     if (p.type === 'ic') return [p.pin1Hole];
+    if (p.type === 'transistor') return [p.eHole, p.bHole, p.cHole];
     return [p.startHole, p.endHole];
   });
 
@@ -121,11 +247,11 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
         </div>
       ) : (
         <div className="relative w-full overflow-x-auto rounded-lg">
-          <div className="relative" style={{ minWidth: 600 }}>
-            {/* Realistic breadboard base */}
+          <div className="relative" style={{ minWidth: 1200 }}>
+            {/* SVG breadboard base */}
             <BreadboardBase size="830" highlightHoles={highlightHoles} />
 
-            {/* Component SVG overlay — same viewBox as BreadboardBase */}
+            {/* Component overlay — same viewBox as BreadboardBase */}
             <svg
               viewBox={`0 0 ${totalWidth} ${totalHeight}`}
               preserveAspectRatio="xMidYMid meet"
@@ -138,9 +264,13 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                 pointerEvents: 'none',
               }}
             >
+              {/* Offboard jacks and pots */}
+              <OffboardComponents bomData={bomData} />
+
+              {/* Board components */}
               {placements.map((placement, idx) => {
                 try {
-                  // ── Resistor ──────────────────────────────────────────────
+                  // ── Resistor ────────────────────────────────────────────
                   if (placement.type === 'resistor') {
                     const spec = getResistorSpec(placement.value);
                     if (!spec) return null;
@@ -157,7 +287,7 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     );
                   }
 
-                  // ── Capacitor ─────────────────────────────────────────────
+                  // ── Capacitor ──────────────────────────────────────────
                   if (placement.type === 'capacitor') {
                     const spec  = decodeCapacitor(placement.value);
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
@@ -173,7 +303,7 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     );
                   }
 
-                  // ── IC ────────────────────────────────────────────────────
+                  // ── IC ────────────────────────────────────────────────
                   if (placement.type === 'ic') {
                     const pin1      = holeToCoordinates(placement.pin1Hole,      LAYOUT_830);
                     const bottomRow = holeToCoordinates(placement.bottomRowHole, LAYOUT_830);
@@ -197,7 +327,7 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     );
                   }
 
-                  // ── Diode / LED ───────────────────────────────────────────
+                  // ── Diode / LED ───────────────────────────────────────
                   if (placement.type === 'diode' || placement.type === 'led') {
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
@@ -219,6 +349,21 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                       />
                     );
                   }
+
+                  // ── Transistor ────────────────────────────────────────
+                  if (placement.type === 'transistor') {
+                    const bPin = holeToCoordinates(placement.bHole, LAYOUT_830);
+                    const spec = makeTransistorSpec(placement.value);
+                    return (
+                      <TransistorSVG
+                        key={idx}
+                        x={bPin.x}
+                        y={bPin.y}
+                        spec={spec}
+                        label={placement.label}
+                      />
+                    );
+                  }
                 } catch {
                   // Silently skip components that fail to decode
                 }
@@ -234,11 +379,24 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
       {hasRenderableComponents && (
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-600">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600"></span>
-            Highlighted holes = component leads
+            <span className="inline-block w-10 h-2.5 rounded" style={{ background: '#D2B48C' }}></span>
+            Resistor
           </span>
-          <span className="text-gray-400">•</span>
-          <span>Visual reference layout — not circuit-routed</span>
+          <span className="text-gray-300">|</span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded-full" style={{ background: '#D4A574' }}></span>
+            Capacitor
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-5 h-3 rounded" style={{ background: '#1A1A1A' }}></span>
+            Transistor/IC
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600"></span>
+            Highlighted = component lead
+          </span>
         </div>
       )}
     </div>

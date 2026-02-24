@@ -18,3 +18,6 @@ export type { DiodeSVGProps } from './DiodeSVG';
 
 export { default as WireSVG } from './WireSVG';
 export type { WireSVGProps, WireColor } from './WireSVG';
+
+export { default as TransistorSVG } from './TransistorSVG';
+export type { TransistorSVGProps } from './TransistorSVG';
