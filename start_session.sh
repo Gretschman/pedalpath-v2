@@ -23,7 +23,12 @@ echo "--- Upload Queue ---"
 python3 tools/sync_upload_queue.py
 echo ""
 
-# 3. Quick git status
+# 3. Sync Supabase schema
+echo "--- Supabase Schema ---"
+python3 tools/sync_supabase_schema.py
+echo ""
+
+# 4. Quick git status
 echo "--- Git Status ---"
 git log --oneline -5
 echo ""
