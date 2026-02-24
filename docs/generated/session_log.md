@@ -1,34 +1,42 @@
-# Session Log — 2026-02-23
+# Session Log — 2026-02-24
 
 ## What We Accomplished
-- Discovered repo lives in WSL at /home/rob/pedalpath-v2 (not Windows)
-- Archived 11 stale session files from repo root
-- Created tools/, docs/generated/, archive/old-sessions/ directories
-- Installed all prerequisites: PyGithub, python-dotenv, npm docx package
-- Created /home/rob/.pedalpath_env with GitHub token and Supabase URL
-- Created upload-queue/ folder, accessible from Windows via \\wsl.localhost\Ubuntu\home\rob\pedalpath-v2\upload-queue
-- Pinned upload-queue to Windows File Explorer Quick Access
-- Built and passed 21/21 prereqs checker
+- Rewrote CLAUDE.md from ~2500 tokens down to ~310 tokens (lean version)
+- Built tools/sync_github_issues.py — pulls 7 open issues → docs/generated/issues_current.md
+- Built tools/sync_upload_queue.py — scans upload-queue/, extracts docx previews → docs/generated/session_manifest.md
+- Built start_session.sh — orchestrates both sync tools + git status at session start
+- Added docs/generated/ to .gitignore (generated output never committed)
+- Fixed PyGithub deprecation warning (Auth.Token)
 
 ## What Is Next
-- Build sync_upload_queue.py
-- Build sync_github_issues.py
-- Build session_end.py
-- Build export_doc.py (docx with Rob's header/footer spec)
-- Rewrite CLAUDE.md to lean version under 400 tokens
-- Build session startup bash script (start_session.sh)
+- Build session_end.py — updates session_log.md, stages new tools, commits, pushes
+- Build export_doc.py — generates .docx with Rob's header/footer spec
 
 ## Key Paths
 - Repo: /home/rob/pedalpath-v2
 - Upload queue: /home/rob/pedalpath-v2/upload-queue
 - Secrets: /home/rob/.pedalpath_env
 - Tools: /home/rob/pedalpath-v2/tools/
+- Generated output: /home/rob/pedalpath-v2/docs/generated/ (not committed)
+
+## Session Startup (use every session)
+```bash
+cd /home/rob/pedalpath-v2
+bash start_session.sh
+claude
+```
+Then open with: `Read docs/generated/session_log.md`
+
+## Tools Built So Far
+- tools/check_prereqs.py — 21/21 checks
+- tools/sync_github_issues.py — GitHub issues → issues_current.md
+- tools/sync_upload_queue.py — upload queue scan → session_manifest.md
+- start_session.sh — runs all of the above
 
 ## Planned Tools Library
 
 ### Tier 1 — Build Next Session
-- sync_upload_queue.py — scans upload-queue/, categorizes files, writes session_manifest.md
-- sync_github_issues.py — pulls open GitHub issues to docs/generated/issues_current.md
+- session_end.py — updates session_log.md, commits new tools, pushes
 - export_doc.py — generates .docx with Rob's exact header/footer spec
 - summarize_session.py — reads Dev Sessions Fathom exports, extracts decisions and next steps, writes to session_log.md
 
@@ -57,32 +65,29 @@
 - All tools go in /home/rob/pedalpath-v2/tools/
 - Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
 
-## Tool Building Rules
-- Every new tool gets one line added to CLAUDE.md Tools Available section immediately after creation
-- Tools that read secrets use /home/rob/.pedalpath_env via python-dotenv
-- All output files go to docs/generated/ (ephemeral, not committed)
-- All tools go in /home/rob/pedalpath-v2/tools/
-- Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
+## Context From Previous Sessions
 
-## Context From Previous Session (2026-02-21)
-
-### Current Development State
+### Development State (as of 2026-02-21)
 - Phase 1 COMPLETE: Component decoders (resistor/capacitor), BreadboardBase, 156 tests
 - Phase 2 COMPLETE: All 5 SVG components, BomBreadboardView, bom-layout, 168 tests passing
 - Phase 3 NOT STARTED: Mobile responsiveness, touch zoom/pan, stripboard enhancements
 - Phase 4 NOT STARTED: Stripe payment integration, marketing, user testing
 
 ### Immediate Next Development Tasks (Priority Order)
-1. Phase 3 mobile — all 23 components need responsive breakpoints, touch zoom/pan. See /visual-overhaul-2026/3-implementation/phase3-mobile/README.md
-2. Stripe integration — install stripe package, configure env vars on both Vercel projects, implement checkout. Pricing in REVENUE_SPRINT_5DAY.md
-3. Delete old BreadboardGrid.tsx — confirm nothing imports it, then delete (5 min)
-4. Code splitting — split 658KB main bundle before launch
+1. Breadboard rewrite — BreadboardGuide.tsx complete rewrite, TransistorSVG, realistic sizing
+2. Stripboard rewrite — StripboardGuide.tsx, tagboardeffects.com style
+3. Enclosure drill templates — all 1590-series, Tayda format
+4. Offboard wiring diagram — jacks/pot/LED/3PDT step
+5. AI accuracy — passive circuit detection
 
-### Known Outstanding Issues
-- Stripe not installed: TypeScript warns on every build
-- Old BreadboardGrid.tsx still exists — safe to delete
-- Bundle size 658KB (180KB gzipped) — needs splitting before launch
-- IC/Diode decoders are stubs — deferred
+### Known Outstanding Issues (from GitHub)
+- #2  Stripboard visualization missing
+- #4  iOS/PWA support
+- #9  Transistor components not rendered
+- #10 Breadboard overlays not realistic
+- #11 Build guide steps missing component visuals
+- #15 Major bugs + resources (main visual overhaul ticket)
+- #16 Demo Project no longer accessible
 
 ### Both Vercel Deployments Active
 - Primary: https://pedalpath-v2.vercel.app

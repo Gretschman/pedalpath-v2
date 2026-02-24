@@ -37,4 +37,10 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 upload-queue/*
-upload-queue/*
+!upload-queue/.gitkeep
+
+# Generated tool output (ephemeral, not committed)
+docs/generated/issues_current.md
+docs/generated/session_manifest.md
+docs/generated/deploy_status.md
+docs/generated/db_health.md
