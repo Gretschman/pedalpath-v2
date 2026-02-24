@@ -44,3 +44,4 @@ docs/generated/issues_current.md
 docs/generated/session_manifest.md
 docs/generated/deploy_status.md
 docs/generated/db_health.md
+docs/generated/supabase_schema.sql
