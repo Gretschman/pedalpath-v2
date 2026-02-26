@@ -156,7 +156,8 @@ export interface TransistorSpec extends ComponentSpec {
   type: 'transistor';
   partNumber: string;
   transistorType: TransistorType;
-  package: 'TO-92' | 'TO-220';
+  /** TO-18: Metal Can (Germanium, e.g. AC128). TO-92: D-shape (Silicon, e.g. BC547). TO-220: tab heatsink. */
+  package: 'TO-92' | 'TO-18' | 'TO-220';
   pinout: string[];  // Pin order left to right, e.g. ['E', 'B', 'C'] or ['G', 'D', 'S']
 }
 

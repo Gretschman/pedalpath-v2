@@ -46,6 +46,8 @@ export function BreadboardBase({
 
   return (
     <svg
+      width={totalWidth}
+      height={totalHeight}
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}
       className={`breadboard-base ${className}`}
       xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +59,6 @@ export function BreadboardBase({
       {/* Power Rails */}
       <PowerRails
         y={config.powerRailY.topPositive}
-        columns={config.columns}
         type="positive"
         config={config}
         highlightHoles={highlightHoles}
@@ -65,7 +66,6 @@ export function BreadboardBase({
       />
       <PowerRails
         y={config.powerRailY.topGround}
-        columns={config.columns}
         type="ground"
         config={config}
         highlightHoles={highlightHoles}
@@ -82,7 +82,6 @@ export function BreadboardBase({
       {/* Power Rails — Bottom */}
       <PowerRails
         y={config.powerRailY.bottomGround}
-        columns={config.columns}
         type="ground"
         config={config}
         highlightHoles={highlightHoles}
@@ -90,7 +89,6 @@ export function BreadboardBase({
       />
       <PowerRails
         y={config.powerRailY.bottomPositive}
-        columns={config.columns}
         type="positive"
         config={config}
         highlightHoles={highlightHoles}
@@ -236,26 +234,33 @@ function BoardBackground({ config }: { config: BreadboardLayout }) {
 
 function PowerRails({
   y,
-  columns,
   type,
   config,
   highlightHoles,
   onHoleClick,
 }: {
   y: number;
-  columns: number;
   type: 'positive' | 'ground';
   config: BreadboardLayout;
   highlightHoles: string[];
   onHoleClick?: (id: string) => void;
 }) {
-  const { holeSpacing, terminalStripStart } = config;
-  const startX = terminalStripStart.x;
+  const { holeSpacing, terminalStripStart, powerRailHoles } = config;
+
+  // Matrix-5: rail holes start at col-1 + half-pitch (1.27mm)
+  // x formula for hole i (0-based):
+  //   railStartX = terminalStripStart.x + round(1.27 × scale) = 92 + 12 = 104px
+  //   x = railStartX + i×24 + floor(i/5)×24 + (i≥25 ? 48 : 0)
+  const S = holeSpacing / 2.54;  // px/mm scale factor
+  const railStartX = terminalStripStart.x + Math.round(1.27 * S);
+  const centerBreakPx = Math.round(5.08 * S);  // 48px
 
   return (
     <g className={`power-rail power-rail-${type}`}>
-      {Array.from({ length: columns }).map((_, i) => {
-        const x = startX + i * holeSpacing;
+      {Array.from({ length: powerRailHoles }).map((_, i) => {
+        const groupGap = Math.floor(i / 5) * holeSpacing;
+        const centerBreak = i >= 25 ? centerBreakPx : 0;
+        const x = railStartX + i * holeSpacing + groupGap + centerBreak;
         const holeId = `${type === 'positive' ? '+' : '-'}${i + 1}`;
         const highlighted = highlightHoles.includes(holeId);
 

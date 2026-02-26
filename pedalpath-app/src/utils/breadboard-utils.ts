@@ -12,6 +12,8 @@ export interface BreadboardLayout {
   sections: number;
   holeSpacing: number;
   centerGap: number;
+  /** Number of holes per power rail (Matrix-5 layout, not equal to columns) */
+  powerRailHoles: number;
   powerRailY: {
     topPositive: number;
     topGround: number;
@@ -28,33 +30,36 @@ export interface BreadboardLayout {
 
 // MB102 830-point breadboard — exact mechanical specification
 // Scale: 24px = 2.54mm → 9.449 px/mm
-// Physical board: 165.1mm × 54.6mm (= 65 × 21.496 pitches)
+// Physical board: 165.1mm × 54.6mm
 // Canvas: 1600 × 616px (board 1560×516 + 20px side margins + 80px top / 20px bottom)
 //
-// Origin offsets (from board top-left corner to first hole center):
-//   x_to_col_1  = 7.62mm  = 3 pitches = 72px   → canvas x = 20 + 72 = 92
-//   y_to_row_A  = 11.43mm = 4.5 pitches = 108px → canvas y = 80 + 108 = 188
+// GROUND TRUTH (board_models.py):
+//   A1 origin:  x=7.62mm (3 pitches), y=11.43mm (4.5 pitches) from board top-left
+//   Trough:     7.62mm center-to-center from Row E to Row F
+//               Extra gap = TROUGH − PITCH = 7.62 − 2.54 = 5.08mm (2 pitches) added for rows F-J
+//   Top rail +: 3.81mm (1.5 pitches) from board top → canvas y = 80 + 36 = 116
+//   Top rail −: 6.35mm (2.5 pitches) from board top → canvas y = 80 + 60 = 140
+//   Bot rail −: 48.26mm (19 pitches)               → canvas y = 80 + 456 = 536
+//   Bot rail +: 50.80mm (20 pitches)               → canvas y = 80 + 480 = 560
 //
-// Power rail offsets (from board top-left to rail hole center):
-//   top rail +  = 3.81mm = 1.5 pitches = 36px → canvas y = 80 + 36  = 116
-//   top rail −  = 6.35mm = 2.5 pitches = 60px → canvas y = 80 + 60  = 140
-//   bot rail −  = (54.6 − 6.35)mm = 19 pitches = 456px → canvas y = 80 + 456 = 536
-//   bot rail +  = (54.6 − 3.81)mm = 20 pitches = 480px → canvas y = 80 + 480 = 560
-//
-// Center gutter: 5.08mm = 2 pitches = 48px  (E→F gap: 7.62mm = 3 pitches = 72px)
+// POWER RAILS — Matrix-5 grouping:
+//   50 holes per rail, in groups of 5 with 2.54mm gap between groups + 5.08mm center break
+//   Rail start x: A1_x + 1.27mm (half-pitch offset) = 8.89mm → canvas x = 20 + 84 = 104
+//   For hole i (0-based): x = 104 + i×24 + floor(i/5)×24 + (i≥25 ? 48 : 0)
 //
 // Physical MB102 rail ordering: outer (+) rail closer to board edge, inner (−) closer to strip.
 export const LAYOUT_830: BreadboardLayout = {
   columns: 63,
   rowsPerSection: 5,
   sections: 2,
-  holeSpacing: 24,   // 2.54mm × 9.449 = 24px (exact integer)
-  centerGap: 48,     // 5.08mm × 9.449 = 48px (exact, = 2 pitches)
+  holeSpacing: 24,      // 2.54mm × 9.449 = 24px (exact integer)
+  centerGap: 48,        // 5.08mm = TROUGH(7.62) − PITCH(2.54) = extra gap for rows F-J
+  powerRailHoles: 50,   // Matrix-5: 25 per half + 5.08mm center break
   powerRailY: {
-    topPositive: 116, // outer (+) rail — 3.81mm from board top edge
-    topGround:   140, // inner (−) rail — 6.35mm from board top edge
-    bottomGround:   536, // inner (−) rail — 48.25mm from board top (19 pitches)
-    bottomPositive: 560, // outer (+) rail — 50.79mm from board top (20 pitches)
+    topPositive: 116,   // outer (+) rail — 3.81mm from board top edge
+    topGround:   140,   // inner (−) rail — 6.35mm from board top edge
+    bottomGround:   536, // inner (−) rail — 48.26mm from board top (19 pitches)
+    bottomPositive: 560, // outer (+) rail — 50.80mm from board top (20 pitches)
   },
   terminalStripStart: {
     x: 92,   // col 1 center — 7.62mm (3 pitches) from board left + 20px canvas margin
@@ -67,7 +72,8 @@ export const LAYOUT_830: BreadboardLayout = {
 export const LAYOUT_400: BreadboardLayout = {
   ...LAYOUT_830,
   columns: 30,
-  totalWidth: 800, // col 1 (92) → col 30 (92+29×24=788) + 12px right canvas margin
+  totalWidth: 800,     // col 1 (92) → col 30 (92+29×24=788) + 12px right canvas margin
+  powerRailHoles: 25,  // First half of Matrix-5 layout (no center break)
 };
 
 export const ROW_NAMES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'] as const;
@@ -94,7 +100,7 @@ export function holeToCoordinates(
       holeId.startsWith('positive') || holeId.startsWith('ground')) {
     const isPositive = holeId.startsWith('+') || holeId.startsWith('positive');
 
-    // Extract column number
+    // Extract hole number (1-based)
     let col: number;
     if (holeId.startsWith('+') || holeId.startsWith('-')) {
       col = parseInt(holeId.substring(1));
@@ -102,7 +108,14 @@ export function holeToCoordinates(
       col = parseInt(holeId.split('-')[1]);
     }
 
-    const x = config.terminalStripStart.x + (col - 1) * config.holeSpacing;
+    // Matrix-5 x formula: groups of 5 + 2.54mm gap + 5.08mm center break at hole 26
+    // Rail start = terminalStripStart.x + 1.27mm×scale = 92 + 12 = 104px
+    const i = col - 1;  // 0-based
+    const railStartX = config.terminalStripStart.x + Math.round(1.27 * (config.holeSpacing / 2.54));
+    const groupGap = Math.floor(i / 5) * config.holeSpacing;
+    const centerBreak = i >= 25 ? Math.round(5.08 * (config.holeSpacing / 2.54)) : 0;
+    const x = railStartX + i * config.holeSpacing + groupGap + centerBreak;
+
     const y = isPositive
       ? config.powerRailY.topPositive
       : config.powerRailY.topGround;
@@ -141,17 +154,18 @@ export function holeToCoordinates(
  */
 export function isValidHoleId(holeId: string, size: '830' | '400'): boolean {
   const maxCol = size === '830' ? 63 : 30;
+  const maxRailHoles = size === '830' ? 50 : 25;
 
   // Power rails: +N or -N format
   if (/^[+-]\d+$/.test(holeId)) {
     const col = parseInt(holeId.substring(1));
-    return col >= 1 && col <= maxCol;
+    return col >= 1 && col <= maxRailHoles;
   }
 
   // Power rails: positive-N or ground-N format
   if (/^(positive|ground)-\d+$/.test(holeId)) {
     const col = parseInt(holeId.split('-')[1]);
-    return col >= 1 && col <= maxCol;
+    return col >= 1 && col <= maxRailHoles;
   }
 
   // Terminal strip: {letter}{number} format
@@ -186,15 +200,15 @@ export function isValidHoleId(holeId: string, size: '830' | '400'): boolean {
  * getConnectedHoles('+10', '830')  // → ['+1', '+2', ..., '+63']
  */
 export function getConnectedHoles(holeId: string, size: '830' | '400'): string[] {
-  const maxCol = size === '830' ? 63 : 30;
+  const maxRailHoles = size === '830' ? 50 : 25;
 
-  // Power rails: all holes in same rail connected
+  // Power rails: all holes in same rail connected (Matrix-5, 50 holes for 830)
   if (holeId.startsWith('+') || holeId.startsWith('positive')) {
-    return Array.from({ length: maxCol }, (_, i) => `+${i + 1}`);
+    return Array.from({ length: maxRailHoles }, (_, i) => `+${i + 1}`);
   }
 
   if (holeId.startsWith('-') || holeId.startsWith('ground')) {
-    return Array.from({ length: maxCol }, (_, i) => `-${i + 1}`);
+    return Array.from({ length: maxRailHoles }, (_, i) => `-${i + 1}`);
   }
 
   // Terminal strip: 5 holes in same column connected

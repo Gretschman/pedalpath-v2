@@ -31,7 +31,7 @@ Phase 2 complete (168 tests passing). Visual output unacceptable — full rewrit
 cd /home/rob/pedalpath-v2/pedalpath-app
 npm test -- --run    # run all tests
 npm run build        # TypeScript check
-npm run dev          # localhost:5174
+npm run dev          # localhost:5173
 vercel --prod --yes  # deploy
 ```
 

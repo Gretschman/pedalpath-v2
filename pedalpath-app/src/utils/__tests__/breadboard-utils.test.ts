@@ -49,13 +49,15 @@ describe('breadboard-utils', () => {
 
     it('calculates correct position for positive power rail', () => {
       const coords = holeToCoordinates('+10', LAYOUT_830);
-      expect(coords.x).toBe(308); // 92 + 9 * 24
+      // Matrix-5: i=9, railStart=104, groupGap=floor(9/5)*24=24, centerBreak=0
+      // x = 104 + 9*24 + 24 + 0 = 344
+      expect(coords.x).toBe(344);
       expect(coords.y).toBe(116); // topPositive: y_to_rail_plus=3.81mm=36px + 80px margin
     });
 
     it('calculates correct position for ground power rail', () => {
       const coords = holeToCoordinates('-10', LAYOUT_830);
-      expect(coords.x).toBe(308); // 92 + 9 * 24
+      expect(coords.x).toBe(344); // same x formula as positive rail
       expect(coords.y).toBe(140); // topGround: y_to_rail_minus=6.35mm=60px + 80px margin
     });
 
@@ -90,15 +92,17 @@ describe('breadboard-utils', () => {
       it('validates power rail holes', () => {
         expect(isValidHoleId('+1', '830')).toBe(true);
         expect(isValidHoleId('+10', '830')).toBe(true);
-        expect(isValidHoleId('+63', '830')).toBe(true);
+        expect(isValidHoleId('+50', '830')).toBe(true);   // max 50 holes per rail
         expect(isValidHoleId('-1', '830')).toBe(true);
-        expect(isValidHoleId('-63', '830')).toBe(true);
+        expect(isValidHoleId('-50', '830')).toBe(true);
       });
 
       it('rejects invalid power rail holes', () => {
         expect(isValidHoleId('+0', '830')).toBe(false);
-        expect(isValidHoleId('+64', '830')).toBe(false);
-        expect(isValidHoleId('-64', '830')).toBe(false);
+        expect(isValidHoleId('+51', '830')).toBe(false);  // Matrix-5: only 50 holes
+        expect(isValidHoleId('+63', '830')).toBe(false);  // 63 terminal cols ≠ rail holes
+        expect(isValidHoleId('-51', '830')).toBe(false);
+        expect(isValidHoleId('-63', '830')).toBe(false);
       });
 
       it('rejects malformed hole IDs', () => {
@@ -146,18 +150,18 @@ describe('breadboard-utils', () => {
 
     it('returns all positive power rail holes', () => {
       const connected = getConnectedHoles('+10', '830');
-      expect(connected).toHaveLength(63);
+      expect(connected).toHaveLength(50);  // Matrix-5: 50 holes per rail
       expect(connected).toContain('+1');
       expect(connected).toContain('+10');
-      expect(connected).toContain('+63');
+      expect(connected).toContain('+50');
     });
 
     it('returns all ground power rail holes', () => {
       const connected = getConnectedHoles('-10', '830');
-      expect(connected).toHaveLength(63);
+      expect(connected).toHaveLength(50);  // Matrix-5: 50 holes per rail
       expect(connected).toContain('-1');
       expect(connected).toContain('-10');
-      expect(connected).toContain('-63');
+      expect(connected).toContain('-50');
     });
 
     it('power rails are not connected to each other', () => {
@@ -168,11 +172,11 @@ describe('breadboard-utils', () => {
       expect(groundConnected).not.toContain('+10');
     });
 
-    it('handles 400-point breadboard (30 columns)', () => {
+    it('handles 400-point breadboard (25 rail holes)', () => {
       const connected = getConnectedHoles('+10', '400');
-      expect(connected).toHaveLength(30);
+      expect(connected).toHaveLength(25);  // First half of Matrix-5, no center break
       expect(connected[0]).toBe('+1');
-      expect(connected[29]).toBe('+30');
+      expect(connected[24]).toBe('+25');
     });
   });
 
@@ -259,12 +263,14 @@ describe('breadboard-utils', () => {
       expect(LAYOUT_830.rowsPerSection).toBe(5);
       expect(LAYOUT_830.sections).toBe(2);
       expect(LAYOUT_830.holeSpacing).toBe(24);
+      expect(LAYOUT_830.powerRailHoles).toBe(50);  // Matrix-5
     });
 
     it('LAYOUT_400 has correct dimensions', () => {
       expect(LAYOUT_400.columns).toBe(30);
       expect(LAYOUT_400.rowsPerSection).toBe(5);
       expect(LAYOUT_400.sections).toBe(2);
+      expect(LAYOUT_400.powerRailHoles).toBe(25);  // First half of Matrix-5
     });
 
     it('power rail Y coordinates are correctly ordered', () => {
