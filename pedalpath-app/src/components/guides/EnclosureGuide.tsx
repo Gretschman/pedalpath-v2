@@ -25,20 +25,27 @@ interface WiringConnection {
 
 interface EnclosureDimensions {
   name: string;
-  width: number;  // mm
-  height: number; // mm
-  depth: number;  // mm
+  width: number;  // mm (face width)
+  height: number; // mm (face height)
+  depth: number;  // mm (box depth)
+  /** Recommended Y (mm from top) for first row of controls — below top forbidden zone */
+  firstDrillY: number;
 }
 
+// All standard Hammond/Tayda 1590-series + 125B enclosures.
+// Face dimensions are internal working area (mm).
 const ENCLOSURE_SIZES: Record<string, EnclosureDimensions> = {
-  '1590B':  { name: '1590B (Standard)',  width: 112,  height: 60,  depth: 31 },
-  '125B':   { name: '125B (Tall)',        width: 62.7, height: 118, depth: 34 },
-  '1590BB': { name: '1590BB (Large)',     width: 119,  height: 94,  depth: 56 },
+  '1590A':  { name: '1590A (Mini)',     width: 92,    height: 38,   depth: 31,   firstDrillY: 12 },
+  '1590B':  { name: '1590B (Standard)', width: 112,   height: 60,   depth: 31,   firstDrillY: 20 },
+  '125B':   { name: '125B (Tall)',       width: 62.7,  height: 118,  depth: 34,   firstDrillY: 32 },
+  '1590N1': { name: '1590N1 (Tall)',     width: 57.5,  height: 111,  depth: 31,   firstDrillY: 30 },
+  '1590BB': { name: '1590BB (Large)',    width: 119,   height: 94,   depth: 56,   firstDrillY: 22 },
+  '1590DD': { name: '1590DD (XL)',       width: 190.5, height: 119,  depth: 59,   firstDrillY: 22 },
 };
 
-// Forbidden Zones — MB-102/125B Standard (enclosure_logic.py)
-// Components placed here will collide with hardware (jacks, footswitch, DC).
-// Coordinates are relative to the top-left of the enclosure face (mm).
+// Forbidden Zones — hardware collision areas per enclosure face.
+// Coordinates relative to top-left of enclosure face (mm).
+// Source: Enclosure125B (enclosure_logic.py) + standard Tayda layouts.
 interface ForbiddenZone {
   label: string;
   yMin: number;
@@ -47,12 +54,32 @@ interface ForbiddenZone {
 }
 
 const FORBIDDEN_ZONES: Record<string, ForbiddenZone[]> = {
-  '125B': [
-    { label: 'JACKS / DC ZONE', yMin: 0,  yMax: 25,  color: '#ef4444' },
-    { label: 'FOOTSWITCH ZONE', yMin: 95, yMax: 118, color: '#ef4444' },
+  // 1590A: tiny, footswitch dominates bottom ~35%
+  '1590A':  [
+    { label: 'FOOTSWITCH ZONE', yMin: 24, yMax: 38,  color: '#ef4444' },
   ],
-  '1590B':  [],
-  '1590BB': [],
+  // 1590B: standard. Footswitch centered at ~50mm from top.
+  '1590B':  [
+    { label: 'FOOTSWITCH ZONE', yMin: 42, yMax: 60,  color: '#ef4444' },
+  ],
+  // 125B (tall vertical): jacks/DC at top, footswitch at bottom
+  '125B': [
+    { label: 'JACKS / DC ZONE',  yMin: 0,   yMax: 25,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE',  yMin: 95,  yMax: 118, color: '#ef4444' },
+  ],
+  // 1590N1 (tall): proportionally similar to 125B
+  '1590N1': [
+    { label: 'JACKS / DC ZONE',  yMin: 0,   yMax: 22,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE',  yMin: 89,  yMax: 111, color: '#ef4444' },
+  ],
+  // 1590BB: larger box, footswitch near bottom
+  '1590BB': [
+    { label: 'FOOTSWITCH ZONE',  yMin: 74,  yMax: 94,  color: '#ef4444' },
+  ],
+  // 1590DD: XL box, footswitch zone near bottom
+  '1590DD': [
+    { label: 'FOOTSWITCH ZONE',  yMin: 98,  yMax: 119, color: '#ef4444' },
+  ],
 };
 
 export default function EnclosureGuide({ bomData, projectName: _projectName = 'Your Pedal' }: EnclosureGuideProps) {
@@ -75,7 +102,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   // Formula: divide usable width (minus 20mm margins on each side) into (n+1) equal segments.
   // This centers the group for any pot count, including single-pot.
   const potSpacing = (dimensions.width - 40) / (potCount + 1);
-  const potYPosition = 25; // 25mm from top edge (standard GGG-style position)
+  // Use enclosure's firstDrillY so pots always land below any top forbidden zone
+  const potYPosition = dimensions.firstDrillY;
 
   // Add pots with proper spacing
   pots.forEach((pot, idx) => {
