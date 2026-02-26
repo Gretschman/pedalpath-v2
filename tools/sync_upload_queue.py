@@ -19,7 +19,7 @@ except ImportError:
 
 from docx import Document
 
-QUEUE_DIR = Path('/home/rob/pedalpath-v2/upload-queue')
+QUEUE_DIR = Path('/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX')
 OUTPUT    = Path('/home/rob/pedalpath-v2/docs/generated/session_manifest.md')
 
 # File categories by extension

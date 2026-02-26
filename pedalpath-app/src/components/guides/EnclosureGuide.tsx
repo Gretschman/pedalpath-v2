@@ -188,10 +188,15 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     forbiddenZones.some(z => hole.y >= z.yMin && hole.y <= z.yMax)
   );
 
+  // Wire color → hex for rendering
+  const WIRE_COLOR_HEX: Record<string, string> = {
+    green: '#16a34a', blue: '#2563eb', red: '#dc2626', black: '#374151', white: '#f1f5f9',
+  };
+
   // Wiring connections (3PDT standard)
   const wiringConnections: WiringConnection[] = [
-    { from: 'Input Jack Tip', to: '3PDT Pin 2', wireColor: 'White', notes: 'Guitar input signal' },
-    { from: '3PDT Pin 5', to: 'Circuit Input', wireColor: 'White', notes: 'To circuit input pad' },
+    { from: 'Input Jack Tip', to: '3PDT Pin 2', wireColor: 'Green', notes: 'Guitar input signal' },
+    { from: '3PDT Pin 5', to: 'Circuit Input', wireColor: 'Green', notes: 'To circuit input pad' },
     { from: 'Circuit Output', to: '3PDT Pin 4', wireColor: 'Blue', notes: 'From circuit output pad' },
     { from: '3PDT Pin 1', to: 'Output Jack Tip', wireColor: 'Blue', notes: 'Pedal output' },
     { from: '3PDT Pin 6', to: 'Output Jack Tip', wireColor: 'Blue', notes: 'Bypass connection' },
@@ -482,6 +487,171 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
             ← 25mm calibration →
           </text>
         </g>
+      </svg>
+    );
+  };
+
+  // Generate SVG offboard wiring diagram — standard true bypass 3PDT
+  // Pin layout (solder side): rows top→bottom = [7,8,9] / [4,5,6] / [1,2,3]
+  // Wire colours: Green=input, Blue=output, Red=power, Black=ground
+  const renderWiringDiagram = () => {
+    const svgW = 800, svgH = 500;
+    const GAP = 46;
+
+    const swX = 220, swY = 290;
+    const pins: Record<number, { x: number; y: number }> = {
+      7: { x: swX,           y: swY         }, 8: { x: swX + GAP,     y: swY         }, 9: { x: swX + 2 * GAP, y: swY         },
+      4: { x: swX,           y: swY + GAP   }, 5: { x: swX + GAP,     y: swY + GAP   }, 6: { x: swX + 2 * GAP, y: swY + GAP   },
+      1: { x: swX,           y: swY + 2*GAP }, 2: { x: swX + GAP,     y: swY + 2*GAP }, 3: { x: swX + 2 * GAP, y: swY + 2*GAP },
+    };
+    const PIN_FN: Record<number, string> = {
+      1: 'OUT', 2: 'IN', 3: 'GND', 4: 'BRD←', 5: '→BRD', 6: 'BYP', 7: 'LED−', 8: 'N/C', 9: 'LED+',
+    };
+
+    const INJ = { cx: 72,  cy: 280, tipX: 108, tipY: 255, slvX: 108, slvY: 305 };
+    const OUJ = { cx: 728, cy: 280, tipX: 692, tipY: 255, slvX: 692, slvY: 305 };
+    const DCJ = { cx: 400, cy: 52,  posX: 378, posY: 78,  negX: 422, negY: 78  };
+    const PCB = { x: 490, y: 210, w: 140, h: 100, inX: 506, inY: 233, outX: 506, outY: 278, gnX: 614, gnY: 278, nvX: 614, nvY: 233 };
+    const LED = { cx: 395, cy: 162, anX: 377, anY: 178, caX: 413, caY: 178 };
+    const GND_Y = 435, GND_X1 = 108, GND_X2 = 760;
+
+    const GREEN = '#16a34a', BLUE = '#2563eb', RED = '#dc2626', BLK = '#374151';
+    const ws = (color: string, dashed = false) => ({
+      stroke: color, strokeWidth: 2.5, fill: 'none',
+      strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+      ...(dashed ? { strokeDasharray: '7,5' } : {}),
+    });
+
+    return (
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        style={{ width: '100%', maxWidth: 800, display: 'block', margin: '0 auto', background: '#f8fafc', borderRadius: 8 }}
+        aria-label="3PDT True Bypass Offboard Wiring Diagram"
+      >
+        <rect width={svgW} height={svgH} fill="#f8fafc" />
+
+        {/* ════ WIRES — drawn first so components sit on top ════ */}
+
+        {/* GREEN — Input Tip → Pin 2, Pin 5 → Board IN */}
+        <polyline points={`${INJ.tipX},${INJ.tipY} ${INJ.tipX},205 ${pins[2].x},205 ${pins[2].x},${pins[2].y}`} {...ws(GREEN)} />
+        <polyline points={`${pins[5].x},${pins[5].y} ${pins[5].x},318 455,318 455,${PCB.inY} ${PCB.inX},${PCB.inY}`} {...ws(GREEN)} />
+
+        {/* BLUE solid — Board OUT → Pin 4, Pin 1 → Output Tip */}
+        <polyline points={`${PCB.outX},${PCB.outY} 474,${PCB.outY} 474,350 ${pins[4].x},350 ${pins[4].x},${pins[4].y}`} {...ws(BLUE)} />
+        <polyline points={`${pins[1].x},${pins[1].y} ${pins[1].x},405 ${OUJ.tipX},405 ${OUJ.tipX},${OUJ.tipY}`} {...ws(BLUE)} />
+        {/* BLUE dashed — Pin 6 → Output Tip (bypass, effect off) */}
+        <polyline points={`${pins[6].x},${pins[6].y} ${pins[6].x},418 ${OUJ.tipX + 6},418 ${OUJ.tipX + 6},${OUJ.tipY}`} {...ws(BLUE, true)} />
+
+        {/* RED — DC+ → Board +9V, Pin 9 → LED Anode */}
+        <polyline points={`${DCJ.posX},${DCJ.posY} ${DCJ.posX},120 645,120 645,${PCB.nvY} ${PCB.nvX},${PCB.nvY}`} {...ws(RED)} />
+        <polyline points={`${pins[9].x},${pins[9].y} ${pins[9].x},190 ${LED.anX},190 ${LED.anX},${LED.anY}`} {...ws(RED)} />
+
+        {/* BLACK — all ground connections */}
+        <line x1={INJ.slvX}  y1={INJ.slvY}  x2={INJ.slvX}  y2={GND_Y} {...ws(BLK)} />
+        <line x1={OUJ.slvX}  y1={OUJ.slvY}  x2={OUJ.slvX}  y2={GND_Y} {...ws(BLK)} />
+        <polyline points={`${DCJ.negX},${DCJ.negY} ${GND_X2},${DCJ.negY} ${GND_X2},${GND_Y}`} {...ws(BLK)} />
+        <line x1={LED.caX}   y1={LED.caY}    x2={LED.caX}   y2={GND_Y} {...ws(BLK)} />
+        <line x1={PCB.gnX}   y1={PCB.gnY}    x2={PCB.gnX}   y2={GND_Y} {...ws(BLK)} />
+        <line x1={pins[3].x} y1={pins[3].y}  x2={pins[3].x} y2={GND_Y} {...ws(BLK)} />
+
+        {/* ── Ground Bus ── */}
+        <line x1={GND_X1} y1={GND_Y} x2={GND_X2} y2={GND_Y} stroke={BLK} strokeWidth={4} strokeLinecap="round" />
+        {[GND_X1, pins[3].x, LED.caX, PCB.gnX, OUJ.slvX, GND_X2].map((gx, i) => (
+          <line key={i} x1={gx} y1={GND_Y} x2={gx} y2={GND_Y + 7} stroke={BLK} strokeWidth={2} />
+        ))}
+        <text x={(GND_X1 + GND_X2) / 2} y={GND_Y + 18} textAnchor="middle" fontSize={10} fill={BLK} fontWeight="bold" fontFamily="monospace">
+          ⏚  GROUND BUS
+        </text>
+
+        {/* ════ COMPONENTS — drawn on top of wires ════ */}
+
+        {/* ── Input Jack ── */}
+        <circle cx={INJ.cx} cy={INJ.cy} r={36} fill="#e2e8f0" stroke="#475569" strokeWidth={2} />
+        <circle cx={INJ.cx} cy={INJ.cy} r={12} fill="#94a3b8" stroke="#475569" strokeWidth={1.5} />
+        <text x={INJ.cx} y={INJ.cy - 42} textAnchor="middle" fontSize={11} fill="#0f172a" fontWeight="bold">INPUT</text>
+        <text x={INJ.cx} y={INJ.cy - 30} textAnchor="middle" fontSize={9}  fill="#64748b">¼″ jack</text>
+        <circle cx={INJ.tipX} cy={INJ.tipY} r={5} fill="#fbbf24" stroke="#78350f" strokeWidth={1.5} />
+        <text x={INJ.tipX + 8} y={INJ.tipY + 4} fontSize={9} fill="#0f172a" fontWeight="600">TIP</text>
+        <circle cx={INJ.slvX} cy={INJ.slvY} r={5} fill="#94a3b8" stroke="#475569" strokeWidth={1.5} />
+        <text x={INJ.slvX + 8} y={INJ.slvY + 4} fontSize={9} fill="#0f172a" fontWeight="600">SLV</text>
+
+        {/* ── Output Jack ── */}
+        <circle cx={OUJ.cx} cy={OUJ.cy} r={36} fill="#e2e8f0" stroke="#475569" strokeWidth={2} />
+        <circle cx={OUJ.cx} cy={OUJ.cy} r={12} fill="#94a3b8" stroke="#475569" strokeWidth={1.5} />
+        <text x={OUJ.cx} y={OUJ.cy - 42} textAnchor="middle" fontSize={11} fill="#0f172a" fontWeight="bold">OUTPUT</text>
+        <text x={OUJ.cx} y={OUJ.cy - 30} textAnchor="middle" fontSize={9}  fill="#64748b">¼″ jack</text>
+        <circle cx={OUJ.tipX} cy={OUJ.tipY} r={5} fill="#fbbf24" stroke="#78350f" strokeWidth={1.5} />
+        <text x={OUJ.tipX - 8} y={OUJ.tipY + 4} textAnchor="end" fontSize={9} fill="#0f172a" fontWeight="600">TIP</text>
+        <circle cx={OUJ.slvX} cy={OUJ.slvY} r={5} fill="#94a3b8" stroke="#475569" strokeWidth={1.5} />
+        <text x={OUJ.slvX - 8} y={OUJ.slvY + 4} textAnchor="end" fontSize={9} fill="#0f172a" fontWeight="600">SLV</text>
+
+        {/* ── DC Jack ── */}
+        <rect x={DCJ.cx - 40} y={DCJ.cy - 28} width={80} height={52} rx={6} fill="#fef3c7" stroke="#d97706" strokeWidth={2} />
+        <text x={DCJ.cx} y={DCJ.cy - 10} textAnchor="middle" fontSize={10} fill="#92400e" fontWeight="bold">DC POWER</text>
+        <text x={DCJ.cx} y={DCJ.cy + 5}  textAnchor="middle" fontSize={9}  fill="#92400e">2.1mm barrel</text>
+        <circle cx={DCJ.posX} cy={DCJ.posY} r={5} fill={RED} stroke="#991b1b" strokeWidth={1.5} />
+        <text x={DCJ.posX} y={DCJ.posY + 16} textAnchor="middle" fontSize={10} fill="#991b1b" fontWeight="bold">+</text>
+        <circle cx={DCJ.negX} cy={DCJ.negY} r={5} fill={BLK} stroke="#111827" strokeWidth={1.5} />
+        <text x={DCJ.negX} y={DCJ.negY + 16} textAnchor="middle" fontSize={10} fill="#111827" fontWeight="bold">−</text>
+
+        {/* ── 3PDT Footswitch ── */}
+        <rect x={swX - 42} y={swY - 48} width={164} height={164} rx={8} fill="#1e293b" stroke="#0f172a" strokeWidth={2.5} />
+        <text x={swX + 40} y={swY - 30} textAnchor="middle" fontSize={11} fill="#e2e8f0" fontWeight="bold">3PDT</text>
+        <text x={swX + 40} y={swY - 17} textAnchor="middle" fontSize={9}  fill="#94a3b8">FOOTSWITCH</text>
+        <text x={swX + 40} y={swY - 5}  textAnchor="middle" fontSize={8}  fill="#64748b">solder side</text>
+        {[7, 8, 9, 4, 5, 6, 1, 2, 3].map(n => {
+          const { x, y } = pins[n];
+          return (
+            <g key={n}>
+              <circle cx={x} cy={y} r={14} fill="#475569" stroke="#334155" strokeWidth={1.5} />
+              <text x={x} y={y - 2} textAnchor="middle" fontSize={10} fill="white" fontWeight="bold">{n}</text>
+              <text x={x} y={y + 9}  textAnchor="middle" fontSize={7}  fill="#cbd5e1">{PIN_FN[n]}</text>
+            </g>
+          );
+        })}
+
+        {/* ── Circuit Board ── */}
+        <rect x={PCB.x} y={PCB.y} width={PCB.w} height={PCB.h} rx={6} fill="#14532d" stroke="#166534" strokeWidth={2} />
+        <text x={PCB.x + PCB.w / 2} y={PCB.y + 28} textAnchor="middle" fontSize={12} fill="#bbf7d0" fontWeight="bold">CIRCUIT</text>
+        <text x={PCB.x + PCB.w / 2} y={PCB.y + 44} textAnchor="middle" fontSize={10} fill="#86efac">BOARD</text>
+        <circle cx={PCB.inX} cy={PCB.inY} r={7} fill={GREEN} stroke="#052e16" strokeWidth={1.5} />
+        <text x={PCB.inX} y={PCB.inY - 12} textAnchor="middle" fontSize={9} fill="#bbf7d0" fontWeight="bold">IN</text>
+        <circle cx={PCB.outX} cy={PCB.outY} r={7} fill={BLUE}  stroke="#1e1b4b" strokeWidth={1.5} />
+        <text x={PCB.outX} y={PCB.outY + 18} textAnchor="middle" fontSize={9} fill="#bbf7d0" fontWeight="bold">OUT</text>
+        <circle cx={PCB.gnX}  cy={PCB.gnY}  r={7} fill={BLK}   stroke="#111827" strokeWidth={1.5} />
+        <text x={PCB.gnX} y={PCB.gnY + 18} textAnchor="middle" fontSize={9} fill="#bbf7d0" fontWeight="bold">GND</text>
+        <circle cx={PCB.nvX}  cy={PCB.nvY}  r={7} fill={RED}   stroke="#450a0a" strokeWidth={1.5} />
+        <text x={PCB.nvX} y={PCB.nvY - 12} textAnchor="middle" fontSize={9} fill="#bbf7d0" fontWeight="bold">+9V</text>
+
+        {/* ── LED ── */}
+        <polygon points={`${LED.cx},${LED.cy - 20} ${LED.cx - 15},${LED.cy + 8} ${LED.cx + 15},${LED.cy + 8}`} fill="#fde68a" stroke="#d97706" strokeWidth={2} />
+        <line x1={LED.cx - 15} y1={LED.cy + 8} x2={LED.cx + 15} y2={LED.cy + 8} stroke="#d97706" strokeWidth={2} />
+        <text x={LED.cx} y={LED.cy - 26} textAnchor="middle" fontSize={10} fill="#92400e" fontWeight="bold">LED</text>
+        <circle cx={LED.anX} cy={LED.anY} r={5} fill={RED} stroke="#991b1b" strokeWidth={1.5} />
+        <text x={LED.anX - 8} y={LED.anY + 4} textAnchor="end" fontSize={9} fill="#991b1b" fontWeight="bold">+</text>
+        <circle cx={LED.caX} cy={LED.caY} r={5} fill={BLK} stroke="#111827" strokeWidth={1.5} />
+        <text x={LED.caX + 8} y={LED.caY + 4} fontSize={9} fill="#111827" fontWeight="bold">−</text>
+        <text x={LED.caX + 18} y={LED.caY + 4} fontSize={8} fill="#6b7280" fontStyle="italic">CLR</text>
+
+        {/* ── Bypass label ── */}
+        <text x={(pins[6].x + OUJ.tipX) / 2} y={425} textAnchor="middle" fontSize={9} fill={BLUE} fontStyle="italic" opacity={0.85}>
+          bypass (effect off)
+        </text>
+
+        {/* ── Wire colour legend ── */}
+        <rect x={492} y={328} width={162} height={92} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1.5} />
+        <text x={573} y={346} textAnchor="middle" fontSize={10} fill="#374151" fontWeight="bold">WIRE COLORS</text>
+        {[
+          { color: GREEN, label: 'Green — Input signal' },
+          { color: BLUE,  label: 'Blue — Output signal' },
+          { color: RED,   label: 'Red — Power (+9V)'    },
+          { color: BLK,   label: 'Black — Ground'       },
+        ].map((item, i) => (
+          <g key={i} transform={`translate(502, ${358 + i * 15})`}>
+            <line x1={0} y1={5} x2={18} y2={5} stroke={item.color} strokeWidth={2.5} strokeLinecap="round" />
+            <text x={24} y={9} fontSize={9} fill="#374151">{item.label}</text>
+          </g>
+        ))}
       </svg>
     );
   };
@@ -780,32 +950,9 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
             </div>
           </div>
 
-          {/* 3PDT Diagram */}
-          <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-6 mb-6">
-            <h4 className="font-semibold text-gray-900 mb-4 text-center">
-              3PDT True Bypass Wiring Diagram
-            </h4>
-            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(pin => (
-                <div key={pin} className="bg-white border-2 border-gray-400 rounded-lg p-3 text-center">
-                  <div className="text-xs text-gray-600 mb-1">Pin {pin}</div>
-                  <div className="text-xs font-medium text-gray-900">
-                    {pin === 1 && 'Output Tip'}
-                    {pin === 2 && 'Input Tip'}
-                    {pin === 3 && 'Ground'}
-                    {pin === 4 && 'Circuit Out'}
-                    {pin === 5 && 'Circuit In'}
-                    {pin === 6 && 'Bypass'}
-                    {pin === 7 && 'LED -'}
-                    {pin === 8 && 'N/C'}
-                    {pin === 9 && 'LED +'}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs text-gray-600 text-center mt-4">
-              View from solder side (lugs facing you)
-            </div>
+          {/* 3PDT Diagram — SVG */}
+          <div className="mb-6">
+            {renderWiringDiagram()}
           </div>
 
           {/* Wiring Connections List */}
@@ -816,7 +963,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
                 <div className="flex items-start gap-3">
                   <div
                     className="w-8 h-8 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: conn.wireColor.toLowerCase() }}
+                    style={{ backgroundColor: WIRE_COLOR_HEX[conn.wireColor.toLowerCase()] ?? conn.wireColor.toLowerCase() }}
                   />
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">

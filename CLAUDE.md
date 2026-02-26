@@ -21,7 +21,7 @@ Phase 2 complete (168 tests passing). Visual output unacceptable — full rewrit
 
 **DO NOT** start Stripe until visual issues resolved.
 
-**Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/Upload to Claude COde/2b Uploaded to Claude Code/Updates 02.22.26/
+**Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
 ---
 
@@ -43,7 +43,7 @@ vercel --prod --yes  # deploy
 - Component SVGs: `src/components/visualizations/components-svg/`
 - Decoders: `src/utils/decoders/`
 - Tests: `src/utils/**/__tests__/`
-- Upload queue: `upload-queue/` (Windows: `\\wsl.localhost\Ubuntu\home\rob\pedalpath-v2\upload-queue`)
+- Upload queue / Inbox: `/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX` (drop files here from Windows)
 - Session docs: `docs/generated/session_log.md`
 
 ---

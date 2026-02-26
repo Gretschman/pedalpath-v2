@@ -2,46 +2,70 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // System prompt — sets the role/persona for Claude
-const SYSTEM_PROMPT = `You are an expert in guitar effects pedal circuits and electronic schematics. Your sole task is to analyze schematic images and extract component lists from what is actually visible in the image. You never invent, guess, or assume components that are not clearly shown in the image.`;
+const SYSTEM_PROMPT = `You are an expert electronics engineer specialising in guitar effects pedal schematics. You extract accurate component lists from schematic images. You are rigorous and conservative: you never invent components, and you never misidentify text labels, PCB names, or title blocks as components.`;
 
 // User prompt — the actual analysis instruction sent with the image
-const USER_PROMPT = `Analyze the guitar effects pedal schematic in the image above. Extract ALL components that are VISIBLY SHOWN in this specific image.
+const USER_PROMPT = `Analyze the guitar effects pedal schematic image and extract every electronic component that is shown.
 
-CRITICAL: Only report components you can actually see in THIS image. Do not use prior knowledge to fill in components that are not visible. If a value is hard to read, use your best estimate with a low confidence score rather than skipping it or substituting a different component.
+━━━ WHAT COUNTS AS A COMPONENT ━━━
+A component MUST have a recognisable schematic SYMBOL (zigzag=resistor, parallel lines=capacitor, triangle=op-amp, etc.) AND a reference designator (R1, C1, Q1, U1, P1, SW1, J1, D1, LED1…).
 
-Return a structured JSON response:
+━━━ WHAT IS NOT A COMPONENT — DO NOT REPORT THESE ━━━
+• Board/product names (e.g. "Defizzerator", "Tube Screamer", "Big Muff")
+• PCB revision text (e.g. "REV3C", "V2.1", "Rev B")
+• Section labels or node names (e.g. "BIAS", "GRIT", "DRIVE", "INPUT", "OUTPUT", "VCC", "GND")
+• Copyright text, designer names, dates
+• Anything that lacks both a schematic symbol AND a reference designator
+
+━━━ REFERENCE DESIGNATOR GUIDE ━━━
+R = resistor | C = capacitor | L = inductor | D = diode | LED = LED
+Q = transistor (BJT or JFET) | U, IC = integrated circuit / op-amp
+P, RV, VR, POT = potentiometer | SW = switch | J = jack | FS = footswitch
+
+━━━ RULES ━━━
+1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read.
+2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical. If values are partially legible or could differ, report each component separately with its own entry and individual confidence score. A wrong value is worse than a duplicate entry.
+3. Value accuracy — watch for common misreads:
+   • 1k vs 1M (one-k vs one-meg) — check for the Ω or k/M suffix carefully
+   • 10n vs 100n vs 10p — check the multiplier prefix (n=nano, p=pico, u=micro)
+   • 47n vs 4.7n, 22n vs 2.2n — look for decimal points
+4. Component symbols to look for:
+   • Potentiometer (P, RV, VR): resistor symbol with an arrow through it, or a 3-terminal resistor symbol
+   • Switch (SW): open-circuit line with a hinge/pivot, often labeled On-Off-On, SPDT, or DPDT
+   • These are frequently in passive tone/EQ circuits — look carefully even if hard to see
+5. Enclosure size — count only off-board hardware (pots, switches, jacks, LEDs):
+   • 1–2 controls → 1590A
+   • 3–4 controls → 1590B
+   • 5–6 controls → 1590BB or 125B (125B for tall/narrow layouts)
+   • 7+ controls → 1590DD
+6. Power — ONLY include the "power" field if the schematic contains active components (Q, U, IC, op-amp). Passive circuits (R, C, L, D, pot, switch, jack only) need NO power supply — omit "power" entirely.
+7. Return ONLY valid JSON. No markdown, no commentary.
+
+Return this exact structure:
 
 {
   "components": [
     {
-      "component_type": "resistor" | "capacitor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
-      "value": "<exact value as shown in schematic, e.g. 10k, 100nF, 2N3904, OC44>",
+      "component_type": "resistor" | "capacitor" | "inductor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
+      "value": "<value as written on schematic, e.g. 10k, 100nF, 2N3904>",
       "quantity": 1,
       "reference_designators": ["R1"],
       "confidence": 95,
-      "notes": "Optional notes about legibility or context"
+      "notes": "Optional: legibility issues or special observations"
     }
   ],
   "enclosure": {
-    "size": "1590B" | "125B" | "1590BB",
-    "drill_count": 6,
-    "notes": "Recommended based on visible controls"
+    "size": "1590A" | "1590B" | "1590BB" | "125B" | "1590DD",
+    "drill_count": 4,
+    "notes": "Brief reasoning"
   },
   "power": {
     "voltage": "9V",
-    "current": "20mA",
-    "polarity": "center-negative" | "center-positive"
+    "current": "~5mA",
+    "polarity": "center-negative"
   },
   "confidence_score": 85
-}
-
-Requirements:
-1. Include EVERY component visible: resistors (with values), capacitors (with values), semiconductors (transistors, diodes, ICs), jacks, footswitch, potentiometers, LEDs, switches
-2. Group identical components (same type AND value) — set quantity > 1 and list all reference designators
-3. Set confidence 0-100 based on how clearly each value is marked in the image
-4. For enclosure: count off-board components (pots, switches, jacks, LEDs); 1590B=3-4 knobs, 125B=3-5 knobs, 1590BB=5+ knobs
-5. Standard pedal power is 9V center-negative unless the schematic shows otherwise
-6. Return ONLY valid JSON, no markdown or extra text`;
+}`;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
@@ -186,6 +210,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         parsed_at: new Date(),
         confidence_score: parsed.confidence_score || 0,
       };
+
+      // Passive-circuit guard: strip power recommendation if no active components present.
+      // Active types: transistor, ic, op-amp. Passive circuits (R/C/D/pot/jack/switch) need no supply.
+      const ACTIVE_TYPES = new Set(['transistor', 'ic', 'op-amp']);
+      const hasActiveComponents = bomData.components.some(
+        (c: { component_type: string }) => ACTIVE_TYPES.has(c.component_type)
+      );
+      if (!hasActiveComponents) {
+        bomData.power = undefined;
+      }
 
       // Validate that we got some components
       if (!bomData.components || bomData.components.length === 0) {
