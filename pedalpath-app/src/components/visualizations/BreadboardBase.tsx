@@ -109,36 +109,44 @@ export function BreadboardBase({
 
 function BoardBackground({ config }: { config: BreadboardLayout }) {
   const {
-    totalWidth, totalHeight,
+    totalHeight,
     terminalStripStart, holeSpacing, centerGap, powerRailY, columns,
   } = config;
 
-  // Active area boundaries (slightly inside the total SVG)
-  const areaLeft = 55;
-  const areaRight = terminalStripStart.x + columns * holeSpacing + 35;
-  const railH = 22; // height of each power rail tinted strip
+  // Physical board rect — derived from MB102 mechanical spec
+  // Scale: holeSpacing px / 2.54mm = px per mm
+  const S = holeSpacing / 2.54; // px/mm
+  const boardLeft = terminalStripStart.x - Math.round(7.62 * S);   // col-1 offset: 3 pitches = 72px → x=20
+  const boardTop  = terminalStripStart.y - Math.round(11.43 * S);  // row-A offset: 4.5 pitches = 108px → y=80
+  const boardW    = terminalStripStart.x + (columns - 1) * holeSpacing - boardLeft; // col-1 to col-63 span = 1560px
+  const boardH    = Math.round(54.6 * S);  // 54.6mm board height = 516px
+
+  // Active area rect (slightly inset — contains rails + terminal strip)
+  const areaLeft  = boardLeft + 14;
+  const areaRight = boardLeft + boardW - 14;
+  const railH = 20; // power rail tint strip height (px)
 
   // Terminal strip bounding box
-  const tsTop = terminalStripStart.y - 20;
-  const tsBottom = terminalStripStart.y + 10 * holeSpacing + centerGap + 20;
+  const tsTop    = terminalStripStart.y - 16;
+  const tsBottom = terminalStripStart.y + 9 * holeSpacing + centerGap + 16;
 
   // Center gap bounding box
-  const gapTop = terminalStripStart.y + 5 * holeSpacing;
+  const gapTop    = terminalStripStart.y + 5 * holeSpacing;
   const gapBottom = gapTop + centerGap;
 
   return (
     <g className="board-background">
-      {/* Board body */}
+      {/* Board body — physically sized (165.1mm × 54.6mm) */}
       <rect
-        x={0} y={0}
-        width={totalWidth} height={totalHeight}
+        x={boardLeft} y={boardTop}
+        width={boardW} height={boardH}
         fill="#F2EFE4"
         rx={6}
       />
       {/* Board border */}
       <rect
-        x={2} y={2}
-        width={totalWidth - 4} height={totalHeight - 4}
+        x={boardLeft + 2} y={boardTop + 2}
+        width={boardW - 4} height={boardH - 4}
         fill="none"
         stroke="#C8C0A8"
         strokeWidth="3"
@@ -366,6 +374,11 @@ function Hole({
 function Labels({ config }: { config: BreadboardLayout }) {
   const { columns, terminalStripStart, holeSpacing, centerGap } = config;
 
+  // Polarity marker x: inside board left margin, left of active area
+  const S = holeSpacing / 2.54;
+  const boardLeft  = terminalStripStart.x - Math.round(7.62 * S);  // 20
+  const polarityX  = boardLeft + 10;  // 30px — comfortably inside board edge
+
   return (
     <g className="labels">
       {/* Column numbers — every 5 columns plus first and last */}
@@ -391,7 +404,7 @@ function Labels({ config }: { config: BreadboardLayout }) {
             {/* Below row j */}
             <text
               x={x}
-              y={terminalStripStart.y + 10 * holeSpacing + centerGap + 18}
+              y={terminalStripStart.y + 9 * holeSpacing + centerGap + 20}
               fontSize="9"
               fill="#888888"
               textAnchor="middle"
@@ -424,14 +437,14 @@ function Labels({ config }: { config: BreadboardLayout }) {
         );
       })}
 
-      {/* Power rail polarity markers */}
-      <text x={18} y={config.powerRailY.topPositive + 5} fontSize="14" fill="#CC2200" fontWeight="bold" fontFamily="Arial, sans-serif">+</text>
-      <text x={18} y={config.powerRailY.topGround + 5} fontSize="14" fill="#0055CC" fontWeight="bold" fontFamily="Arial, sans-serif">−</text>
+      {/* Power rail polarity markers — positioned inside board left margin */}
+      <text x={polarityX} y={config.powerRailY.topPositive + 5} fontSize="14" fill="#CC2200" fontWeight="bold" fontFamily="Arial, sans-serif">+</text>
+      <text x={polarityX} y={config.powerRailY.topGround + 5} fontSize="14" fill="#0055CC" fontWeight="bold" fontFamily="Arial, sans-serif">−</text>
       {config.powerRailY.bottomGround < config.totalHeight && (
-        <text x={18} y={config.powerRailY.bottomGround + 5} fontSize="14" fill="#0055CC" fontWeight="bold" fontFamily="Arial, sans-serif">−</text>
+        <text x={polarityX} y={config.powerRailY.bottomGround + 5} fontSize="14" fill="#0055CC" fontWeight="bold" fontFamily="Arial, sans-serif">−</text>
       )}
       {config.powerRailY.bottomPositive < config.totalHeight && (
-        <text x={18} y={config.powerRailY.bottomPositive + 5} fontSize="14" fill="#CC2200" fontWeight="bold" fontFamily="Arial, sans-serif">+</text>
+        <text x={polarityX} y={config.powerRailY.bottomPositive + 5} fontSize="14" fill="#CC2200" fontWeight="bold" fontFamily="Arial, sans-serif">+</text>
       )}
     </g>
   );

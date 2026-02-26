@@ -18,47 +18,51 @@ import {
 
 describe('breadboard-utils', () => {
   describe('holeToCoordinates', () => {
+    // MB102 physical spec: scale 24px = 2.54mm (9.449 px/mm)
+    // terminalStripStart { x:92, y:188 } = board_margin(20,80) + origin_offset(72px,108px)
+    // col N: x = 92 + (N-1)*24   |  row idx: y = 188 + idx*24 + (idx>=5 ? 48 : 0)
+
     it('calculates correct position for terminal strip hole a1', () => {
       const coords = holeToCoordinates('a1', LAYOUT_830);
-      expect(coords).toEqual({ x: 103, y: 239 });
+      expect(coords).toEqual({ x: 92, y: 188 }); // x_to_col1=7.62mm=72px+20, y_to_rowA=11.43mm=108px+80
     });
 
     it('calculates correct position for terminal strip hole a15', () => {
       const coords = holeToCoordinates('a15', LAYOUT_830);
-      expect(coords.x).toBe(439); // 103 + 14 * 24
-      expect(coords.y).toBe(239);
+      expect(coords.x).toBe(428); // 92 + 14 * 24
+      expect(coords.y).toBe(188);
     });
 
     it('calculates correct position for row f (after center gap)', () => {
       const coords = holeToCoordinates('f1', LAYOUT_830);
-      expect(coords.x).toBe(103);
-      // Row f is index 5, so: 239 + (5 * 24) + 48 (center gap)
-      expect(coords.y).toBe(407);
+      expect(coords.x).toBe(92);
+      // Row f is index 5, so: 188 + (5 * 24) + 48 (center gap = 5.08mm gutter)
+      expect(coords.y).toBe(356);
     });
 
     it('calculates correct position for row j (last row)', () => {
       const coords = holeToCoordinates('j1', LAYOUT_830);
-      expect(coords.x).toBe(103);
-      // Row j is index 9, so: 239 + (9 * 24) + 48 (center gap)
-      expect(coords.y).toBe(503);
+      expect(coords.x).toBe(92);
+      // Row j is index 9, so: 188 + (9 * 24) + 48 (center gap)
+      expect(coords.y).toBe(452);
     });
 
     it('calculates correct position for positive power rail', () => {
       const coords = holeToCoordinates('+10', LAYOUT_830);
-      expect(coords.x).toBe(319); // 103 + 9 * 24
-      expect(coords.y).toBe(190);
+      expect(coords.x).toBe(308); // 92 + 9 * 24
+      expect(coords.y).toBe(116); // topPositive: y_to_rail_plus=3.81mm=36px + 80px margin
     });
 
     it('calculates correct position for ground power rail', () => {
       const coords = holeToCoordinates('-10', LAYOUT_830);
-      expect(coords.x).toBe(319); // 103 + 9 * 24
-      expect(coords.y).toBe(126);
+      expect(coords.x).toBe(308); // 92 + 9 * 24
+      expect(coords.y).toBe(140); // topGround: y_to_rail_minus=6.35mm=60px + 80px margin
     });
 
     it('handles 400-point breadboard coordinates', () => {
       const coords = holeToCoordinates('a30', LAYOUT_400);
-      expect(coords.x).toBe(799); // 103 + 29 * 24
-      expect(coords.y).toBe(239);
+      expect(coords.x).toBe(788); // 92 + 29 * 24
+      expect(coords.y).toBe(188);
     });
   });
 
@@ -215,13 +219,13 @@ describe('breadboard-utils', () => {
     it('returns 830-point layout', () => {
       const layout = getLayout('830');
       expect(layout.columns).toBe(63);
-      expect(layout.totalWidth).toBe(1700);
+      expect(layout.totalWidth).toBe(1600); // 165.1mm → 1560px + 40px canvas margin
     });
 
     it('returns 400-point layout', () => {
       const layout = getLayout('400');
       expect(layout.columns).toBe(30);
-      expect(layout.totalWidth).toBe(850);
+      expect(layout.totalWidth).toBe(800);
     });
 
     it('both layouts have same hole spacing', () => {
@@ -265,10 +269,12 @@ describe('breadboard-utils', () => {
 
     it('power rail Y coordinates are correctly ordered', () => {
       const { powerRailY } = LAYOUT_830;
-      // Standard breadboard layout: outer ground rail above inner positive rail
-      expect(powerRailY.topGround).toBeLessThan(powerRailY.topPositive);
-      expect(powerRailY.topPositive).toBeLessThan(powerRailY.bottomPositive);
-      expect(powerRailY.bottomPositive).toBeLessThan(powerRailY.bottomGround);
+      // Physical MB102 layout: outer (+) rail closer to board edge than inner (−) rail.
+      // Top half (smaller Y = closer to top edge):   topPositive < topGround
+      // Bottom half (smaller Y = closer to terminal): bottomGround < bottomPositive
+      expect(powerRailY.topPositive).toBeLessThan(powerRailY.topGround);
+      expect(powerRailY.topGround).toBeLessThan(powerRailY.bottomGround);
+      expect(powerRailY.bottomGround).toBeLessThan(powerRailY.bottomPositive);
     });
   });
 });

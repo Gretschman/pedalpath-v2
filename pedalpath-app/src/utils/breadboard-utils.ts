@@ -26,30 +26,48 @@ export interface BreadboardLayout {
   totalHeight: number;
 }
 
+// MB102 830-point breadboard — exact mechanical specification
+// Scale: 24px = 2.54mm → 9.449 px/mm
+// Physical board: 165.1mm × 54.6mm (= 65 × 21.496 pitches)
+// Canvas: 1600 × 616px (board 1560×516 + 20px side margins + 80px top / 20px bottom)
+//
+// Origin offsets (from board top-left corner to first hole center):
+//   x_to_col_1  = 7.62mm  = 3 pitches = 72px   → canvas x = 20 + 72 = 92
+//   y_to_row_A  = 11.43mm = 4.5 pitches = 108px → canvas y = 80 + 108 = 188
+//
+// Power rail offsets (from board top-left to rail hole center):
+//   top rail +  = 3.81mm = 1.5 pitches = 36px → canvas y = 80 + 36  = 116
+//   top rail −  = 6.35mm = 2.5 pitches = 60px → canvas y = 80 + 60  = 140
+//   bot rail −  = (54.6 − 6.35)mm = 19 pitches = 456px → canvas y = 80 + 456 = 536
+//   bot rail +  = (54.6 − 3.81)mm = 20 pitches = 480px → canvas y = 80 + 480 = 560
+//
+// Center gutter: 5.08mm = 2 pitches = 48px  (E→F gap: 7.62mm = 3 pitches = 72px)
+//
+// Physical MB102 rail ordering: outer (+) rail closer to board edge, inner (−) closer to strip.
 export const LAYOUT_830: BreadboardLayout = {
   columns: 63,
   rowsPerSection: 5,
   sections: 2,
-  holeSpacing: 24,
-  centerGap: 48,
+  holeSpacing: 24,   // 2.54mm × 9.449 = 24px (exact integer)
+  centerGap: 48,     // 5.08mm × 9.449 = 48px (exact, = 2 pitches)
   powerRailY: {
-    topGround: 126,      // blue (−) rail, outer (closer to board edge)
-    topPositive: 190,    // red (+) rail, inner (closer to terminal strip)
-    bottomPositive: 552, // red (+) rail, inner (just below row j)
-    bottomGround: 616,   // blue (−) rail, outer (outside photo crop, not visible)
+    topPositive: 116, // outer (+) rail — 3.81mm from board top edge
+    topGround:   140, // inner (−) rail — 6.35mm from board top edge
+    bottomGround:   536, // inner (−) rail — 48.25mm from board top (19 pitches)
+    bottomPositive: 560, // outer (+) rail — 50.79mm from board top (20 pitches)
   },
   terminalStripStart: {
-    x: 103,
-    y: 239,
+    x: 92,   // col 1 center — 7.62mm (3 pitches) from board left + 20px canvas margin
+    y: 188,  // row A center — 11.43mm (4.5 pitches) from board top + 80px canvas margin
   },
-  totalWidth: 1700,
-  totalHeight: 566,
+  totalWidth:  1600, // 165.1mm → 1560px + 40px canvas margin (20 each side)
+  totalHeight: 616,  // 54.6mm  → 516px  + 100px canvas margin (80 top / 20 bottom)
 };
 
 export const LAYOUT_400: BreadboardLayout = {
   ...LAYOUT_830,
   columns: 30,
-  totalWidth: 850,
+  totalWidth: 800, // col 1 (92) → col 30 (92+29×24=788) + 12px right canvas margin
 };
 
 export const ROW_NAMES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'] as const;

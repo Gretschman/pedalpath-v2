@@ -28,8 +28,12 @@ const StripboardView: React.FC<StripboardViewProps> = ({
 
   const ROWS = 25;
   const COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').slice(0, 20); // A-T
-  const HOLE_SPACING = 15;
-  const HOLE_RADIUS = 3;
+  // Physical stripboard spec: 2.54mm pitch → 24px at 9.449px/mm
+  // Hole diameter: 1.02mm → 9.6px → radius 5px
+  // Copper strip width: 2.1mm → ~20px | Isolation gap: 0.44mm → ~4px
+  const HOLE_SPACING = 24;   // 2.54mm pitch
+  const HOLE_RADIUS = 5;     // 1.02mm hole diameter → r=4.8px ≈ 5px
+  const COPPER_STRIP_H = 20; // 2.1mm copper strip width → 20px (gap=4px fills remaining 4px to next strip)
   const TOP_MARGIN = 40;
   const LEFT_MARGIN = 40;
 
@@ -356,15 +360,15 @@ const StripboardView: React.FC<StripboardViewProps> = ({
                 {row}
               </text>
 
-              {/* Copper strip */}
+              {/* Copper strip — 2.1mm wide = 20px, centered on hole row */}
               <rect
                 x={LEFT_MARGIN - 5}
-                y={y - 4}
+                y={y - COPPER_STRIP_H / 2}
                 width={COLUMNS.length * HOLE_SPACING + 10}
-                height={8}
+                height={COPPER_STRIP_H}
                 fill={isGroundRail ? '#3b82f6' : isPowerRail ? '#ef4444' : '#d97706'}
                 opacity={isGroundRail || isPowerRail ? 0.7 : 0.6}
-                rx="1"
+                rx="2"
               />
 
               {/* Holes (solder pads) */}
@@ -377,7 +381,7 @@ const StripboardView: React.FC<StripboardViewProps> = ({
                     <circle
                       cx={LEFT_MARGIN + colIndex * HOLE_SPACING}
                       cy={y}
-                      r={HOLE_RADIUS + 1}
+                      r={HOLE_RADIUS}
                       fill={isCut ? '#1a1a1a' : '#b45309'}
                       stroke="#92400e"
                       strokeWidth="1"
