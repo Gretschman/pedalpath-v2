@@ -31,9 +31,11 @@ const TransistorSVG: React.FC<TransistorSVGProps> = ({
   label,
   pinSpacing = 24,
 }) => {
-  const leadLength = 14;   // px from hole to body bottom
-  const bw = 38;           // body width
-  const bh = 20;           // body height (dome height)
+  // Scale: 24px = 2.54mm → 9.45px/mm
+  // TO-92 body: ~5mm wide × 5mm tall = 47px × 47px
+  const leadLength = 36;   // px from hole to body bottom (realistic lead length)
+  const bw = 46;           // body width  (~5mm)
+  const bh = 46;           // body height / dome height (~5mm)
 
   const bodyBottom = y - leadLength;
 
@@ -42,12 +44,12 @@ const TransistorSVG: React.FC<TransistorSVGProps> = ({
   const bX = x;
   const cX = x + pinSpacing;
 
-  // D-shape path: flat bottom at bodyBottom, dome curves upward by bh
+  // D-shape path: flat bottom at bodyBottom, dome (semicircle) curves upward by bh
   // M start bottom-left → line to bottom-right → arc up-and-over back to left → close
   const bodyPath = [
     `M ${x - bw / 2} ${bodyBottom}`,
     `L ${x + bw / 2} ${bodyBottom}`,
-    `A ${bw / 2} ${bh} 0 0 0 ${x - bw / 2} ${bodyBottom}`,
+    `A ${bw / 2} ${bh / 2} 0 0 0 ${x - bw / 2} ${bodyBottom}`,
     'Z',
   ].join(' ');
 
@@ -59,19 +61,19 @@ const TransistorSVG: React.FC<TransistorSVGProps> = ({
       <line
         x1={eX} y1={y}
         x2={eX} y2={bodyBottom}
-        stroke="#A0A0A0" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round"
       />
       {/* B lead */}
       <line
         x1={bX} y1={y}
         x2={bX} y2={bodyBottom}
-        stroke="#A0A0A0" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round"
       />
       {/* C lead */}
       <line
         x1={cX} y1={y}
         x2={cX} y2={bodyBottom}
-        stroke="#A0A0A0" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round"
       />
 
       {/* Body shadow for depth */}

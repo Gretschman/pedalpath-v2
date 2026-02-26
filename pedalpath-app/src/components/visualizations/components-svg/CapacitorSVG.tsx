@@ -48,32 +48,33 @@ function calculateDistance(x1: number, y1: number, x2: number, y2: number): numb
  * Get capacitor body dimensions based on type and value
  */
 function getCapacitorDimensions(spec: CapacitorSpec): { width: number; height: number } {
+  // Scale: 24px = 2.54mm → 9.45px/mm
   const uf = spec.capacitance.uf;
 
   switch (spec.capType) {
     case 'ceramic':
-      // Small disc: 5-8mm diameter
-      return { width: 8, height: 8 };
+      // Ceramic disc: ~3-5mm dia → 28-47px. Use 20px (leaves gap between holes)
+      return { width: 20, height: 20 };
 
     case 'film_box':
-      // Box capacitor: varies by capacitance
-      if (uf < 0.01) return { width: 8, height: 12 }; // < 10nF
-      if (uf < 0.1) return { width: 10, height: 14 }; // 10-100nF
-      return { width: 12, height: 16 }; // > 100nF
+      // Box capacitor: ~5-8mm × 4-7mm body
+      if (uf < 0.01) return { width: 18, height: 24 }; // < 10nF: small box
+      if (uf < 0.1) return { width: 22, height: 28 };  // 10-100nF: medium box
+      return { width: 26, height: 32 };                 // > 100nF: larger box
 
     case 'electrolytic':
-      // Cylindrical: diameter based on capacitance
-      if (uf < 1) return { width: 8, height: 12 };
-      if (uf < 10) return { width: 10, height: 16 };
-      if (uf < 100) return { width: 12, height: 20 };
-      return { width: 14, height: 24 };
+      // Cylindrical — diameter scales with capacitance
+      if (uf < 1)   return { width: 18, height: 26 };  // small (0.47µF etc)
+      if (uf < 10)  return { width: 22, height: 32 };  // medium (4.7µF)
+      if (uf < 100) return { width: 26, height: 38 };  // large (47µF)
+      return { width: 30, height: 44 };                 // very large (100µF+)
 
     case 'tantalum':
-      // Small teardrop/blob
-      return { width: 8, height: 10 };
+      // Tantalum bead/teardrop — small
+      return { width: 18, height: 22 };
 
     default:
-      return { width: 10, height: 14 };
+      return { width: 22, height: 28 };
   }
 }
 
@@ -386,7 +387,7 @@ const CapacitorSVG: React.FC<CapacitorSVGProps> = ({
         x2={-width / 2 - 2}
         y2={0}
         stroke="#B8860B"
-        strokeWidth="1.5"
+        strokeWidth="2.5"
         strokeLinecap="round"
       />
 
@@ -397,7 +398,7 @@ const CapacitorSVG: React.FC<CapacitorSVGProps> = ({
         x2={totalLength / 2}
         y2={0}
         stroke="#B8860B"
-        strokeWidth="1.5"
+        strokeWidth="2.5"
         strokeLinecap="round"
       />
 

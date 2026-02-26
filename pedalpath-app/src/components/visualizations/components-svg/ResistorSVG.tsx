@@ -102,16 +102,16 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
   const centerY = (startY + endY) / 2;
 
   // Resistor body dimensions (in pixels)
-  // Standard 1/4W resistor is about 6mm long, 2.3mm diameter
-  // At 25.4px per 2.54mm (breadboard hole spacing), 6mm ≈ 60px
-  const bodyLength = Math.min(totalLength * 0.6, 60);
-  const bodyWidth = 10; // diameter
+  // Scale: 24px = 2.54mm → 9.45px/mm
+  // 1/4W resistor body: ~6.5mm long × 2.3mm dia → 61px × 22px
+  const bodyLength = Math.min(totalLength * 0.65, 62);
+  const bodyWidth = 20; // 2.3mm dia @ 9.45px/mm ≈ 22px (20 keeps clear of adjacent rows)
 
   // Band positioning (5-band vs 4-band layouts)
   const isFiveBand = displayBands.length === 5;
-  const bandWidth = isFiveBand ? 3 : 4;
-  const bandSpacing = isFiveBand ? 7 : 9;
-  const firstBandOffset = isFiveBand ? -22 : -20;
+  const bandWidth = isFiveBand ? 4.5 : 5.5;
+  const bandSpacing = isFiveBand ? 9 : 11;
+  const firstBandOffset = isFiveBand ? -20 : -18;
 
   // Generate unique IDs for gradients
   const gradientId = `resistor-gradient-${Math.random().toString(36).substr(2, 9)}`;
@@ -147,7 +147,7 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
         x2={-bodyLength / 2}
         y2={0}
         stroke="#B8860B"
-        strokeWidth="1.5"
+        strokeWidth="2.5"
         strokeLinecap="round"
       />
 
@@ -158,7 +158,7 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
         x2={totalLength / 2}
         y2={0}
         stroke="#B8860B"
-        strokeWidth="1.5"
+        strokeWidth="2.5"
         strokeLinecap="round"
       />
 
@@ -246,7 +246,7 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
       {label && (
         <text
           x={0}
-          y={-bodyWidth - 8}
+          y={-bodyWidth / 2 - 8}
           textAnchor="middle"
           fontSize="10"
           fontFamily="monospace"

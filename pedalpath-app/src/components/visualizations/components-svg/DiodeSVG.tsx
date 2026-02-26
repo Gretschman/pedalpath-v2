@@ -82,12 +82,14 @@ interface CylinderProps {
 
 /** Glass or plastic cylindrical diode body with cathode band */
 function CylinderBody({ totalLength, bodyColor, diodeType, partNumber, voltage, gradId }: CylinderProps) {
-  // Body dimensions
-  const bodyWidth  = diodeType === 'rectifier' ? 9 : 7;
-  const bodyLength = Math.min(totalLength * 0.52, diodeType === 'rectifier' ? 38 : 28);
+  // Body dimensions — Scale: 24px = 2.54mm → 9.45px/mm
+  // Signal/zener glass body: ~2mm dia × 4mm long → 19px × 38px
+  // Rectifier plastic body:  ~2.7mm dia × 5.5mm long → 26px × 52px
+  const bodyWidth  = diodeType === 'rectifier' ? 20 : 16;
+  const bodyLength = Math.min(totalLength * 0.55, diodeType === 'rectifier' ? 50 : 36);
   const halfBody   = bodyLength / 2;
   const halfWidth  = bodyWidth / 2;
-  const cathodeBandW = 3.5;
+  const cathodeBandW = 5;
 
   // Cathode band sits near the right (+) end of the body
   const bandX = halfBody - cathodeBandW - 2;
@@ -122,14 +124,14 @@ function CylinderBody({ totalLength, bodyColor, diodeType, partNumber, voltage, 
       <line
         x1={-totalLength / 2} y1={0}
         x2={-halfBody}        y2={0}
-        stroke="#B8860B" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round"
       />
 
       {/* Right lead (cathode) */}
       <line
         x1={halfBody}          y1={0}
         x2={totalLength / 2}   y2={0}
-        stroke="#B8860B" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round"
       />
 
       {/* Body */}
@@ -196,7 +198,8 @@ interface DomeProps {
 
 /** LED dome body with colored glow, flat cathode edge, and anode/cathode leads */
 function LEDDome({ totalLength, spec, gradId, glowId, clipId }: DomeProps) {
-  const radius = spec.size === '5mm' ? 11 : 8;
+  // 5mm LED dia = 47px → radius 24px; 3mm LED = 28px → radius 14px
+  const radius = spec.size === '5mm' ? 22 : 14;
   const bodyColor = spec.color;
 
   // LED colors are bright — compute a lighter glow color
@@ -240,14 +243,14 @@ function LEDDome({ totalLength, spec, gradId, glowId, clipId }: DomeProps) {
       <line
         x1={-totalLength / 2} y1={0}
         x2={-(radius + 2)}    y2={0}
-        stroke="#B8860B" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round"
       />
 
       {/* Cathode lead (right, slightly shorter) */}
       <line
         x1={flatCutX + 1}   y1={0}
         x2={totalLength / 2} y2={0}
-        stroke="#B8860B" strokeWidth="1.5" strokeLinecap="round"
+        stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round"
       />
 
       {/* Outer glow halo */}
@@ -307,10 +310,10 @@ const DiodeSVG: React.FC<DiodeSVGProps> = ({
 
   const uid = React.useId().replace(/:/g, '');
 
-  // Choose body height for label positioning
+  // Choose body height for label positioning (matches updated CylinderBody / LEDDome sizes)
   const bodyWidth = isLED(spec)
-    ? (spec.size === '5mm' ? 22 : 16)
-    : (spec.diodeType === 'rectifier' ? 9 : 7);
+    ? (spec.size === '5mm' ? 44 : 28)
+    : (spec.diodeType === 'rectifier' ? 20 : 16);
 
   return (
     <g
