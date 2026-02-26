@@ -31,9 +31,28 @@ interface EnclosureDimensions {
 }
 
 const ENCLOSURE_SIZES: Record<string, EnclosureDimensions> = {
-  '1590B': { name: '1590B (Small)', width: 112, height: 60, depth: 31 },
-  '125B': { name: '125B (Medium)', width: 120, height: 94, depth: 34 },
-  '1590BB': { name: '1590BB (Large)', width: 119, height: 94, depth: 56 },
+  '1590B':  { name: '1590B (Standard)',  width: 112,  height: 60,  depth: 31 },
+  '125B':   { name: '125B (Tall)',        width: 62.7, height: 118, depth: 34 },
+  '1590BB': { name: '1590BB (Large)',     width: 119,  height: 94,  depth: 56 },
+};
+
+// Forbidden Zones — MB-102/125B Standard (enclosure_logic.py)
+// Components placed here will collide with hardware (jacks, footswitch, DC).
+// Coordinates are relative to the top-left of the enclosure face (mm).
+interface ForbiddenZone {
+  label: string;
+  yMin: number;
+  yMax: number;
+  color: string;
+}
+
+const FORBIDDEN_ZONES: Record<string, ForbiddenZone[]> = {
+  '125B': [
+    { label: 'JACKS / DC ZONE', yMin: 0,  yMax: 25,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 95, yMax: 118, color: '#ef4444' },
+  ],
+  '1590B':  [],
+  '1590BB': [],
 };
 
 export default function EnclosureGuide({ bomData, projectName: _projectName = 'Your Pedal' }: EnclosureGuideProps) {
@@ -44,6 +63,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
   const enclosureSize = selectedEnclosure;
   const dimensions = ENCLOSURE_SIZES[enclosureSize];
+  const forbiddenZones = FORBIDDEN_ZONES[enclosureSize] ?? [];
 
   // Generate drill template based on components with accurate positioning
   // faceHoles = top face of enclosure (pots, footswitch, LED)
@@ -134,6 +154,11 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     ...(hasOutputJack ? [outputSideHole] : []),
     ...(hasDCJack ? [dcEndHole] : []),
   ];
+
+  // Hardware Collision Detection — flag face holes landing in forbidden zones
+  const collisions = faceHoles.filter(hole =>
+    forbiddenZones.some(z => hole.y >= z.yMin && hole.y <= z.yMax)
+  );
 
   // Wiring connections (3PDT standard)
   const wiringConnections: WiringConnection[] = [
@@ -256,7 +281,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
     holes: DrillHole[],
     panelW: number,
     panelH: number,
-    _title: string
+    _title: string,
+    zones: ForbiddenZone[] = []
   ) => {
     // px per mm — 3.7795 ≈ 96 dpi / 25.4 mm/in gives true 1:1 at 96dpi
     const PX_PER_MM = 3.7795;
@@ -309,6 +335,28 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
           strokeWidth="2"
           rx="3"
         />
+
+        {/* ── Forbidden Zones (hardware collision areas) ── */}
+        {zones.map((zone, zi) => {
+          const zy = margin + zone.yMin * PX_PER_MM;
+          const zh = (zone.yMax - zone.yMin) * PX_PER_MM;
+          return (
+            <g key={`zone-${zi}`}>
+              <rect
+                x={margin} y={zy}
+                width={encW} height={zh}
+                fill="#ef4444" fillOpacity="0.12"
+                stroke="#ef4444" strokeWidth="0.8" strokeDasharray="4,3"
+              />
+              <text
+                x={margin + encW / 2} y={zy + zh / 2 + 4}
+                textAnchor="middle" fontSize="8" fill="#dc2626" fontWeight="bold"
+              >
+                ⚠ {zone.label}
+              </text>
+            </g>
+          );
+        })}
 
         {/* ── Corner registration marks ── */}
         {[
@@ -455,6 +503,33 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
         </div>
       </div>
 
+      {/* Hardware Collision Warning */}
+      {collisions.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="font-bold text-red-900">Hardware Collision Detected</h4>
+            <p className="text-red-800 text-sm mt-1">
+              The following components are placed in forbidden zones and will conflict with
+              enclosure hardware (jacks, DC connector, or footswitch):
+            </p>
+            <ul className="mt-2 space-y-1">
+              {collisions.map(h => {
+                const zone = forbiddenZones.find(z => h.y >= z.yMin && h.y <= z.yMax);
+                return (
+                  <li key={h.id} className="text-sm text-red-800 font-medium">
+                    • {h.component} at Y={h.y}mm — conflicts with {zone?.label}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-red-700 text-xs mt-2">
+              Move these components to Y: 25mm–95mm (the safe working area).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Drill Template */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -505,7 +580,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
                   </p>
                 </div>
               ) : (
-                renderDrillTemplate(faceHoles, dimensions.width, dimensions.height, 'Top Face')
+                renderDrillTemplate(faceHoles, dimensions.width, dimensions.height, 'Top Face', forbiddenZones)
               )}
             </div>
 
