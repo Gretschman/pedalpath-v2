@@ -1,524 +1,360 @@
+/**
+ * StripboardView — Realistic Veroboard/Stripboard Visualization
+ *
+ * Renders a photorealistic stripboard with:
+ *   - Phenolic resin board (warm brown, component side)
+ *   - Brushed copper horizontal tracks (copper side)
+ *   - Annular ring solder pads with drill holes
+ *   - Track cut markers (red ✕, gap in copper)
+ *   - Grid labels: columns A–X (left→right), rows 1–25 (top→bottom)
+ *
+ * Physical spec (same scale as MB-102 breadboard: 24px = 2.54mm):
+ *   HOLE_SPACING = 24px (2.54mm pitch)
+ *   HOLE_RADIUS  = 5px  (1.02mm drill → dia≈9.6px)
+ *   STRIP_H      = 20px (2.1mm copper width; 4px gap to next strip)
+ *   Board        = 24 cols × 25 rows
+ */
+
 import React, { useState } from 'react';
 
-type ViewMode = 'component' | 'copper' | 'both';
+// ============================================================================
+// Physical constants
+// ============================================================================
 
-interface StripboardViewProps {
-  viewMode?: ViewMode;
-  onViewModeChange?: (mode: ViewMode) => void;
-  components?: StripboardComponent[];
-  trackCuts?: string[]; // e.g., ['C2', 'E5']
+const HOLE_SPACING = 24;   // 2.54mm pitch → 24px
+const HOLE_RADIUS  = 5;    // 1.02mm drill hole → r=5px
+const PAD_RADIUS   = 8.5;  // copper annular ring outer radius
+const STRIP_H      = 20;   // 2.1mm copper strip height → 20px
+const COLS         = 24;
+const ROWS         = 25;
+const ML           = 40;   // left margin (row labels)
+const MT           = 34;   // top margin (col labels)
+const MR           = 16;   // right margin
+const MB           = 16;   // bottom margin
+
+const TOTAL_W = ML + COLS * HOLE_SPACING + MR;   // 632px
+const TOTAL_H = MT + ROWS * HOLE_SPACING + MB;   // 650px
+
+const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i)); // A–X
+
+// ============================================================================
+// Props
+// ============================================================================
+
+export interface StripboardViewProps {
+  viewMode?: 'component' | 'copper' | 'both';
+  onViewModeChange?: (mode: string) => void;
+  components?: unknown[];   // reserved for future component overlay
+  trackCuts?: string[];     // e.g. ['D11', 'G10']
   showDemo?: boolean;
 }
 
-interface StripboardComponent {
-  type: 'ic' | 'resistor' | 'capacitor' | 'wire';
-  position: string; // e.g., 'D4-D11' for IC, 'B5-D5' for resistor
-  label?: string;
-  orientation?: 'horizontal' | 'vertical';
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/** SVG x for a column index (0-based) */
+const holeCx = (ci: number) => ML + ci * HOLE_SPACING;
+
+/** SVG y for a row number (1-based) */
+const holeCy = (row: number) => MT + (row - 1) * HOLE_SPACING + HOLE_SPACING / 2;
+
+// ============================================================================
+// Sub-component: single stripboard SVG
+// ============================================================================
+
+interface BoardSVGProps {
+  copperSide: boolean;
+  cutSet: Set<string>;
 }
 
+function BoardSVG({ copperSide, cutSet }: BoardSVGProps) {
+  // Color palette
+  const boardFill      = copperSide ? 'url(#sb-board-copper)' : 'url(#sb-board-top)';
+  const boardStroke    = copperSide ? '#3A2810' : '#9A6020';
+  const labelFill      = copperSide ? '#9A7040' : '#5A3A10';
+  const holeFill       = copperSide ? '#060200' : '#1E0C00';
+  const cutGapFill     = copperSide ? '#060200' : '#C4904A';
+
+  const stripStartX = ML - 8;
+  const stripW      = COLS * HOLE_SPACING + 16;
+
+  return (
+    <svg
+      width={TOTAL_W}
+      height={TOTAL_H}
+      viewBox={`0 0 ${TOTAL_W} ${TOTAL_H}`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        {/* Board top (component side) — warm phenolic resin */}
+        <linearGradient id="sb-board-top" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#D4A870" />
+          <stop offset="100%" stopColor="#B8893A" />
+        </linearGradient>
+
+        {/* Board copper side — near-black epoxy */}
+        <linearGradient id="sb-board-copper" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#110800" />
+          <stop offset="100%" stopColor="#080400" />
+        </linearGradient>
+
+        {/* Copper track gradient — top-lit brushed copper */}
+        <linearGradient id="sb-copper-track" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#E0A840" />
+          <stop offset="30%"  stopColor="#C08030" />
+          <stop offset="70%"  stopColor="#A06020" />
+          <stop offset="100%" stopColor="#703A10" />
+        </linearGradient>
+
+        {/* Top-side copper: duller, visible through board holes */}
+        <linearGradient id="sb-copper-topview" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor="#C89840" stopOpacity="0.65" />
+          <stop offset="100%" stopColor="#A07020" stopOpacity="0.65" />
+        </linearGradient>
+
+        {/* Solder pad on copper side: matte solder ring */}
+        <radialGradient id="sb-solder-pad" cx="38%" cy="35%" r="62%">
+          <stop offset="0%"   stopColor="#E8DEB8" />
+          <stop offset="55%"  stopColor="#C0A858" />
+          <stop offset="100%" stopColor="#887838" />
+        </radialGradient>
+
+        {/* Copper pad ring on top side */}
+        <radialGradient id="sb-pad-top" cx="38%" cy="35%" r="62%">
+          <stop offset="0%"   stopColor="#DCA840" />
+          <stop offset="100%" stopColor="#8B5520" />
+        </radialGradient>
+      </defs>
+
+      {/* Board body */}
+      <rect
+        x={ML - 10} y={MT - 10}
+        width={COLS * HOLE_SPACING + 20}
+        height={ROWS * HOLE_SPACING + 20}
+        fill={boardFill}
+        stroke={boardStroke}
+        strokeWidth="2"
+        rx="4"
+      />
+
+      {/* Mounting hole corners (cosmetic) */}
+      {[
+        [ML - 3,                     MT - 3],
+        [ML + COLS * HOLE_SPACING + 3 - HOLE_SPACING, MT - 3],
+        [ML - 3,                     MT + (ROWS - 1) * HOLE_SPACING + 3],
+        [ML + COLS * HOLE_SPACING + 3 - HOLE_SPACING, MT + (ROWS - 1) * HOLE_SPACING + 3],
+      ].map(([mx, my], idx) => (
+        <circle key={`mh-${idx}`} cx={mx} cy={my} r={4}
+          fill={copperSide ? '#0A0500' : '#8B6020'}
+          stroke={copperSide ? '#3A2000' : '#6A4010'}
+          strokeWidth="0.5"
+        />
+      ))}
+
+      {/* Copper strips — one per row */}
+      {Array.from({ length: ROWS }, (_, ri) => {
+        const rowNum = ri + 1;
+        const cy = holeCy(rowNum);
+        const stripY = cy - STRIP_H / 2;
+        const trackGrad = copperSide ? 'url(#sb-copper-track)' : 'url(#sb-copper-topview)';
+
+        // Collect cut column indices for this row
+        const cutCols = COL_LABELS.reduce<number[]>((acc, col, ci) => {
+          if (cutSet.has(`${col}${rowNum}`)) acc.push(ci);
+          return acc;
+        }, []);
+
+        return (
+          <g key={`strip-${rowNum}`}>
+            {/* Full copper strip */}
+            <rect
+              x={stripStartX} y={stripY}
+              width={stripW} height={STRIP_H}
+              fill={trackGrad}
+              rx="2"
+            />
+            {/* Edge highlight on copper side */}
+            {copperSide && (
+              <rect
+                x={stripStartX} y={stripY}
+                width={stripW} height={2}
+                fill="#E8C060" opacity="0.4"
+                rx="1"
+              />
+            )}
+
+            {/* Track cuts: overlay gap in copper */}
+            {cutCols.map((ci) => {
+              const gapCx = holeCx(ci);
+              return (
+                <g key={`cut-${ci}`}>
+                  {/* Board-coloured gap breaks the copper */}
+                  <rect
+                    x={gapCx - HOLE_RADIUS - 3} y={stripY - 1}
+                    width={HOLE_RADIUS * 2 + 6}  height={STRIP_H + 2}
+                    fill={cutGapFill}
+                  />
+                  {/* Red ✕ cut marker */}
+                  <line
+                    x1={gapCx - 5} y1={cy - 5}
+                    x2={gapCx + 5} y2={cy + 5}
+                    stroke="#DD1111" strokeWidth="2.5" strokeLinecap="round"
+                  />
+                  <line
+                    x1={gapCx - 5} y1={cy + 5}
+                    x2={gapCx + 5} y2={cy - 5}
+                    stroke="#DD1111" strokeWidth="2.5" strokeLinecap="round"
+                  />
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+
+      {/* Solder pads + drill holes */}
+      {Array.from({ length: ROWS }, (_, ri) =>
+        Array.from({ length: COLS }, (_, ci) => {
+          const rowNum = ri + 1;
+          const col = COL_LABELS[ci];
+          const cx = holeCx(ci);
+          const cy = holeCy(rowNum);
+          const onCut = cutSet.has(`${col}${rowNum}`);
+          const padGrad = copperSide ? 'url(#sb-solder-pad)' : 'url(#sb-pad-top)';
+
+          return (
+            <g key={`hole-${ri}-${ci}`}>
+              {/* Annular ring (skip on cut) */}
+              {!onCut && (
+                <circle
+                  cx={cx} cy={cy} r={PAD_RADIUS}
+                  fill={padGrad}
+                />
+              )}
+              {/* Drill hole */}
+              <circle
+                cx={cx} cy={cy} r={HOLE_RADIUS}
+                fill={holeFill}
+              />
+              {/* Hole rim */}
+              <circle
+                cx={cx} cy={cy} r={HOLE_RADIUS}
+                fill="none"
+                stroke={copperSide ? '#3A2000' : '#5A3010'}
+                strokeWidth="0.5"
+              />
+            </g>
+          );
+        })
+      )}
+
+      {/* Column labels (A–X) */}
+      {COL_LABELS.map((col, ci) => (
+        <text
+          key={`cl-${col}`}
+          x={holeCx(ci)} y={MT - 16}
+          textAnchor="middle"
+          fontSize="10" fontFamily="monospace" fontWeight="700"
+          fill={labelFill}
+        >
+          {col}
+        </text>
+      ))}
+
+      {/* Row labels (1–25) */}
+      {Array.from({ length: ROWS }, (_, ri) => (
+        <text
+          key={`rl-${ri}`}
+          x={ML - 14} y={holeCy(ri + 1) + 4}
+          textAnchor="middle"
+          fontSize="9" fontFamily="monospace"
+          fill={labelFill}
+        >
+          {ri + 1}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
+// ============================================================================
+// Main export
+// ============================================================================
+
 const StripboardView: React.FC<StripboardViewProps> = ({
-  viewMode: initialViewMode = 'both',
+  viewMode: initialViewMode = 'component',
   onViewModeChange,
-  components: propsComponents = [],
-  trackCuts: propsTrackCuts = [],
+  components: _components = [],
+  trackCuts: propCuts = [],
   showDemo = true,
 }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-
-  const ROWS = 25;
-  const COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').slice(0, 20); // A-T
-  // Physical stripboard spec: 2.54mm pitch → 24px at 9.449px/mm
-  // Hole diameter: 1.02mm → 9.6px → radius 5px
-  // Copper strip width: 2.1mm → ~20px | Isolation gap: 0.44mm → ~4px
-  const HOLE_SPACING = 24;   // 2.54mm pitch
-  const HOLE_RADIUS = 5;     // 1.02mm hole diameter → r=4.8px ≈ 5px
-  const COPPER_STRIP_H = 20; // 2.1mm copper strip width → 20px (gap=4px fills remaining 4px to next strip)
-  const TOP_MARGIN = 40;
-  const LEFT_MARGIN = 40;
-
-  // Demo data
-  const demoComponents: StripboardComponent[] = showDemo
-    ? [
-        // IC (8-pin DIP at D10-K10 area)
-        { type: 'ic', position: 'D10-D17', label: 'TL072' },
-        // Resistors
-        { type: 'resistor', position: 'B5-E5', label: 'R1 10kΩ', orientation: 'horizontal' },
-        { type: 'resistor', position: 'F8-I8', label: 'R2 1kΩ', orientation: 'horizontal' },
-        // Capacitor
-        { type: 'capacitor', position: 'L12-O12', label: 'C1 100nF', orientation: 'horizontal' },
-        // Wire links
-        { type: 'wire', position: 'B7-B12', orientation: 'vertical' },
-        { type: 'wire', position: 'M15-M18', orientation: 'vertical' },
-      ]
-    : propsComponents;
+  const [showCopper, setShowCopper] = useState(initialViewMode === 'copper');
 
   const demoTrackCuts: string[] = showDemo
-    ? ['D11', 'D14', 'G10', 'L13'] // Example track cuts
-    : propsTrackCuts;
+    ? ['D11', 'D14', 'G10', 'L13']
+    : propCuts;
+  const trackCuts = showDemo ? demoTrackCuts : propCuts;
+  const cutSet = new Set(trackCuts);
 
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    onViewModeChange?.(mode);
-  };
-
-  // Parse position like 'D10-K17' to coordinates
-  const parsePosition = (pos: string) => {
-    const [start, end] = pos.split('-');
-    return { start, end: end || start };
-  };
-
-  const getHoleCoords = (hole: string) => {
-    const col = hole.charAt(0);
-    const row = parseInt(hole.slice(1));
-    const colIndex = COLUMNS.indexOf(col);
-    return {
-      x: LEFT_MARGIN + colIndex * HOLE_SPACING,
-      y: TOP_MARGIN + row * HOLE_SPACING,
-    };
-  };
-
-  const renderComponentSide = () => {
-    const width = LEFT_MARGIN * 2 + COLUMNS.length * HOLE_SPACING;
-    const height = TOP_MARGIN * 2 + ROWS * HOLE_SPACING;
-
-    return (
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-        {/* Background */}
-        <rect width={width} height={height} fill="#f0e5d8" />
-
-        {/* Title */}
-        <text
-          x={width / 2}
-          y={20}
-          textAnchor="middle"
-          className="text-sm font-semibold"
-          fill="#1f2937"
-        >
-          Component Side
-        </text>
-
-        {/* Grid */}
-        {/* Column labels */}
-        {COLUMNS.map((col, colIndex) => (
-          <text
-            key={`col-${col}`}
-            x={LEFT_MARGIN + colIndex * HOLE_SPACING}
-            y={TOP_MARGIN - 10}
-            textAnchor="middle"
-            className="text-xs font-mono font-bold"
-            fill="#374151"
-          >
-            {col}
-          </text>
-        ))}
-
-        {/* Row labels and holes */}
-        {Array.from({ length: ROWS }).map((_, rowIndex) => {
-          const row = rowIndex + 1;
-          return (
-            <g key={`row-${row}`}>
-              {/* Row number */}
-              <text
-                x={LEFT_MARGIN - 15}
-                y={TOP_MARGIN + row * HOLE_SPACING + 4}
-                textAnchor="middle"
-                className="text-xs font-mono"
-                fill="#6b7280"
-              >
-                {row}
-              </text>
-
-              {/* Holes */}
-              {COLUMNS.map((col, colIndex) => (
-                <circle
-                  key={`hole-${col}${row}`}
-                  cx={LEFT_MARGIN + colIndex * HOLE_SPACING}
-                  cy={TOP_MARGIN + row * HOLE_SPACING}
-                  r={HOLE_RADIUS}
-                  fill="#1f2937"
-                  opacity="0.3"
-                  stroke="#6b7280"
-                  strokeWidth="0.5"
-                />
-              ))}
-            </g>
-          );
-        })}
-
-        {/* Components overlay */}
-        {demoComponents.map((comp, index) => {
-          const { start, end } = parsePosition(comp.position);
-          const startCoords = getHoleCoords(start);
-          const endCoords = getHoleCoords(end);
-
-          if (comp.type === 'ic') {
-            // Draw IC chip
-            const height = Math.abs(endCoords.y - startCoords.y) + HOLE_SPACING;
-            const width = 30;
-            const x = startCoords.x - width / 2;
-            const y = Math.min(startCoords.y, endCoords.y) - HOLE_SPACING / 2;
-
-            return (
-              <g key={`comp-${index}`}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={width}
-                  height={height}
-                  fill="#374151"
-                  stroke="#1f2937"
-                  strokeWidth="2"
-                  rx="2"
-                  opacity="0.9"
-                />
-                <circle cx={x + 5} cy={y + 5} r="2" fill="#ffffff" />
-                <text
-                  x={x + width / 2}
-                  y={y + height / 2 + 4}
-                  textAnchor="middle"
-                  className="text-xs font-mono font-bold"
-                  fill="#ffffff"
-                >
-                  {comp.label}
-                </text>
-              </g>
-            );
-          }
-
-          if (comp.type === 'resistor') {
-            // Draw resistor body
-            const midX = (startCoords.x + endCoords.x) / 2;
-            const midY = (startCoords.y + endCoords.y) / 2;
-            const isHorizontal = comp.orientation === 'horizontal';
-            const bodyWidth = isHorizontal ? 30 : 8;
-            const bodyHeight = isHorizontal ? 8 : 30;
-
-            return (
-              <g key={`comp-${index}`}>
-                {/* Lead lines */}
-                <line
-                  x1={startCoords.x}
-                  y1={startCoords.y}
-                  x2={endCoords.x}
-                  y2={endCoords.y}
-                  stroke="#8b4513"
-                  strokeWidth="2"
-                />
-                {/* Body */}
-                <rect
-                  x={midX - bodyWidth / 2}
-                  y={midY - bodyHeight / 2}
-                  width={bodyWidth}
-                  height={bodyHeight}
-                  fill="#d4af37"
-                  stroke="#8b4513"
-                  strokeWidth="1.5"
-                  rx="2"
-                />
-                {/* Color bands */}
-                <rect
-                  x={midX - bodyWidth / 4}
-                  y={midY - bodyHeight / 2}
-                  width={2}
-                  height={bodyHeight}
-                  fill="#8b4513"
-                />
-                {comp.label && (
-                  <text
-                    x={midX}
-                    y={midY - bodyHeight / 2 - 8}
-                    textAnchor="middle"
-                    className="text-xs font-mono"
-                    fill="#1f2937"
-                  >
-                    {comp.label}
-                  </text>
-                )}
-              </g>
-            );
-          }
-
-          if (comp.type === 'capacitor') {
-            // Draw capacitor
-            const midX = (startCoords.x + endCoords.x) / 2;
-            const midY = (startCoords.y + endCoords.y) / 2;
-            const isHorizontal = comp.orientation === 'horizontal';
-            const bodyWidth = isHorizontal ? 25 : 10;
-            const bodyHeight = isHorizontal ? 10 : 25;
-
-            return (
-              <g key={`comp-${index}`}>
-                {/* Lead lines */}
-                <line
-                  x1={startCoords.x}
-                  y1={startCoords.y}
-                  x2={endCoords.x}
-                  y2={endCoords.y}
-                  stroke="#6b7280"
-                  strokeWidth="2"
-                />
-                {/* Body */}
-                <rect
-                  x={midX - bodyWidth / 2}
-                  y={midY - bodyHeight / 2}
-                  width={bodyWidth}
-                  height={bodyHeight}
-                  fill="#fbbf24"
-                  stroke="#92400e"
-                  strokeWidth="1.5"
-                  rx="2"
-                />
-                {comp.label && (
-                  <text
-                    x={midX}
-                    y={midY - bodyHeight / 2 - 8}
-                    textAnchor="middle"
-                    className="text-xs font-mono"
-                    fill="#1f2937"
-                  >
-                    {comp.label}
-                  </text>
-                )}
-              </g>
-            );
-          }
-
-          if (comp.type === 'wire') {
-            // Draw wire link
-            return (
-              <line
-                key={`comp-${index}`}
-                x1={startCoords.x}
-                y1={startCoords.y}
-                x2={endCoords.x}
-                y2={endCoords.y}
-                stroke="#1f2937"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            );
-          }
-
-          return null;
-        })}
-      </svg>
-    );
-  };
-
-  const renderCopperSide = () => {
-    const width = LEFT_MARGIN * 2 + COLUMNS.length * HOLE_SPACING;
-    const height = TOP_MARGIN * 2 + ROWS * HOLE_SPACING;
-
-    return (
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-        {/* Background */}
-        <rect width={width} height={height} fill="#1a1a1a" />
-
-        {/* Title */}
-        <text
-          x={width / 2}
-          y={20}
-          textAnchor="middle"
-          className="text-sm font-semibold"
-          fill="#ffffff"
-        >
-          Copper Side (Solder View)
-        </text>
-
-        {/* Column labels */}
-        {COLUMNS.map((col, colIndex) => (
-          <text
-            key={`col-${col}`}
-            x={LEFT_MARGIN + colIndex * HOLE_SPACING}
-            y={TOP_MARGIN - 10}
-            textAnchor="middle"
-            className="text-xs font-mono font-bold"
-            fill="#d1d5db"
-          >
-            {col}
-          </text>
-        ))}
-
-        {/* Copper strips (horizontal) */}
-        {Array.from({ length: ROWS }).map((_, rowIndex) => {
-          const row = rowIndex + 1;
-          const y = TOP_MARGIN + row * HOLE_SPACING;
-          const isGroundRail = row === 1;
-          const isPowerRail = row === 2;
-
-          return (
-            <g key={`strip-${row}`}>
-              {/* Row number */}
-              <text
-                x={LEFT_MARGIN - 15}
-                y={y + 4}
-                textAnchor="middle"
-                className="text-xs font-mono"
-                fill="#9ca3af"
-              >
-                {row}
-              </text>
-
-              {/* Copper strip — 2.1mm wide = 20px, centered on hole row */}
-              <rect
-                x={LEFT_MARGIN - 5}
-                y={y - COPPER_STRIP_H / 2}
-                width={COLUMNS.length * HOLE_SPACING + 10}
-                height={COPPER_STRIP_H}
-                fill={isGroundRail ? '#3b82f6' : isPowerRail ? '#ef4444' : '#d97706'}
-                opacity={isGroundRail || isPowerRail ? 0.7 : 0.6}
-                rx="2"
-              />
-
-              {/* Holes (solder pads) */}
-              {COLUMNS.map((col, colIndex) => {
-                const holeId = `${col}${row}`;
-                const isCut = demoTrackCuts.includes(holeId);
-
-                return (
-                  <g key={`pad-${holeId}`}>
-                    <circle
-                      cx={LEFT_MARGIN + colIndex * HOLE_SPACING}
-                      cy={y}
-                      r={HOLE_RADIUS}
-                      fill={isCut ? '#1a1a1a' : '#b45309'}
-                      stroke="#92400e"
-                      strokeWidth="1"
-                    />
-                    {/* Track cut indicator */}
-                    {isCut && (
-                      <>
-                        <line
-                          x1={LEFT_MARGIN + colIndex * HOLE_SPACING - 6}
-                          y1={y - 6}
-                          x2={LEFT_MARGIN + colIndex * HOLE_SPACING + 6}
-                          y2={y + 6}
-                          stroke="#ef4444"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        <line
-                          x1={LEFT_MARGIN + colIndex * HOLE_SPACING - 6}
-                          y1={y + 6}
-                          x2={LEFT_MARGIN + colIndex * HOLE_SPACING + 6}
-                          y2={y - 6}
-                          stroke="#ef4444"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                      </>
-                    )}
-                  </g>
-                );
-              })}
-
-              {/* Rail labels */}
-              {isGroundRail && (
-                <text
-                  x={width - LEFT_MARGIN + 20}
-                  y={y + 4}
-                  className="text-xs font-bold"
-                  fill="#3b82f6"
-                >
-                  GND
-                </text>
-              )}
-              {isPowerRail && (
-                <text
-                  x={width - LEFT_MARGIN + 20}
-                  y={y + 4}
-                  className="text-xs font-bold"
-                  fill="#ef4444"
-                >
-                  +9V
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Legend */}
-        <g transform={`translate(${LEFT_MARGIN}, ${height - 30})`}>
-          <text x="0" y="0" className="text-xs font-semibold" fill="#d1d5db">
-            Legend:
-          </text>
-          <line x1="50" y1="-3" x2="70" y2="-3" stroke="#ef4444" strokeWidth="3" />
-          <text x="75" y="0" className="text-xs" fill="#d1d5db">
-            Track cut (X)
-          </text>
-          <circle cx="145" cy="-3" r="4" fill="#b45309" stroke="#92400e" />
-          <text x="155" y="0" className="text-xs" fill="#d1d5db">
-            Solder pad
-          </text>
-        </g>
-      </svg>
-    );
+  const handleToggle = (copper: boolean) => {
+    setShowCopper(copper);
+    onViewModeChange?.(copper ? 'copper' : 'component');
   };
 
   return (
-    <div className="w-full space-y-4">
-      {/* View mode toggle buttons */}
-      <div className="flex flex-wrap gap-2 justify-center">
+    <div className="w-full space-y-3">
+      {/* View toggle */}
+      <div className="flex gap-2">
         <button
-          onClick={() => handleViewModeChange('component')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            viewMode === 'component'
-              ? 'bg-blue-600 text-white'
+          onClick={() => handleToggle(false)}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            !showCopper
+              ? 'bg-amber-700 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
           Component Side
         </button>
         <button
-          onClick={() => handleViewModeChange('copper')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            viewMode === 'copper'
-              ? 'bg-blue-600 text-white'
+          onClick={() => handleToggle(true)}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showCopper
+              ? 'bg-amber-700 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
           Copper Side
         </button>
-        <button
-          onClick={() => handleViewModeChange('both')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            viewMode === 'both'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Both Views
-        </button>
       </div>
 
-      {/* View content */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        {viewMode === 'component' && renderComponentSide()}
-        {viewMode === 'copper' && renderCopperSide()}
-        {viewMode === 'both' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>{renderComponentSide()}</div>
-            <div>{renderCopperSide()}</div>
+      {/* Board */}
+      <div className="overflow-x-auto rounded-lg shadow-sm">
+        <BoardSVG copperSide={showCopper} cutSet={cutSet} />
+      </div>
+
+      {/* Track cut legend */}
+      {trackCuts.length > 0 && (
+        <div className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="font-semibold mb-1">Track Cuts (red ✕):</p>
+          <div className="flex flex-wrap gap-2">
+            {trackCuts.map((cut) => (
+              <span key={cut} className="font-mono bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5">
+                {cut}
+              </span>
+            ))}
           </div>
-        )}
-      </div>
+          <p className="mt-1.5 text-amber-700">
+            Use a track cutter or 5mm drill bit to break the copper strip at each marked hole.
+          </p>
+        </div>
+      )}
 
-      {/* Info text */}
-      <div className="text-sm text-gray-600 space-y-1 bg-gray-50 p-4 rounded-lg">
-        <p>
-          • <strong>Component Side:</strong> Shows where components are placed from the top view
-        </p>
-        <p>
-          • <strong>Copper Side:</strong> Shows horizontal copper strips (tracks) and where to cut
-          them
-        </p>
-        <p>
-          • <strong>Track Cuts (X):</strong> Break the copper strip to isolate circuit sections
-        </p>
-        <p>
-          • <strong>Ground (blue) & Power (red):</strong> Typically use bottom rows for easy access
-        </p>
+      {/* Info */}
+      <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1">
+        <p><strong>Component Side</strong> — phenolic top surface; place components here</p>
+        <p><strong>Copper Side</strong> — horizontal copper tracks; solder and cut here</p>
+        <p><strong>Track cuts</strong> — break the copper strip to isolate circuit nodes</p>
       </div>
     </div>
   );
