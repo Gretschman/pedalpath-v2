@@ -168,15 +168,18 @@ describe('generateBreadboardLayout', () => {
         { component_type: 'capacitor', value: '100nF',   quantity: 1, reference_designators: ['C1'] },
         { component_type: 'diode',     value: '1N4148',  quantity: 1, reference_designators: ['D1'] },
       ],
+      power: { voltage: '9V', polarity: 'center-negative' },
     });
     const placements = generateBreadboardLayout(bom);
-    expect(placements.length).toBe(5); // 1 IC + 2 R + 1 C + 1 D
+    // 1 IC + 2 R + 1 C + 1 D + 2 jumper wires (VCC + GND)
+    expect(placements.length).toBe(7);
 
     const types = placements.map(p => p.type);
     expect(types).toContain('ic');
     expect(types).toContain('resistor');
     expect(types).toContain('capacitor');
     expect(types).toContain('diode');
+    expect(types).toContain('jumper');
   });
 
   test('all inline placement holes are in valid row+column format', () => {
@@ -205,9 +208,75 @@ describe('generateBreadboardLayout', () => {
     });
     const placements = generateBreadboardLayout(bom);
     for (const p of placements) {
-      if (p.type !== 'ic') {
+      if (p.type !== 'ic' && p.type !== 'jumper') {
         const endCol = parseInt(p.endHole.slice(1));
         expect(endCol).toBeLessThanOrEqual(63);
+      }
+    }
+  });
+
+  test('generates VCC and GND jumper wires when IC is present with power', () => {
+    const bom = makeBOM({
+      components: [
+        { component_type: 'ic', value: 'TL072', quantity: 1, reference_designators: ['IC1'] },
+      ],
+      power: { voltage: '9V', polarity: 'center-negative' },
+    });
+    const placements = generateBreadboardLayout(bom);
+    const jumpers = placements.filter(p => p.type === 'jumper');
+
+    expect(jumpers).toHaveLength(2);
+    const colors = jumpers.map(j => j.type === 'jumper' ? j.color : null);
+    expect(colors).toContain('red');
+    expect(colors).toContain('black');
+  });
+
+  test('generates VCC and GND jumper wires for transistor-only circuit with power', () => {
+    const bom = makeBOM({
+      components: [
+        { component_type: 'transistor', value: '2N5088', quantity: 1, reference_designators: ['Q1'] },
+        { component_type: 'resistor',   value: '470k',   quantity: 1, reference_designators: ['R1'] },
+      ],
+      power: { voltage: '9V', polarity: 'center-negative' },
+    });
+    const placements = generateBreadboardLayout(bom);
+    const jumpers = placements.filter(p => p.type === 'jumper');
+
+    expect(jumpers).toHaveLength(2);
+    const colors = jumpers.map(j => j.type === 'jumper' ? j.color : null);
+    expect(colors).toContain('red');
+    expect(colors).toContain('black');
+  });
+
+  test('generates no jumper wires for passive-only circuits', () => {
+    const bom = makeBOM({
+      components: [
+        { component_type: 'resistor',  value: '10k',   quantity: 1, reference_designators: ['R1'] },
+        { component_type: 'capacitor', value: '100nF', quantity: 1, reference_designators: ['C1'] },
+      ],
+      // No power field = passive circuit
+    });
+    const placements = generateBreadboardLayout(bom);
+    const jumpers = placements.filter(p => p.type === 'jumper');
+    expect(jumpers).toHaveLength(0);
+  });
+
+  test('IC jumper wire startHole targets the correct power rail format', () => {
+    const bom = makeBOM({
+      components: [
+        { component_type: 'ic', value: 'TL072', quantity: 1, reference_designators: ['IC1'] },
+      ],
+      power: { voltage: '9V', polarity: 'center-negative' },
+    });
+    const placements = generateBreadboardLayout(bom);
+    const jumpers = placements.filter(p => p.type === 'jumper');
+
+    for (const j of jumpers) {
+      if (j.type === 'jumper') {
+        // startHole should be a power rail hole (+N or -N)
+        expect(j.startHole).toMatch(/^[+-]\d+$/);
+        // endHole should be a terminal strip hole
+        expect(j.endHole).toMatch(/^[a-j]\d+$/);
       }
     }
   });

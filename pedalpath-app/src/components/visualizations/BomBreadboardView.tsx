@@ -9,7 +9,8 @@
  */
 
 import BreadboardBase from './BreadboardBase';
-import { ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG, TransistorSVG } from './components-svg';
+import { ResistorSVG, CapacitorSVG, ICSVG, DiodeSVG, TransistorSVG, WireSVG } from './components-svg';
+import type { WireColor } from './components-svg';
 import {
   encodeResistor,
   decodeResistor,
@@ -229,9 +230,9 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
   const placements = generateBreadboardLayout(bomData);
   const { totalWidth, totalHeight } = LAYOUT_830;
 
-  // Highlight only the holes for focused (or all) components
+  // Highlight only the holes for focused (or all) components — exclude jumper wires
   const highlightHoles: string[] = placements
-    .filter(p => !focusComponentTypes || focusComponentTypes.includes(p.type))
+    .filter(p => p.type !== 'jumper' && (!focusComponentTypes || focusComponentTypes.includes(p.type)))
     .flatMap(p => {
       if (p.type === 'ic') return [p.pin1Hole];
       if (p.type === 'transistor') return [p.eHole, p.bHole, p.cHole];
@@ -273,10 +274,26 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
 
               {/* Board components */}
               {placements.map((placement, idx) => {
-                const isFocused = !focusComponentTypes || focusComponentTypes.includes(placement.type);
+                // Jumper wires always render at full opacity
+                const isFocused = placement.type === 'jumper' || !focusComponentTypes || focusComponentTypes.includes(placement.type);
                 const opacity = isFocused ? 1 : 0.15;
 
                 try {
+                  // ── Jumper Wire ──────────────────────────────────────────
+                  if (placement.type === 'jumper') {
+                    const start = holeToCoordinates(placement.startHole, LAYOUT_830);
+                    const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
+                    return (
+                      <WireSVG
+                        key={idx}
+                        startX={start.x} startY={start.y}
+                        endX={end.x}     endY={end.y}
+                        color={placement.color as WireColor}
+                        label={placement.label}
+                      />
+                    );
+                  }
+
                   // ── Resistor ────────────────────────────────────────────
                   if (placement.type === 'resistor') {
                     const spec = getResistorSpec(placement.value);

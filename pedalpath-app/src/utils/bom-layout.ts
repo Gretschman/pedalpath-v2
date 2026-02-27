@@ -21,7 +21,10 @@ import type { BOMData } from '../types/bom.types';
 // Types
 // ============================================================================
 
-export type PlacementType = 'resistor' | 'capacitor' | 'ic' | 'diode' | 'led' | 'transistor';
+export type PlacementType = 'resistor' | 'capacitor' | 'ic' | 'diode' | 'led' | 'transistor' | 'jumper';
+
+export type JumperWireColor =
+  | 'red' | 'black' | 'green' | 'blue' | 'yellow' | 'orange' | 'white' | 'purple';
 
 /** Placement for inline components (resistors, capacitors, diodes) */
 export interface InlinePlacement {
@@ -63,7 +66,16 @@ export interface TransistorPlacement {
   endHole: string;
 }
 
-export type ComponentPlacement = InlinePlacement | ICPlacement | TransistorPlacement;
+/** A jumper wire connecting two breadboard holes */
+export interface JumperWirePlacement {
+  type: 'jumper';
+  startHole: string;
+  endHole: string;
+  color: JumperWireColor;
+  label?: string;
+}
+
+export type ComponentPlacement = InlinePlacement | ICPlacement | TransistorPlacement | JumperWirePlacement;
 
 // ============================================================================
 // Main export
@@ -178,7 +190,9 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
     }
   }
 
-  return placements;
+  // Generate power/ground jumper wires based on component placements
+  const jumpers = generateJumperWires(placements, bomData);
+  return [...placements, ...jumpers];
 }
 
 // ============================================================================
@@ -196,6 +210,76 @@ function guessPinCount(value: string): 8 | 14 | 16 {
   if (v.includes('PT2399') || v.includes('MN3005') || v.includes('MN3101') ||
       v.includes('MN3009') || v.includes('MN3207')) return 16;
   return 8;
+}
+
+/**
+ * Generate power and ground jumper wires from component placements.
+ *
+ * Produces deterministic wires that are always correct regardless of circuit:
+ *   - IC circuits: red VCC wire (top + rail → IC VCC pin) + black GND wire (top − rail → IC GND pin)
+ *   - Transistor-only circuits: red VCC wire (top + rail → collector column) + black GND (top − rail → emitter)
+ *   - Passive-only: no jumpers needed
+ *
+ * Standard DIP power pin convention:
+ *   8-pin:  GND = pin 4 → e{col+3}, VCC = pin 8  → f{col}
+ *   14-pin: GND = pin 7 → e{col+6}, VCC = pin 14 → f{col}
+ *   16-pin: GND = pin 8 → e{col+7}, VCC = pin 16 → f{col}
+ */
+function generateJumperWires(
+  placements: ComponentPlacement[],
+  bomData: BOMData,
+): JumperWirePlacement[] {
+  // Passive circuits don't need power wires
+  if (!bomData.power) return [];
+
+  const icPlacement = placements.find((p): p is ICPlacement => p.type === 'ic');
+  const transistorPlacement = placements.find((p): p is TransistorPlacement => p.type === 'transistor');
+
+  if (icPlacement) {
+    const icCol = parseInt(icPlacement.pin1Hole.substring(1));
+    const pinCount = icPlacement.pinCount;
+    // GND pin is pin N/2, on the upper-row (e) side; VCC pin is pin N, on f-row at icCol
+    const gndCol = icCol + (pinCount / 2) - 1;
+    return [
+      {
+        type: 'jumper',
+        startHole: `+${icCol}`,
+        endHole: `f${icCol}`,
+        color: 'red',
+        label: 'VCC',
+      },
+      {
+        type: 'jumper',
+        startHole: `-${gndCol}`,
+        endHole: `e${gndCol}`,
+        color: 'black',
+        label: 'GND',
+      },
+    ];
+  }
+
+  if (transistorPlacement) {
+    const eCol = parseInt(transistorPlacement.eHole.substring(1));
+    const cCol = parseInt(transistorPlacement.cHole.substring(1));
+    return [
+      {
+        type: 'jumper',
+        startHole: `+${cCol}`,
+        endHole: `a${cCol}`,
+        color: 'red',
+        label: 'VCC',
+      },
+      {
+        type: 'jumper',
+        startHole: `-${eCol}`,
+        endHole: `d${eCol}`,
+        color: 'black',
+        label: 'GND',
+      },
+    ];
+  }
+
+  return [];
 }
 
 /**
