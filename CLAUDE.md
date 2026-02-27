@@ -23,8 +23,8 @@ Phase 2 complete + visual overhaul complete. 172 tests passing. Live at pedalpat
 **Next session priority order:**
 1. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
 2. **Stripe integration** — products/prices/env vars/checkout flow/success page
-3. **Run migration 004** — Apply 004_component_corrections.sql in Supabase dashboard
-4. **Issue #18, #19, #20** — Close as informational (no code work needed)
+3. **Wire component_reference into AI prompt** — send top 5 of each type to Claude to prime parsing accuracy
+4. **Wire component_reference into correction UI** — suggest closest match when user flags a component
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
