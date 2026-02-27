@@ -22,6 +22,29 @@ R = resistor | C = capacitor | L = inductor | D = diode | LED = LED
 Q = transistor (BJT or JFET) | U, IC = integrated circuit / op-amp
 P, RV, VR, POT = potentiometer | SW = switch | J = jack | FS = footswitch
 
+━━━ KNOWN COMPONENT VALUES — GUITAR PEDAL CIRCUITS ━━━
+These are the most frequently used components in guitar effects schematics, ranked by real-world occurrence across hundreds of pedal circuits. When a component type is identified but its value is ambiguous or partially legible, bias your reading toward these known values. If the schematic clearly shows a different value, use that value instead.
+
+Transistors (most→least common):
+  J201 · 2N5088 · BC549C · 2N3904 · BS170 · 2N5089 · MPSA18 · 2N3906 · BC548 · MPF4393 · 2N7000 · 2N5457 · BC550C · 2SC1815 · 2N2222 · BC549 · OC71 · 2N5087 · 2N1308
+
+Diodes:
+  1N4148 · 1N5817 · 1N914 · 1N34A · 1N4001 · BAT41 · BAT46 · BAT42 · 1N270 · 1N4007 · MA856 · 1N4739
+  Note: 1N914 = 1N4148 (identical function); 1N34A and 1N270 are germanium (soft clipping)
+
+ICs / Op-amps:
+  TL072 · JRC4558 · TC1044 · TL074 · LM833 · RC4558 · NE5532 · OPA2134 · LM308 · PT2399 · LM386 · LT1054 · TL071 · LM741 · CD4049UBE
+  Note: JRC4558 = NJM4558 = RC4558 (same chip, used in Tube Screamer); TC1044 = ICL7660
+
+Resistors (most common values in pedal circuits):
+  10K · 4.7K · 1M · 1K · 100K · 22K · 470K · 47K · 2.2K · 15K · 33K · 220K · 100R · 3.3K · 470R · 2.2M · 12K · 1.5K · 68K · 220R · 27K · 56K
+
+Capacitors (most common values):
+  100nF · 1µF · 10µF · 100µF · 22nF · 10nF · 47nF · 47µF · 1nF · 220nF · 100pF · 2.2nF · 470pF · 4.7µF · 22µF · 4.7nF · 470nF
+
+Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
+  B100K · A100K · B50K · B10K · B25K · A50K · A1M · A10K · A500K · A250K · B250K · B500K · B1M
+
 ━━━ RULES ━━━
 1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read. Never set value to "unspecified" — always give a best estimate.
 2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical. If values are partially legible or could differ, report each component separately with its own entry and individual confidence score. A wrong value is worse than a duplicate entry.
@@ -36,11 +59,12 @@ P, RV, VR, POT = potentiometer | SW = switch | J = jack | FS = footswitch
    • Potentiometer (P, RV, VR): resistor symbol with an arrow through it, or a 3-terminal resistor symbol
    • Switch (SW): open-circuit line with a hinge/pivot, often labeled On-Off-On, SPDT, or DPDT
    • These are frequently in passive tone/EQ circuits — look carefully even if hard to see
-5. Enclosure size — count only off-board hardware (pots, switches, jacks, LEDs):
-   • 1–2 controls → 1590A
-   • 3–4 controls → 1590B
-   • 5–6 controls → 1590BB or 125B (125B for tall/narrow layouts)
-   • 7+ controls → 1590DD
+5. Enclosure size — count only off-board hardware (pots, switches, LEDs; not jacks which are always present):
+   • 1–2 controls → 1590A  (nano, single transistor circuits)
+   • 3–4 controls → 1590B  (standard MXR-style, most common DIY enclosure)
+   • 5–6 controls → 1590BB or 125B  (125B if circuit needs height; 1590BB if wider layout preferred)
+   • 7–8 controls → 1590XX or 1590LB
+   • 9+ controls  → 1590DD
 6. Power — ONLY include the "power" field if the schematic contains active components (Q, U, IC, op-amp). Passive circuits (R, C, L, D, pot, switch, jack only) need NO power supply — omit "power" entirely.
 7. Return ONLY valid JSON. No markdown, no commentary.
 
