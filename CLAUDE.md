@@ -18,13 +18,15 @@ Phase 2 complete + visual overhaul complete. 172 tests passing. Live at pedalpat
 - ✅ Custom domain pedalpath.app live (ALIAS → cname.vercel-dns.com via Porkbun)
 - ✅ _INBOX cleared — all resources evaluated + copied to _REFERENCE
 - ✅ AI passive-circuit detection verified intact across API + layout + enclosure
+- ✅ Issue #22 — AI prompt: capacitor shorthand rules (.1U = 0.1µF, never "unspecified")
+- ✅ Issues #23/#24 — Breadboard layout: transistor body no longer overlaps resistors/caps (reordered placement, firstFreeCol)
+- ✅ BreadboardGuide step 9 — "Connect Power" → "Test Your Circuit" for passive circuits
 
 **Next session priority order:**
 1. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
 2. **Stripe integration** — products/prices/env vars/checkout flow/success page
-3. **Issue #22** — Mini-Boost C2 capacitor parsing ("unspecified" → 0.1µF)
-4. **Issues #23/#24** — Mini-Boost/Mini-Fuzz breadboard layout correctness
-5. **BreadboardGuide step 9** — hide/modify "Connect Power" for passive circuits (minor)
+3. **Issue #26** — BOM screen: flag incorrect/missing components
+4. **Issues #23/#24 deeper pass** — visual verification, further layout improvements if needed
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
