@@ -12,21 +12,19 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 Phase 2 complete + visual overhaul complete. 172 tests passing. Live at pedalpath.app.
 
-**Completed this session (2026-02-27):**
-- ✅ Issue #25 — Jumper wires: JumperWirePlacement type, generateJumperWires(), WireSVG rendering
-- ✅ Issue #9 — Transistor thumbnail: custom inline TO-92 SVG, fits 120×56, E/B/C labels visible
-- ✅ Custom domain pedalpath.app live (ALIAS → cname.vercel-dns.com via Porkbun)
-- ✅ _INBOX cleared — all resources evaluated + copied to _REFERENCE
-- ✅ AI passive-circuit detection verified intact across API + layout + enclosure
-- ✅ Issue #22 — AI prompt: capacitor shorthand rules (.1U = 0.1µF, never "unspecified")
-- ✅ Issues #23/#24 — Breadboard layout: transistor body no longer overlaps resistors/caps (reordered placement, firstFreeCol)
-- ✅ BreadboardGuide step 9 — "Connect Power" → "Test Your Circuit" for passive circuits
+**Completed this session (2026-02-27 — session 2):**
+- ✅ Issue #21 — Clipboard paste: Ctrl+V anywhere captures schematic from clipboard
+- ✅ Issue #4 — PWA/iOS: manifest.json, icon.svg, viewport-fit=cover, OG/Twitter meta, apple-mobile-web-app-*
+- ✅ Issue #26 — BOM flagging: Flag button per component, Submit Report → component_corrections table, migration 004
+- ✅ Issue #2 — Stripboard visualization: generateStripboardLayout() + component overlays (transistor/resistor/cap/diode)
+- ✅ Closed GitHub issues: #2, #4, #15, #21, #26 (also #9, #22, #24, #25 carried from session 1)
+- ✅ Resource library indexed to memory files (reference-library.md in .claude/projects memory)
 
 **Next session priority order:**
 1. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
 2. **Stripe integration** — products/prices/env vars/checkout flow/success page
-3. **Issue #26** — BOM screen: flag incorrect/missing components
-4. **Issues #23/#24 deeper pass** — visual verification, further layout improvements if needed
+3. **Run migration 004** — Apply 004_component_corrections.sql in Supabase dashboard
+4. **Issue #18, #19, #20** — Close as informational (no code work needed)
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
