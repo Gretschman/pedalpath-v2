@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import type { BOMData, BOMComponent } from '@/types/bom.types';
-import type { TransistorSpec } from '@/types/component-specs.types';
 import {
   encodeResistor,
   decodeResistor,
@@ -9,7 +8,7 @@ import {
   decodeDiode,
   decodeLED,
 } from '@/utils/decoders';
-import { ResistorSVG, CapacitorSVG, DiodeSVG, TransistorSVG } from '../visualizations/components-svg';
+import { ResistorSVG, CapacitorSVG, DiodeSVG } from '../visualizations/components-svg';
 import BomBreadboardView from '../visualizations/BomBreadboardView';
 
 interface BreadboardGuideProps {
@@ -92,17 +91,30 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
     }
 
     if (component.component_type === 'transistor') {
-      const spec: TransistorSpec = {
-        type: 'transistor',
-        value: component.value,
-        partNumber: component.value,
-        transistorType: 'bjt-npn',
-        package: 'TO-92',
-        pinout: ['E', 'B', 'C'],
-      };
+      // Custom inline thumbnail — sized for 120×56 viewport.
+      // TransistorSVG is designed for the large board canvas (leadLength=36, bh=46)
+      // and clips at this scale, so we draw a simplified TO-92 directly.
+      // Body: flat face at y=34, dome curves up to ~y=12. Leads: y=34–48. Labels: y=54.
       return (
-        <svg width={w} height={h} viewBox="0 0 120 72" style={{ display: 'block' }}>
-          <TransistorSVG x={60} y={62} spec={spec} pinSpacing={20} />
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          {/* Three leads: E (left), B (center), C (right) */}
+          <line x1={48} y1={48} x2={48} y2={34} stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1={60} y1={48} x2={60} y2={34} stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1={72} y1={48} x2={72} y2={34} stroke="#A0A0A0" strokeWidth="2.5" strokeLinecap="round" />
+          {/* D-shaped body: flat face at y=34, dome sweeps upward to ~y=12 */}
+          <path d="M 38 34 L 82 34 A 22 22 0 0 0 38 34 Z"
+            fill="#1A1A1A" stroke="#444444" strokeWidth="0.5" />
+          {/* Subtle highlight on dome */}
+          <ellipse cx={60} cy={20} rx={12} ry={7} fill="#FFFFFF" opacity="0.08" />
+          {/* Part number */}
+          <text x={60} y={25} textAnchor="middle" fontSize="7" fontFamily="monospace"
+            fill="#CCCCCC" letterSpacing="-0.5">
+            {component.value.substring(0, 7)}
+          </text>
+          {/* Pin labels */}
+          <text x={48} y={54} textAnchor="middle" fontSize="7" fontFamily="sans-serif" fill="#666666">E</text>
+          <text x={60} y={54} textAnchor="middle" fontSize="7" fontFamily="sans-serif" fill="#666666">B</text>
+          <text x={72} y={54} textAnchor="middle" fontSize="7" fontFamily="sans-serif" fill="#666666">C</text>
         </svg>
       );
     }
