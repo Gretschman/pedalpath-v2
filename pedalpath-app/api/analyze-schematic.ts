@@ -23,12 +23,15 @@ Q = transistor (BJT or JFET) | U, IC = integrated circuit / op-amp
 P, RV, VR, POT = potentiometer | SW = switch | J = jack | FS = footswitch
 
 ━━━ RULES ━━━
-1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read.
+1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read. Never set value to "unspecified" — always give a best estimate.
 2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical. If values are partially legible or could differ, report each component separately with its own entry and individual confidence score. A wrong value is worse than a duplicate entry.
 3. Value accuracy — watch for common misreads:
    • 1k vs 1M (one-k vs one-meg) — check for the Ω or k/M suffix carefully
    • 10n vs 100n vs 10p — check the multiplier prefix (n=nano, p=pico, u=micro)
    • 47n vs 4.7n, 22n vs 2.2n — look for decimal points
+   • Capacitor shorthand: U or u suffix = µF (e.g. .1U = 0.1µF, 1U = 1µF, 4.7U = 4.7µF)
+   • Leading decimal: .1 means 0.1, .047 means 0.047, .01 means 0.01 — always include the leading zero
+   • NEVER return "unspecified" as a value — if a value is hard to read, provide your best estimate with low confidence and explain in the notes field. An estimate is always more useful than "unspecified".
 4. Component symbols to look for:
    • Potentiometer (P, RV, VR): resistor symbol with an arrow through it, or a 3-terminal resistor symbol
    • Switch (SW): open-circuit line with a hinge/pivot, often labeled On-Off-On, SPDT, or DPDT
