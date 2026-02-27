@@ -279,16 +279,24 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
     },
     {
       number: 9,
-      title: 'Connect Power',
-      description: 'Connect your power supply. Most guitar pedals use 9V center-negative.',
-      components: [
-        `Power: ${bomData.power?.voltage ?? '9V'} ${bomData.power?.polarity ?? 'center-negative'}`,
+      title: bomData.power ? 'Connect Power' : 'Test Your Circuit',
+      description: bomData.power
+        ? 'Connect your power supply. Most guitar pedals use 9V center-negative.'
+        : 'This is a passive circuit — no external power supply is needed. Connect your guitar and test directly.',
+      components: bomData.power ? [
+        `Power: ${bomData.power.voltage} ${bomData.power.polarity}`,
         'Connect positive (+9V) to positive rail',
         'Connect negative (ground) to ground rail',
         'Add 100μF capacitor across power rails (near circuit)'
+      ] : [
+        'Connect input jack to guitar cable',
+        'Connect output jack to amplifier',
+        'No power supply required — this circuit is entirely passive',
       ],
-      warning: 'Verify polarity before connecting power! Guitar pedals are typically CENTER-NEGATIVE.',
-      tips: 'Always use a current-limited power supply for first testing. Start with 50mA limit if possible.'
+      warning: bomData.power ? 'Verify polarity before connecting power! Guitar pedals are typically CENTER-NEGATIVE.' : undefined,
+      tips: bomData.power
+        ? 'Always use a current-limited power supply for first testing. Start with 50mA limit if possible.'
+        : 'Passive circuits (tone controls, passive buffers, filters) draw no power from a supply.',
     },
     {
       number: 10,
