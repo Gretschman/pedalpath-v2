@@ -24,6 +24,8 @@ interface BreadboardStep {
   components: string[];
   /** BOM component objects — renders visual thumbnails instead of plain text */
   componentItems?: BOMComponent[];
+  /** Component types to highlight on the board view — others dim to 15% opacity */
+  focusComponentTypes?: string[];
   tips?: string;
   warning?: string;
 }
@@ -32,36 +34,50 @@ interface BreadboardStep {
 // Component Thumbnail
 // ============================================================================
 
+/** Parse a resistor value string like "470k", "2.2k", "1M", "100" → ohms. */
+function parseOhmsForThumbnail(value: string): number {
+  const cleaned = value.toLowerCase().replace(/[ωΩ\s]/g, '').replace('ohm', '').replace(/r$/, '');
+  const match = cleaned.match(/^(\d+\.?\d*)(k|m)?$/);
+  if (!match) return 10_000;
+  const [, num, unit] = match;
+  const n = parseFloat(num);
+  if (unit === 'k') return n * 1_000;
+  if (unit === 'm') return n * 1_000_000;
+  return n;
+}
+
 /** Small SVG preview of a single BOM component — used in "What You Need" rows. */
 function ComponentThumbnail({ component }: { component: BOMComponent }) {
-  const w = 80;
-  const h = 42;
+  const w = 120;
+  const h = 56;
+  const sx = 10; const sy = 28; const ex = 110; const ey = 28;
 
   try {
     if (component.component_type === 'resistor') {
-      const encoded = encodeResistor(10_000, 5); // 10 kΩ demo
+      const ohms = parseOhmsForThumbnail(component.value);
+      const encoded = encodeResistor(ohms, 5);
       const spec = decodeResistor(encoded.bands4 ?? encoded.bands5);
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-          <ResistorSVG startX={8} startY={21} endX={72} endY={21} spec={spec} />
+          <ResistorSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />
         </svg>
       );
     }
 
     if (component.component_type === 'capacitor') {
-      const spec = decodeCapacitor('100nF');
+      const spec = decodeCapacitor(component.value);
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-          <CapacitorSVG startX={8} startY={21} endX={72} endY={21} spec={spec} />
+          <CapacitorSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />
         </svg>
       );
     }
 
     if (component.component_type === 'diode') {
-      const spec = decodeDiode('1N4148');
+      const spec = decodeDiode(component.value);
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-          <DiodeSVG startX={8} startY={21} endX={72} endY={21} spec={spec} />
+          <DiodeSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />
         </svg>
       );
     }
@@ -70,7 +86,7 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
       const spec = decodeLED('red', '5mm');
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-          <DiodeSVG startX={8} startY={21} endX={72} endY={21} spec={spec} />
+          <DiodeSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />
         </svg>
       );
     }
@@ -84,10 +100,9 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
         package: 'TO-92',
         pinout: ['E', 'B', 'C'],
       };
-      // Taller viewBox to fit the body dome + compressed pinSpacing for 80px width
       return (
-        <svg width={w} height={h} viewBox="0 0 80 50" style={{ display: 'block' }}>
-          <TransistorSVG x={40} y={44} spec={spec} pinSpacing={16} />
+        <svg width={w} height={h} viewBox="0 0 120 72" style={{ display: 'block' }}>
+          <TransistorSVG x={60} y={62} spec={spec} pinSpacing={20} />
         </svg>
       );
     }
@@ -96,22 +111,22 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
           {/* DIP body */}
-          <rect x={18} y={7} width={44} height={28} fill="#1A1A1A" stroke="#444" strokeWidth="1" rx={2} />
+          <rect x={22} y={8} width={76} height={36} fill="#1A1A1A" stroke="#444" strokeWidth="1" rx={2} />
           {/* Notch */}
-          <path d="M 37 7 A 3 3 0 0 1 43 7" fill="#2A2A2A" stroke="#444" strokeWidth="0.5" />
+          <path d="M 56 8 A 4 4 0 0 1 64 8" fill="#2A2A2A" stroke="#444" strokeWidth="0.5" />
           {/* Pin stubs top row */}
           {[0, 1, 2, 3].map(i => (
-            <line key={`t${i}`} x1={25 + i * 9} y1={3} x2={25 + i * 9} y2={7}
+            <line key={`t${i}`} x1={32 + i * 14} y1={3} x2={32 + i * 14} y2={8}
               stroke="#A0A0A0" strokeWidth="1.5" />
           ))}
           {/* Pin stubs bottom row */}
           {[0, 1, 2, 3].map(i => (
-            <line key={`b${i}`} x1={25 + i * 9} y1={35} x2={25 + i * 9} y2={39}
+            <line key={`b${i}`} x1={32 + i * 14} y1={44} x2={32 + i * 14} y2={49}
               stroke="#A0A0A0" strokeWidth="1.5" />
           ))}
-          <text x={40} y={23} textAnchor="middle" fontSize="7" fontFamily="monospace"
+          <text x={60} y={30} textAnchor="middle" fontSize="9" fontFamily="monospace"
             fill="#CCCCCC" fontWeight="600">
-            {component.value.substring(0, 6)}
+            {component.value.substring(0, 7)}
           </text>
         </svg>
       );
@@ -120,9 +135,9 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
     if (component.component_type === 'potentiometer') {
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-          <circle cx={40} cy={21} r={16} fill="#888888" stroke="#555" strokeWidth="1" />
-          <circle cx={40} cy={21} r={8} fill="#666666" />
-          <line x1={40} y1={13} x2={40} y2={6} stroke="#DDDDDD" strokeWidth="2" strokeLinecap="round" />
+          <circle cx={60} cy={28} r={22} fill="#888888" stroke="#555" strokeWidth="1" />
+          <circle cx={60} cy={28} r={11} fill="#666666" />
+          <line x1={60} y1={17} x2={60} y2={8} stroke="#DDDDDD" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       );
     }
@@ -132,9 +147,9 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
 
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-      <rect x={8} y={11} width={64} height={20} fill="#999" rx={3} />
-      <text x={40} y={24} textAnchor="middle" fontSize="7" fill="#fff" fontFamily="monospace">
-        {component.value.substring(0, 8)}
+      <rect x={10} y={16} width={100} height={24} fill="#999" rx={3} />
+      <text x={60} y={31} textAnchor="middle" fontSize="9" fill="#fff" fontFamily="monospace">
+        {component.value.substring(0, 10)}
       </text>
     </svg>
   );
@@ -186,6 +201,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
       componentItems: bomData.components.filter(c =>
         ['ic', 'op-amp', 'transistor'].includes(c.component_type)
       ),
+      focusComponentTypes: ['ic', 'op-amp', 'transistor'],
       tips: 'ICs should straddle the center gap of the breadboard. Pin 1 is usually marked with a notch or dot.',
       warning: 'Static electricity can damage ICs. Touch a grounded metal surface before handling.'
     },
@@ -197,6 +213,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
         .filter(c => c.component_type === 'resistor')
         .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
       componentItems: bomData.components.filter(c => c.component_type === 'resistor'),
+      focusComponentTypes: ['resistor'],
       tips: 'Bend resistor leads at 90° to fit breadboard spacing. Keep leads short but manageable.',
       warning: 'Double-check resistor color codes. A wrong value can prevent the circuit from working or cause damage.'
     },
@@ -208,6 +225,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
         .filter(c => c.component_type === 'capacitor')
         .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
       componentItems: bomData.components.filter(c => c.component_type === 'capacitor'),
+      focusComponentTypes: ['capacitor'],
       tips: 'Ceramic caps (small, yellow/brown) are non-polarized. Electrolytic caps (cylindrical) have polarity marked.',
       warning: 'CRITICAL: Electrolytic capacitors can explode if connected backwards. Check polarity twice!'
     },
@@ -221,6 +239,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
       componentItems: bomData.components.filter(c =>
         c.component_type === 'diode' || c.component_type === 'led'
       ),
+      focusComponentTypes: ['diode', 'led'],
       tips: 'The stripe on a diode marks the cathode. Current flows from anode to cathode (towards the stripe).'
     },
     {
@@ -231,6 +250,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
         .filter(c => c.component_type === 'potentiometer')
         .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
       componentItems: bomData.components.filter(c => c.component_type === 'potentiometer'),
+      focusComponentTypes: ['potentiometer'],
       tips: 'Potentiometers typically have 3 pins: left (ground), middle (wiper/output), right (signal). Check the datasheet.'
     },
     {
@@ -391,7 +411,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
                   <div
                     key={idx}
                     className="flex flex-col items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
-                    style={{ minWidth: 90 }}
+                    style={{ minWidth: 130 }}
                   >
                     <ComponentThumbnail component={component} />
                     <span className="text-xs font-semibold text-gray-800 text-center leading-tight">
@@ -426,7 +446,10 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
           {currentStepData.number >= 2 && currentStepData.number <= 9 && (
             <div className="my-6">
               <h4 className="font-semibold text-gray-900 mb-3">Your Components on the Breadboard:</h4>
-              <BomBreadboardView bomData={bomData} />
+              <BomBreadboardView
+                bomData={bomData}
+                focusComponentTypes={currentStepData.focusComponentTypes}
+              />
             </div>
           )}
 

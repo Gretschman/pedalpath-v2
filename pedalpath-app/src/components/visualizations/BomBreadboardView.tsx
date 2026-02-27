@@ -30,6 +30,8 @@ import type { ResistorSpec, ICSpec, TransistorSpec } from '@/types/component-spe
 export interface BomBreadboardViewProps {
   /** BOM data from Claude Vision AI analysis */
   bomData: BOMData;
+  /** When set, only these component types render at full opacity; others dim to 15% */
+  focusComponentTypes?: string[];
   /** Additional CSS class name */
   className?: string;
 }
@@ -223,16 +225,18 @@ function OffboardComponents({ bomData }: { bomData: BOMData }) {
 // Component
 // ============================================================================
 
-export default function BomBreadboardView({ bomData, className = '' }: BomBreadboardViewProps) {
+export default function BomBreadboardView({ bomData, focusComponentTypes, className = '' }: BomBreadboardViewProps) {
   const placements = generateBreadboardLayout(bomData);
   const { totalWidth, totalHeight } = LAYOUT_830;
 
-  // Collect highlighted holes for the base board
-  const highlightHoles: string[] = placements.flatMap(p => {
-    if (p.type === 'ic') return [p.pin1Hole];
-    if (p.type === 'transistor') return [p.eHole, p.bHole, p.cHole];
-    return [p.startHole, p.endHole];
-  });
+  // Highlight only the holes for focused (or all) components
+  const highlightHoles: string[] = placements
+    .filter(p => !focusComponentTypes || focusComponentTypes.includes(p.type))
+    .flatMap(p => {
+      if (p.type === 'ic') return [p.pin1Hole];
+      if (p.type === 'transistor') return [p.eHole, p.bHole, p.cHole];
+      return [p.startHole, p.endHole];
+    });
 
   const hasRenderableComponents = placements.length > 0;
 
@@ -269,6 +273,9 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
 
               {/* Board components */}
               {placements.map((placement, idx) => {
+                const isFocused = !focusComponentTypes || focusComponentTypes.includes(placement.type);
+                const opacity = isFocused ? 1 : 0.15;
+
                 try {
                   // ── Resistor ────────────────────────────────────────────
                   if (placement.type === 'resistor') {
@@ -277,13 +284,14 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <ResistorSVG
-                        key={idx}
-                        startX={start.x} startY={start.y}
-                        endX={end.x}     endY={end.y}
-                        spec={spec}
-                        label={placement.label}
-                      />
+                      <g key={idx} opacity={opacity}>
+                        <ResistorSVG
+                          startX={start.x} startY={start.y}
+                          endX={end.x}     endY={end.y}
+                          spec={spec}
+                          label={placement.label}
+                        />
+                      </g>
                     );
                   }
 
@@ -293,13 +301,14 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <CapacitorSVG
-                        key={idx}
-                        startX={start.x} startY={start.y}
-                        endX={end.x}     endY={end.y}
-                        spec={spec}
-                        label={placement.label}
-                      />
+                      <g key={idx} opacity={opacity}>
+                        <CapacitorSVG
+                          startX={start.x} startY={start.y}
+                          endX={end.x}     endY={end.y}
+                          spec={spec}
+                          label={placement.label}
+                        />
+                      </g>
                     );
                   }
 
@@ -316,14 +325,15 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     }
 
                     return (
-                      <ICSVG
-                        key={idx}
-                        pin1X={pin1.x}        pin1Y={pin1.y}
-                        bottomRowY={bottomRow.y}
-                        pinCount={placement.pinCount}
-                        spec={spec}
-                        label={placement.label}
-                      />
+                      <g key={idx} opacity={opacity}>
+                        <ICSVG
+                          pin1X={pin1.x}        pin1Y={pin1.y}
+                          bottomRowY={bottomRow.y}
+                          pinCount={placement.pinCount}
+                          spec={spec}
+                          label={placement.label}
+                        />
+                      </g>
                     );
                   }
 
@@ -340,13 +350,14 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                         })();
 
                     return (
-                      <DiodeSVG
-                        key={idx}
-                        startX={start.x} startY={start.y}
-                        endX={end.x}     endY={end.y}
-                        spec={spec}
-                        label={placement.label}
-                      />
+                      <g key={idx} opacity={opacity}>
+                        <DiodeSVG
+                          startX={start.x} startY={start.y}
+                          endX={end.x}     endY={end.y}
+                          spec={spec}
+                          label={placement.label}
+                        />
+                      </g>
                     );
                   }
 
@@ -355,13 +366,14 @@ export default function BomBreadboardView({ bomData, className = '' }: BomBreadb
                     const bPin = holeToCoordinates(placement.bHole, LAYOUT_830);
                     const spec = makeTransistorSpec(placement.value);
                     return (
-                      <TransistorSVG
-                        key={idx}
-                        x={bPin.x}
-                        y={bPin.y}
-                        spec={spec}
-                        label={placement.label}
-                      />
+                      <g key={idx} opacity={opacity}>
+                        <TransistorSVG
+                          x={bPin.x}
+                          y={bPin.y}
+                          spec={spec}
+                          label={placement.label}
+                        />
+                      </g>
                     );
                   }
                 } catch {
