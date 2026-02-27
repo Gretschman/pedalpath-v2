@@ -10,16 +10,23 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-Phase 2 complete (168 tests passing). Visual output unacceptable — full rewrite required (Issue #15).
+Phase 2 complete + visual overhaul complete. 168 tests passing. Deployed to pedalpath-app.vercel.app.
+Domain purchased: **pedalpath.app** — configure as custom domain in Vercel next session.
 
-**Priority order:**
-1. Breadboard rewrite — BreadboardGuide.tsx, TransistorSVG, realistic sizing, offboard components
-2. Stripboard rewrite — StripboardGuide.tsx, tagboardeffects.com style
-3. Enclosure drill templates — all 1590-series, Tayda flat-pack format
-4. Offboard wiring diagram — jacks/pot/LED/3PDT step
-5. AI accuracy — passive circuit detection (no IC/transistor → no 9V recommendation)
+**Completed this session (2026-02-26):**
+- ✅ Issue #16 — Electra Distortion demo (verified BOM: 4R/2C/1Q/2D/1VR)
+- ✅ Issue #10 — Board dimming: focusComponentTypes prop, step-aware 15% opacity
+- ✅ Issue #11 — ComponentThumbnail uses real values + correct resistor color bands (120×56px)
+- ✅ PRD v2.0 — PEDALPATH_PRD_v2.md committed to repo
+- ✅ Resources organized — drill templates + offboard wiring copied to _REFERENCE
+- ✅ Issues #19, #20 created (knowledge base: drill templates + wiring as AI teachers)
 
-**DO NOT** start Stripe until visual issues resolved.
+**Next session priority order:**
+1. **Configure pedalpath.app custom domain** in Vercel dashboard (takes 5 min)
+2. **Decide pricing model** — Free-only launch vs Free+Paid at launch (discuss with Rob)
+3. **Stripe integration** — products/prices/env vars/checkout flow/success page
+4. **Issue #9** — Transistor visual reference in breadboard guide steps
+5. AI passive-circuit detection — verify fix is still working
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
