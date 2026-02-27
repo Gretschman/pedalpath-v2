@@ -2,9 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pedalpath-app</title>
+
+    <!-- Viewport: cover mode enables safe-area-inset for iOS notch/Dynamic Island -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- App identity -->
+    <title>PedalPath — Guitar Pedal Schematic Analyzer</title>
+    <meta name="description" content="Upload a guitar pedal schematic and instantly get a bill of materials, breadboard layout, and step-by-step build guide powered by AI." />
+    <meta name="theme-color" content="#2563eb" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+
+    <!-- iOS / Apple -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PedalPath" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph (social sharing) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="PedalPath — Guitar Pedal Schematic Analyzer" />
+    <meta property="og:description" content="Upload a guitar pedal schematic and instantly get a bill of materials, breadboard layout, and build guide." />
+    <meta property="og:url" content="https://pedalpath.app" />
+    <meta property="og:image" content="https://pedalpath.app/og-image.png" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PedalPath — Guitar Pedal Schematic Analyzer" />
+    <meta name="twitter:description" content="AI-powered guitar pedal schematic analysis. Upload → BOM + build guide instantly." />
   </head>
   <body>
     <div id="root"></div>

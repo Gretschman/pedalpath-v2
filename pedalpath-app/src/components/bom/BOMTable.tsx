@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import type { BOMComponent, BOMData } from '../../types/bom.types';
-import { updateBOMComponent } from '../../services/schematic-processor';
-import { Edit2, Check, X, ExternalLink } from 'lucide-react';
+import { updateBOMComponent, submitComponentCorrections } from '../../services/schematic-processor';
+import type { ComponentCorrection } from '../../services/schematic-processor';
+import { Edit2, Check, X, ExternalLink, Flag, AlertTriangle, Send } from 'lucide-react';
 
 interface BOMTableProps {
   bomData: BOMData;
+  schematicId?: string;
   onUpdate?: () => void;
 }
 
@@ -34,9 +36,15 @@ const getConfidenceColor = (confidence?: number): string => {
   return 'bg-red-100 text-red-800';
 };
 
-export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
+export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BOMComponent>>({});
+
+  // Flag state
+  const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
+  const [flagNotes, setFlagNotes] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const startEditing = (component: BOMComponent) => {
     setEditingId(component.id || null);
@@ -68,6 +76,47 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
     }
   };
 
+  const toggleFlag = (componentId: string) => {
+    setFlaggedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(componentId)) {
+        next.delete(componentId);
+        setFlagNotes((n) => { const copy = { ...n }; delete copy[componentId]; return copy; });
+      } else {
+        next.add(componentId);
+      }
+      return next;
+    });
+  };
+
+  const handleSubmitCorrections = async () => {
+    setSubmitting(true);
+
+    const corrections: ComponentCorrection[] = [];
+    for (const id of flaggedIds) {
+      const component = bomData.components.find((c) => c.id === id);
+      if (!component) continue;
+      corrections.push({
+        componentId: id,
+        schematicId,
+        componentType: component.component_type,
+        reportedValue: component.value,
+        issueType: 'wrong_value',
+        description: flagNotes[id] || undefined,
+      });
+    }
+
+    const ok = await submitComponentCorrections(corrections);
+    setSubmitting(false);
+    if (ok) {
+      setSubmitted(true);
+      setFlaggedIds(new Set());
+      setFlagNotes({});
+    } else {
+      alert('Failed to submit corrections. Please try again.');
+    }
+  };
+
   // Group components by type
   const groupedComponents = bomData.components.reduce((groups, component) => {
     const type = component.component_type;
@@ -77,6 +126,8 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
     groups[type].push(component);
     return groups;
   }, {} as Record<string, BOMComponent[]>);
+
+  const flagCount = flaggedIds.size;
 
   return (
     <div className="space-y-6">
@@ -123,7 +174,7 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
           <div>
             <div className="font-medium text-blue-900">AI Confidence Score</div>
             <div className="text-sm text-blue-700">
-              Review and verify components below. You can edit any values.
+              Review and verify components below. Use the flag button to report any errors.
             </div>
           </div>
           <div className="text-3xl font-bold text-blue-900">
@@ -148,10 +199,11 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
           <div className="sm:hidden divide-y divide-gray-100">
             {components.map((component) => {
               const isEditing = editingId === component.id;
+              const isFlagged = component.id ? flaggedIds.has(component.id) : false;
               return (
                 <div
                   key={component.id}
-                  className={`p-4 space-y-3 ${component.verified ? 'bg-green-50' : ''}`}
+                  className={`p-4 space-y-3 ${isFlagged ? 'bg-orange-50' : component.verified ? 'bg-green-50' : ''}`}
                 >
                   {/* Value + Qty row */}
                   <div className="flex items-start justify-between gap-3">
@@ -213,6 +265,17 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
                     )
                   )}
 
+                  {/* Flag note input */}
+                  {isFlagged && component.id && (
+                    <input
+                      type="text"
+                      value={flagNotes[component.id] || ''}
+                      onChange={(e) => setFlagNotes((n) => ({ ...n, [component.id!]: e.target.value }))}
+                      placeholder="What's wrong? (optional)"
+                      className="border border-orange-300 bg-orange-50 rounded px-2 py-1 text-sm w-full"
+                    />
+                  )}
+
                   {/* Actions */}
                   <div className="flex gap-3">
                     {isEditing ? (
@@ -241,6 +304,20 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
                           <Edit2 size={16} />
                           Edit
                         </button>
+                        {component.id && (
+                          <button
+                            onClick={() => toggleFlag(component.id!)}
+                            className={`flex items-center gap-1 px-3 py-2 text-sm rounded-lg ${
+                              isFlagged
+                                ? 'text-orange-700 bg-orange-100'
+                                : 'text-gray-500 bg-gray-50'
+                            }`}
+                            title="Flag incorrect component"
+                          >
+                            <Flag size={16} />
+                            {isFlagged ? 'Flagged' : 'Flag'}
+                          </button>
+                        )}
                         {component.supplier_url && (
                           <a
                             href={component.supplier_url}
@@ -288,9 +365,10 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
               <tbody className="bg-white divide-y divide-gray-200">
                 {components.map((component) => {
                   const isEditing = editingId === component.id;
+                  const isFlagged = component.id ? flaggedIds.has(component.id) : false;
 
                   return (
-                    <tr key={component.id} className={component.verified ? 'bg-green-50' : ''}>
+                    <tr key={component.id} className={isFlagged ? 'bg-orange-50' : component.verified ? 'bg-green-50' : ''}>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {isEditing ? (
                           <input
@@ -371,7 +449,7 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
                             </button>
                           </div>
                         ) : (
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center">
                             <button
                               onClick={() => startEditing(component)}
                               className="text-blue-600 hover:text-blue-800"
@@ -379,6 +457,15 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
                             >
                               <Edit2 size={18} />
                             </button>
+                            {component.id && (
+                              <button
+                                onClick={() => toggleFlag(component.id!)}
+                                className={isFlagged ? 'text-orange-500 hover:text-orange-700' : 'text-gray-300 hover:text-orange-400'}
+                                title={isFlagged ? 'Remove flag' : 'Flag incorrect component'}
+                              >
+                                <Flag size={18} />
+                              </button>
+                            )}
                             {component.supplier_url && (
                               <a
                                 href={component.supplier_url}
@@ -401,6 +488,41 @@ export default function BOMTable({ bomData, onUpdate }: BOMTableProps) {
           </div>
         </div>
       ))}
+
+      {/* Correction submission panel */}
+      {submitted ? (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <div>
+            <div className="font-medium text-green-900">Corrections submitted — thank you!</div>
+            <div className="text-sm text-green-700">Your feedback helps improve AI accuracy for everyone.</div>
+          </div>
+        </div>
+      ) : flagCount > 0 ? (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-medium text-orange-900">
+                  {flagCount} component{flagCount !== 1 ? 's' : ''} flagged for correction
+                </div>
+                <div className="text-sm text-orange-700">
+                  Submit to help improve AI parsing accuracy. Your corrections are anonymous.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSubmitCorrections}
+              disabled={submitting}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 flex-shrink-0"
+            >
+              <Send size={16} />
+              {submitting ? 'Sending…' : 'Submit Report'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

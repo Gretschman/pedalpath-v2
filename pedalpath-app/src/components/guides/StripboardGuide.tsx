@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Grid, Scissors, Zap, CheckCircle, Info } from 'lucide-react';
 import type { BOMData } from '../../types/bom.types';
 import StripboardView from '../visualizations/StripboardView';
+import { generateStripboardLayout } from '../../utils/stripboard-layout';
 
 interface StripboardGuideProps {
   bomData: BOMData;
@@ -22,6 +23,9 @@ interface TrackCut {
 
 export default function StripboardGuide({ bomData, projectName: _projectName = 'Your Pedal' }: StripboardGuideProps) {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'placement' | 'cuts' | 'wiring'>('overview');
+
+  // Generate stripboard layout from BOM data
+  const layout = useMemo(() => generateStripboardLayout(bomData), [bomData]);
 
   // Estimate board size based on component count
   const componentCount = bomData.components.reduce((sum, c) => sum + c.quantity, 0);
@@ -47,12 +51,11 @@ export default function StripboardGuide({ bomData, projectName: _projectName = '
       }))
   ];
 
-  // Example track cuts
-  const trackCuts: TrackCut[] = [
-    { location: 'Row 5, between columns 4-5', reason: 'Isolate IC pin 1 from pin 14' },
-    { location: 'Row 8, between columns 4-5', reason: 'Isolate IC pin 4 from pin 11' },
-    { location: 'Row 10, between columns 6-7', reason: 'Create separate power rail' }
-  ];
+  // Track cuts derived from generated layout
+  const trackCuts: TrackCut[] = layout.trackCuts.map((pos) => ({
+    location: pos,
+    reason: 'Break copper strip to isolate circuit node',
+  }));
 
   return (
     <div className="space-y-6">
@@ -220,8 +223,12 @@ export default function StripboardGuide({ bomData, projectName: _projectName = '
 
               {/* Stripboard Visualization */}
               <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Visual Reference:</h4>
-                <StripboardView showDemo={true} />
+                <h4 className="font-semibold text-gray-900 mb-3">Component Placement View:</h4>
+                <StripboardView
+                  showDemo={false}
+                  components={layout.components}
+                  trackCuts={layout.trackCuts}
+                />
               </div>
 
               <div className="space-y-3">

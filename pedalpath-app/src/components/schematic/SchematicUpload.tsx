@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { Camera, Image as ImageIcon, Upload, X, Check, Loader2 } from 'lucide-react'
+import { Camera, Image as ImageIcon, Upload, X, Check, Loader2, Clipboard } from 'lucide-react'
 import { prepareFileForUpload } from '../../utils/image-utils'
 
 interface SchematicUploadProps {
@@ -11,7 +11,7 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
-  const [uploadMethod, setUploadMethod] = useState<'camera' | 'photo' | 'file' | null>(null)
+  const [uploadMethod, setUploadMethod] = useState<'camera' | 'photo' | 'file' | 'paste' | null>(null)
   const [processing, setProcessing] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<string>('')
 
@@ -32,7 +32,7 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
     return null
   }
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     const error = validateFile(file)
     if (error) {
       alert(error)
@@ -68,7 +68,29 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
       setProcessing(false)
       setProcessingStatus('')
     }
-  }
+  }, [onUploadComplete])
+
+  // Clipboard paste — Ctrl+V / Cmd+V anywhere on the page
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (selectedFile || processing) return
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (const item of Array.from(items)) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) {
+            setUploadMethod('paste')
+            handleFileSelect(file)
+          }
+          break
+        }
+      }
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [selectedFile, processing, handleFileSelect])
 
   const handleCameraCapture = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -281,10 +303,14 @@ export default function SchematicUpload({ onUploadComplete }: SchematicUploadPro
       >
         <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? 'text-primary-600' : 'text-gray-400'}`} />
         <p className="text-lg font-semibold text-gray-900 mb-2">
-          Or drag and drop your file here
+          Drag and drop, or paste from clipboard
         </p>
         <p className="text-sm text-gray-600">
           PNG, JPG, WebP, or PDF • Max 10MB
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          <Clipboard className="inline w-3 h-3 mr-1" />
+          Press <kbd className="bg-gray-100 border border-gray-300 rounded px-1 text-xs font-mono">Ctrl+V</kbd> to paste a screenshot directly
         </p>
       </div>
 

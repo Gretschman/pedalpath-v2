@@ -260,6 +260,50 @@ export async function getBOMData(schematicId: string): Promise<BOMData | null> {
   }
 }
 
+export interface ComponentCorrection {
+  componentId?: string;
+  schematicId?: string;
+  componentType: string;
+  reportedValue: string;
+  correctValue?: string;
+  issueType: 'wrong_value' | 'wrong_type' | 'missing' | 'extra' | 'other';
+  description?: string;
+}
+
+/**
+ * Submit a batch of user-flagged component corrections.
+ * Inserts into component_corrections table for AI training purposes.
+ */
+export async function submitComponentCorrections(
+  corrections: ComponentCorrection[]
+): Promise<boolean> {
+  if (corrections.length === 0) return true;
+  try {
+    const rows = corrections.map((c) => ({
+      schematic_id: c.schematicId || null,
+      component_id: c.componentId || null,
+      component_type: c.componentType,
+      reported_value: c.reportedValue,
+      correct_value: c.correctValue || null,
+      issue_type: c.issueType,
+      description: c.description || null,
+    }));
+
+    const { error } = await supabase
+      .from('component_corrections')
+      .insert(rows);
+
+    if (error) {
+      console.error('Error submitting corrections:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error in submitComponentCorrections:', error);
+    return false;
+  }
+}
+
 /**
  * Update a BOM component (user verification/correction)
  */

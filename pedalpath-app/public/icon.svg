@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#2563eb"/>
+
+  <!-- Pedal enclosure body -->
+  <rect x="96" y="140" width="320" height="232" rx="24" fill="#1e3a8a" stroke="#93c5fd" stroke-width="6"/>
+
+  <!-- Top panel detail line -->
+  <line x1="96" y1="200" x2="416" y2="200" stroke="#1d4ed8" stroke-width="4"/>
+
+  <!-- Knob row — 3 knobs -->
+  <!-- Knob 1 -->
+  <circle cx="166" cy="264" r="28" fill="#0f172a" stroke="#60a5fa" stroke-width="4"/>
+  <circle cx="166" cy="264" r="16" fill="#1e3a8a"/>
+  <line x1="166" y1="248" x2="166" y2="258" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Knob 2 (center) -->
+  <circle cx="256" cy="264" r="28" fill="#0f172a" stroke="#60a5fa" stroke-width="4"/>
+  <circle cx="256" cy="264" r="16" fill="#1e3a8a"/>
+  <line x1="256" y1="248" x2="256" y2="258" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Knob 3 -->
+  <circle cx="346" cy="264" r="28" fill="#0f172a" stroke="#60a5fa" stroke-width="4"/>
+  <circle cx="346" cy="264" r="16" fill="#1e3a8a"/>
+  <line x1="346" y1="248" x2="346" y2="258" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- LED indicator -->
+  <circle cx="256" cy="176" r="10" fill="#22c55e"/>
+  <circle cx="256" cy="176" r="5" fill="#bbf7d0"/>
+
+  <!-- Footswitch -->
+  <circle cx="256" cy="340" r="32" fill="#0f172a" stroke="#475569" stroke-width="5"/>
+  <circle cx="256" cy="340" r="20" fill="#1e293b"/>
+
+  <!-- Input/output jacks (sides) -->
+  <circle cx="96" cy="256" r="14" fill="#0f172a" stroke="#475569" stroke-width="4"/>
+  <circle cx="96" cy="256" r="7" fill="#334155"/>
+  <circle cx="416" cy="256" r="14" fill="#0f172a" stroke="#475569" stroke-width="4"/>
+  <circle cx="416" cy="256" r="7" fill="#334155"/>
+
+  <!-- "PP" letter mark on pedal face -->
+  <text x="256" y="168" text-anchor="middle" font-family="monospace" font-size="0" fill="white">PP</text>
+</svg>

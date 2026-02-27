@@ -16,6 +16,8 @@
  */
 
 import React, { useState } from 'react';
+import type { StripboardComponent } from '../../utils/stripboard-layout';
+import { resistorDigits, resistorBandColor } from '../../utils/stripboard-layout';
 
 // ============================================================================
 // Physical constants
@@ -44,7 +46,7 @@ const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65
 export interface StripboardViewProps {
   viewMode?: 'component' | 'copper' | 'both';
   onViewModeChange?: (mode: string) => void;
-  components?: unknown[];   // reserved for future component overlay
+  components?: StripboardComponent[];
   trackCuts?: string[];     // e.g. ['D11', 'G10']
   showDemo?: boolean;
 }
@@ -66,9 +68,10 @@ const holeCy = (row: number) => MT + (row - 1) * HOLE_SPACING + HOLE_SPACING / 2
 interface BoardSVGProps {
   copperSide: boolean;
   cutSet: Set<string>;
+  componentPlacements?: StripboardComponent[];
 }
 
-function BoardSVG({ copperSide, cutSet }: BoardSVGProps) {
+function BoardSVG({ copperSide, cutSet, componentPlacements = [] }: BoardSVGProps) {
   // Color palette
   const boardFill      = copperSide ? 'url(#sb-board-copper)' : 'url(#sb-board-top)';
   const boardStroke    = copperSide ? '#3A2810' : '#9A6020';
@@ -274,7 +277,138 @@ function BoardSVG({ copperSide, cutSet }: BoardSVGProps) {
           {ri + 1}
         </text>
       ))}
+
+      {/* Component overlays — component side only */}
+      {!copperSide && componentPlacements.length > 0 && (
+        <ComponentOverlay components={componentPlacements} />
+      )}
     </svg>
+  );
+}
+
+// ============================================================================
+// Component overlay — rendered on component-side view only
+// ============================================================================
+
+interface ComponentOverlayProps {
+  components: StripboardComponent[];
+}
+
+function ComponentOverlay({ components }: ComponentOverlayProps) {
+  return (
+    <>
+      {components.map((comp) => {
+        const cx1 = holeCx(comp.lead1.col);
+        const cy1 = holeCy(comp.lead1.row);
+
+        if (comp.type === 'transistor' && comp.lead2 && comp.lead3) {
+          const cy2 = holeCy(comp.lead2.row);
+          const cy3 = holeCy(comp.lead3.row);
+          const midY = (cy1 + cy3) / 2;
+          const bodyTop = cy1 - 6;
+          const bodyBot = cy3 + 6;
+          const bx = cx1 - 9;
+          const bw = 18;
+
+          return (
+            <g key={comp.id}>
+              {/* Body: TO-92 flat-D outline */}
+              <path
+                d={`M ${bx} ${bodyTop} L ${bx + bw} ${bodyTop} L ${bx + bw} ${bodyBot} Q ${cx1} ${bodyBot + 10} ${bx} ${bodyBot} Z`}
+                fill="#1a1a1a"
+                stroke="#444"
+                strokeWidth="1"
+              />
+              {/* Leads: 3 short stubs down */}
+              <line x1={cx1} y1={bodyBot + 10} x2={cx1} y2={cy3 + HOLE_RADIUS} stroke="#999" strokeWidth="1.5" />
+              <line x1={cx1} y1={cy1 - HOLE_RADIUS} x2={cx1} y2={bodyTop} stroke="#999" strokeWidth="1.5" />
+              {/* E/B/C labels */}
+              <text x={cx1 + 12} y={cy1 + 3} fontSize="7" fontFamily="monospace" fill="#666">E</text>
+              <text x={cx1 + 12} y={cy2 + 3} fontSize="7" fontFamily="monospace" fill="#666">B</text>
+              <text x={cx1 + 12} y={cy3 + 3} fontSize="7" fontFamily="monospace" fill="#666">C</text>
+              {/* Ref */}
+              <text x={cx1 - 18} y={midY + 3} fontSize="8" fontFamily="monospace" fill="#333" textAnchor="end">{comp.ref}</text>
+            </g>
+          );
+        }
+
+        if ((comp.type === 'resistor' || comp.type === 'diode') && comp.lead2) {
+          const cy2 = holeCy(comp.lead2.row);
+          const bodyTop = Math.min(cy1, cy2) + 6;
+          const bodyBot = Math.max(cy1, cy2) - 6;
+          const bodyH = bodyBot - bodyTop;
+          const midY = (bodyTop + bodyBot) / 2;
+          const [d1, d2, dm] = resistorDigits(comp.value);
+          const bandH = Math.max(2, bodyH / 5);
+
+          if (comp.type === 'diode') {
+            return (
+              <g key={comp.id}>
+                <line x1={cx1} y1={cy1} x2={cx1} y2={bodyTop} stroke="#888" strokeWidth="1.5" />
+                <line x1={cx1} y1={bodyBot} x2={cx1} y2={cy2} stroke="#888" strokeWidth="1.5" />
+                <rect x={cx1 - 6} y={bodyTop} width={12} height={bodyH} fill="#555" rx="2" />
+                {/* Cathode stripe */}
+                <rect x={cx1 - 6} y={midY + bodyH / 4} width={12} height={3} fill="#e8e0d0" rx="0.5" />
+                <text x={cx1 + 8} y={midY + 3} fontSize="8" fontFamily="monospace" fill="#333">{comp.ref}</text>
+              </g>
+            );
+          }
+
+          return (
+            <g key={comp.id}>
+              {/* Leads */}
+              <line x1={cx1} y1={cy1} x2={cx1} y2={bodyTop} stroke="#888" strokeWidth="1.5" />
+              <line x1={cx1} y1={bodyBot} x2={cx1} y2={cy2} stroke="#888" strokeWidth="1.5" />
+              {/* Body */}
+              <rect x={cx1 - 7} y={bodyTop} width={14} height={bodyH} fill="#D4C080" rx="3" />
+              {/* Color bands */}
+              <rect x={cx1 - 7} y={bodyTop + bandH * 0.5} width={14} height={bandH} fill={resistorBandColor(d1)} />
+              <rect x={cx1 - 7} y={bodyTop + bandH * 1.8} width={14} height={bandH} fill={resistorBandColor(d2)} />
+              <rect x={cx1 - 7} y={bodyTop + bandH * 3.0} width={14} height={bandH} fill={resistorBandColor(dm)} />
+              {/* Tolerance band (gold) */}
+              <rect x={cx1 - 7} y={bodyBot - bandH * 1.2} width={14} height={bandH * 0.8} fill="#C0A020" />
+              {/* Ref */}
+              <text x={cx1 + 9} y={midY + 3} fontSize="8" fontFamily="monospace" fill="#333">{comp.ref}</text>
+            </g>
+          );
+        }
+
+        if (comp.type === 'capacitor' && comp.lead2) {
+          const cy2 = holeCy(comp.lead2.row);
+          const bodyTop = Math.min(cy1, cy2) + 5;
+          const bodyBot = Math.max(cy1, cy2) - 5;
+          const bodyH = bodyBot - bodyTop;
+          const midY = (bodyTop + bodyBot) / 2;
+
+          return (
+            <g key={comp.id}>
+              {/* Leads */}
+              <line x1={cx1} y1={cy1} x2={cx1} y2={bodyTop} stroke="#888" strokeWidth="1.5" />
+              <line x1={cx1} y1={bodyBot} x2={cx1} y2={cy2} stroke="#888" strokeWidth="1.5" />
+              {/* Body: film cap = orange rectangle; electrolytic = blue cylinder */}
+              <rect x={cx1 - 7} y={bodyTop} width={14} height={bodyH}
+                fill={/[uµ]/i.test(comp.value) ? '#4A7CC0' : '#E08030'}
+                rx="3"
+              />
+              {/* + mark for electrolytic */}
+              {/[uµ]/i.test(comp.value) && (
+                <>
+                  <line x1={cx1} y1={bodyTop + 4} x2={cx1} y2={bodyTop + 10} stroke="white" strokeWidth="1.5" />
+                  <line x1={cx1 - 3} y1={bodyTop + 7} x2={cx1 + 3} y2={bodyTop + 7} stroke="white" strokeWidth="1.5" />
+                </>
+              )}
+              {/* Ref */}
+              <text x={cx1 + 9} y={midY + 3} fontSize="8" fontFamily="monospace" fill="#333">{comp.ref}</text>
+            </g>
+          );
+        }
+
+        // Fallback: simple dot
+        return (
+          <circle key={comp.id} cx={cx1} cy={cy1} r={6} fill="#999" opacity="0.6" />
+        );
+      })}
+    </>
   );
 }
 
@@ -285,7 +419,7 @@ function BoardSVG({ copperSide, cutSet }: BoardSVGProps) {
 const StripboardView: React.FC<StripboardViewProps> = ({
   viewMode: initialViewMode = 'component',
   onViewModeChange,
-  components: _components = [],
+  components: componentPlacements = [],
   trackCuts: propCuts = [],
   showDemo = true,
 }) => {
@@ -330,7 +464,11 @@ const StripboardView: React.FC<StripboardViewProps> = ({
 
       {/* Board */}
       <div className="overflow-x-auto rounded-lg shadow-sm">
-        <BoardSVG copperSide={showCopper} cutSet={cutSet} />
+        <BoardSVG
+          copperSide={showCopper}
+          cutSet={cutSet}
+          componentPlacements={showDemo ? [] : componentPlacements}
+        />
       </div>
 
       {/* Track cut legend */}

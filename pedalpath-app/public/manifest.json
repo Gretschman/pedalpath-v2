@@ -1,0 +1,25 @@
+{
+  "name": "PedalPath — Guitar Pedal Schematic Analyzer",
+  "short_name": "PedalPath",
+  "description": "Upload a guitar pedal schematic and instantly get a bill of materials, breadboard layout, and step-by-step build guide powered by AI.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["music", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}

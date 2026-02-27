@@ -221,7 +221,7 @@ export default function ResultsPage() {
               </p>
             </div>
 
-            <BOMTable bomData={bomData} onUpdate={() => console.log('BOM updated')} />
+            <BOMTable bomData={bomData} schematicId={schematicId} onUpdate={() => console.log('BOM updated')} />
             <BOMExport bomData={bomData} projectName="My Pedal Build" />
           </div>
         )}
