@@ -112,46 +112,10 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
     }
   }
 
-  // --- Resistors (rows a then b) ---
-  let rCol = 5;
-  let rRow: 'a' | 'b' = 'a';
-  const resistors = bomData.components.filter(c => c.component_type === 'resistor');
-  for (const r of resistors) {
-    for (let q = 0; q < Math.min(r.quantity, 6); q++) {
-      if (rCol > MAX_COL) {
-        if (rRow === 'a') { rRow = 'b'; rCol = 5; }
-        else break;
-      }
-      placements.push({
-        type: 'resistor',
-        value: r.value,
-        label: r.reference_designators[q] ?? r.reference_designators[0] ?? r.value,
-        startHole: `${rRow}${rCol}`,
-        endHole: `${rRow}${rCol + 5}`,
-      });
-      rCol += 8; // 5-hole span + 3-hole gap
-    }
-  }
-
-  // --- Capacitors (row c) ---
-  let cCol = 5;
-  const caps = bomData.components.filter(c => c.component_type === 'capacitor');
-  for (const cap of caps) {
-    for (let q = 0; q < Math.min(cap.quantity, 5); q++) {
-      if (cCol > MAX_COL) break;
-      const span = guessCapSpan(cap.value);
-      placements.push({
-        type: 'capacitor',
-        value: cap.value,
-        label: cap.reference_designators[q] ?? cap.reference_designators[0] ?? cap.value,
-        startHole: `c${cCol}`,
-        endHole: `c${cCol + span}`,
-      });
-      cCol += span + 4;
-    }
-  }
-
   // --- Transistors (row d, 3 consecutive holes: E/B/C) ---
+  // Placed first: the TransistorSVG body extends 82px above row d (covering rows a–b
+  // at those columns). Resistors and capacitors must start in columns AFTER the
+  // transistor zone so they are not obscured by the transistor body.
   let tCol = 4; // start col for emitter pin
   const transistors = bomData.components.filter(c => c.component_type === 'transistor');
   for (const t of transistors) {
@@ -168,6 +132,49 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
         endHole: `d${tCol + 2}`,
       });
       tCol += 5; // 3 holes used + 2-hole gap
+    }
+  }
+
+  // After transistors, compute the first column safe for rows a–c components.
+  // tCol > 4 means at least one transistor was placed; use tCol as the start.
+  const firstFreeCol = tCol > 4 ? tCol : 5;
+
+  // --- Resistors (rows a then b) ---
+  let rCol = firstFreeCol;
+  let rRow: 'a' | 'b' = 'a';
+  const resistors = bomData.components.filter(c => c.component_type === 'resistor');
+  for (const r of resistors) {
+    for (let q = 0; q < Math.min(r.quantity, 6); q++) {
+      if (rCol > MAX_COL) {
+        if (rRow === 'a') { rRow = 'b'; rCol = firstFreeCol; }
+        else break;
+      }
+      placements.push({
+        type: 'resistor',
+        value: r.value,
+        label: r.reference_designators[q] ?? r.reference_designators[0] ?? r.value,
+        startHole: `${rRow}${rCol}`,
+        endHole: `${rRow}${rCol + 5}`,
+      });
+      rCol += 8; // 5-hole span + 3-hole gap
+    }
+  }
+
+  // --- Capacitors (row c) ---
+  let cCol = firstFreeCol;
+  const caps = bomData.components.filter(c => c.component_type === 'capacitor');
+  for (const cap of caps) {
+    for (let q = 0; q < Math.min(cap.quantity, 5); q++) {
+      if (cCol > MAX_COL) break;
+      const span = guessCapSpan(cap.value);
+      placements.push({
+        type: 'capacitor',
+        value: cap.value,
+        label: cap.reference_designators[q] ?? cap.reference_designators[0] ?? cap.value,
+        startHole: `c${cCol}`,
+        endHole: `c${cCol + span}`,
+      });
+      cCol += span + 4;
     }
   }
 
