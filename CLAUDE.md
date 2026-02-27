@@ -4,29 +4,27 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 **Repo**: /home/rob/pedalpath-v2 (WSL)
 **Secrets**: /home/rob/.pedalpath_env (never commit)
-**Deploy**: https://pedalpath-app.vercel.app | https://pedalpath-v2.vercel.app
+**Deploy**: https://pedalpath.app | https://pedalpath-app.vercel.app
 
 ---
 
 ## Current Status
 
-Phase 2 complete + visual overhaul complete. 168 tests passing. Deployed to pedalpath-app.vercel.app.
-Domain purchased: **pedalpath.app** — configure as custom domain in Vercel next session.
+Phase 2 complete + visual overhaul complete. 172 tests passing. Live at pedalpath.app.
 
-**Completed this session (2026-02-26):**
-- ✅ Issue #16 — Electra Distortion demo (verified BOM: 4R/2C/1Q/2D/1VR)
-- ✅ Issue #10 — Board dimming: focusComponentTypes prop, step-aware 15% opacity
-- ✅ Issue #11 — ComponentThumbnail uses real values + correct resistor color bands (120×56px)
-- ✅ PRD v2.0 — PEDALPATH_PRD_v2.md committed to repo
-- ✅ Resources organized — drill templates + offboard wiring copied to _REFERENCE
-- ✅ Issues #19, #20 created (knowledge base: drill templates + wiring as AI teachers)
+**Completed this session (2026-02-27):**
+- ✅ Issue #25 — Jumper wires: JumperWirePlacement type, generateJumperWires(), WireSVG rendering
+- ✅ Issue #9 — Transistor thumbnail: custom inline TO-92 SVG, fits 120×56, E/B/C labels visible
+- ✅ Custom domain pedalpath.app live (ALIAS → cname.vercel-dns.com via Porkbun)
+- ✅ _INBOX cleared — all resources evaluated + copied to _REFERENCE
+- ✅ AI passive-circuit detection verified intact across API + layout + enclosure
 
 **Next session priority order:**
-1. **Configure pedalpath.app custom domain** in Vercel dashboard (takes 5 min)
-2. **Decide pricing model** — Free-only launch vs Free+Paid at launch (discuss with Rob)
-3. **Stripe integration** — products/prices/env vars/checkout flow/success page
-4. **Issue #9** — Transistor visual reference in breadboard guide steps
-5. AI passive-circuit detection — verify fix is still working
+1. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
+2. **Stripe integration** — products/prices/env vars/checkout flow/success page
+3. **Issue #22** — Mini-Boost C2 capacitor parsing ("unspecified" → 0.1µF)
+4. **Issues #23/#24** — Mini-Boost/Mini-Fuzz breadboard layout correctness
+5. **BreadboardGuide step 9** — hide/modify "Connect Power" for passive circuits (minor)
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
@@ -51,6 +49,7 @@ vercel --prod --yes  # deploy
 - Decoders: `src/utils/decoders/`
 - Tests: `src/utils/**/__tests__/`
 - Upload queue / Inbox: `/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX` (drop files here from Windows)
+- Reference library: `/mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/` — breadboard-specs/, transistor-reference/, offboard-wiring/, drill-templates/, circuit-library/, demo-circuits/
 - Session docs: `docs/generated/session_log.md`
 
 ---
