@@ -10,21 +10,28 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-Phase 2 complete + visual overhaul complete. 172 tests passing. Live at pedalpath.app.
+Accuracy testing pipeline complete. Migration 006 live. 172 tests passing. Live at pedalpath.app.
 
-**Completed this session (2026-02-27 — session 2):**
-- ✅ Issue #21 — Clipboard paste: Ctrl+V anywhere captures schematic from clipboard
-- ✅ Issue #4 — PWA/iOS: manifest.json, icon.svg, viewport-fit=cover, OG/Twitter meta, apple-mobile-web-app-*
-- ✅ Issue #26 — BOM flagging: Flag button per component, Submit Report → component_corrections table, migration 004
-- ✅ Issue #2 — Stripboard visualization: generateStripboardLayout() + component overlays (transistor/resistor/cap/diode)
-- ✅ Closed GitHub issues: #2, #4, #15, #21, #26 (also #9, #22, #24, #25 carried from session 1)
-- ✅ Resource library indexed to memory files (reference-library.md in .claude/projects memory)
+**Completed this session (2026-02-27 — session 3):**
+- ✅ Migration 006: 5 new tables — reference_circuits, reference_bom_items, supplier_links, accuracy_test_runs, accuracy_discrepancies
+- ✅ tools/accuracy_test.py — scores Claude Vision BOM output vs reference; auto-files GitHub issues for <85%
+- ✅ tools/populate_ground_truth.py — seeds reference BOMs from JSON files in _INBOX/ground-truth/
+- ✅ tools/populate_supplier_links.py — upserts Tayda/Mouser URLs from supplier_links.json
+- ✅ api/supplier-links.ts — GET /api/supplier-links?type=X&value=Y → Tayda+Mouser links
+- ✅ BOMTable.tsx — [T]/[M] supplier badge links per row (orange=Tayda, blue=Mouser, grey=not found)
+- ✅ Plan doc saved to _OUTPUT/PedalPath_AccuracyTestingPlan_2026-02-27.md
 
-**Next session priority order:**
-1. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
-2. **Stripe integration** — products/prices/env vars/checkout flow/success page
-3. **Wire component_reference into AI prompt** — send top 5 of each type to Claude to prime parsing accuracy
-4. **Wire component_reference into correction UI** — suggest closest match when user flags a component
+**BLOCKING — needs you before next session (free tier, no Claude Code):**
+1. **Track B** — Run ChatGPT/Gemini on 4 PDFs → JSON BOMs → `_INBOX/ground-truth/*.json` → run `populate_ground_truth.py`
+2. **Track C** — Run ChatGPT-4o Browse for 160 supplier URLs → `_INBOX/ground-truth/supplier_links.json` → run `populate_supplier_links.py`
+3. Prompts for both are in `_OUTPUT/PedalPath_AccuracyTestingPlan_2026-02-27.md`
+
+**Next session priority order (once B+C complete):**
+1. **Run `python3 tools/accuracy_test.py`** — get baseline scores for 4 circuits; review GitHub issues filed
+2. **Fix highest-impact prompt issues** in `api/analyze-schematic.ts` based on discrepancy data
+3. **Re-run accuracy tests** — confirm improvement; target all 4 circuits ≥85%
+4. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
+5. **Stripe integration** — products/prices/env vars/checkout flow/success page
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
