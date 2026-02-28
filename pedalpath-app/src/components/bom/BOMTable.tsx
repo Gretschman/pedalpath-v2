@@ -1,8 +1,101 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { BOMComponent, BOMData } from '../../types/bom.types';
 import { updateBOMComponent, submitComponentCorrections } from '../../services/schematic-processor';
 import type { ComponentCorrection } from '../../services/schematic-processor';
 import { Edit2, Check, X, ExternalLink, Flag, AlertTriangle, Send } from 'lucide-react';
+
+// ─── Supplier link types + fetcher ────────────────────────────────
+
+interface SupplierLink {
+  supplier: 'tayda' | 'mouser';
+  url: string;
+  price_usd?: number | null;
+  in_stock: boolean;
+}
+
+// Simple request-dedup cache keyed by "type|value"
+const supplierCache = new Map<string, SupplierLink[]>();
+
+async function fetchSupplierLinks(componentType: string, value: string): Promise<SupplierLink[]> {
+  const key = `${componentType}|${value}`;
+  if (supplierCache.has(key)) return supplierCache.get(key)!;
+  try {
+    const res = await fetch(
+      `/api/supplier-links?type=${encodeURIComponent(componentType)}&value=${encodeURIComponent(value)}`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const links: SupplierLink[] = data.success ? (data.links ?? []) : [];
+    supplierCache.set(key, links);
+    return links;
+  } catch {
+    return [];
+  }
+}
+
+function useSupplierLinks(componentType: string, value: string) {
+  const [links, setLinks] = useState<SupplierLink[]>([]);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    fetchSupplierLinks(componentType, value).then((l) => {
+      if (mounted.current) setLinks(l);
+    });
+    return () => { mounted.current = false; };
+  }, [componentType, value]);
+  return links;
+}
+
+// ─── Supplier badge component ──────────────────────────────────────
+
+function SupplierBadges({ componentType, value }: { componentType: string; value: string }) {
+  const links = useSupplierLinks(componentType, value);
+  const tayda = links.find((l) => l.supplier === 'tayda');
+  const mouser = links.find((l) => l.supplier === 'mouser');
+
+  return (
+    <span className="inline-flex gap-1 ml-1">
+      {tayda ? (
+        <a
+          href={tayda.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Tayda Electronics${tayda.price_usd != null ? ` — $${tayda.price_usd.toFixed(2)}` : ''}${!tayda.in_stock ? ' (out of stock)' : ''}`}
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold border ${
+            tayda.in_stock
+              ? 'bg-orange-50 text-orange-700 border-orange-300 hover:bg-orange-100'
+              : 'bg-gray-50 text-gray-400 border-gray-200'
+          }`}
+        >
+          T
+        </a>
+      ) : (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold border bg-gray-50 text-gray-300 border-gray-200 cursor-default" title="Not found at Tayda">
+          T
+        </span>
+      )}
+      {mouser ? (
+        <a
+          href={mouser.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Mouser Electronics${mouser.price_usd != null ? ` — $${mouser.price_usd.toFixed(2)}` : ''}${!mouser.in_stock ? ' (out of stock)' : ''}`}
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold border ${
+            mouser.in_stock
+              ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+            : 'bg-gray-50 text-gray-400 border-gray-200'
+          }`}
+        >
+          M
+        </a>
+      ) : (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold border bg-gray-50 text-gray-300 border-gray-200 cursor-default" title="Not found at Mouser">
+          M
+        </span>
+      )}
+    </span>
+  );
+}
 
 interface BOMTableProps {
   bomData: BOMData;
@@ -233,6 +326,9 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                     </div>
                   </div>
 
+                  {/* Supplier badges (mobile) */}
+                  <SupplierBadges componentType={component.component_type} value={component.value} />
+
                   {/* References */}
                   <div className="flex flex-wrap gap-1">
                     {component.reference_designators.map((ref) => (
@@ -358,6 +454,9 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                     Notes
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Buy
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Actions
                   </th>
                 </tr>
@@ -428,6 +527,10 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                         ) : (
                           <div className="text-sm text-gray-600">{component.notes || '—'}</div>
                         )}
+                      </td>
+
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <SupplierBadges componentType={component.component_type} value={component.value} />
                       </td>
 
                       <td className="px-4 py-3 whitespace-nowrap">

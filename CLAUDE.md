@@ -62,6 +62,9 @@ vercel --prod --yes  # deploy
 - `tools/session_end.py` — stages, commits, pushes at session end (interactive or -m "msg")
 - `tools/export_doc.py` — converts markdown → .docx with Rob's header/footer spec
 - `tools/sync_supabase_schema.py` — dumps live Supabase schema → docs/generated/supabase_schema.sql
+- `tools/populate_ground_truth.py` — seeds reference_circuits + reference_bom_items from _INBOX/ground-truth/*.json
+- `tools/populate_supplier_links.py` — upserts supplier_links from _INBOX/ground-truth/supplier_links.json
+- `tools/accuracy_test.py` — runs BOM accuracy tests against reference circuits; files GitHub issues for <85% scores
 - `start_session.sh` — runs all sync tools + git status before starting Claude Code
 
 ---
