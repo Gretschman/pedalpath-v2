@@ -1,0 +1,13 @@
+{
+  "name": "@pedalpath/pwa",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "manifest.template.json",
+    "README.md",
+    "icons"
+  ],
+  "scripts": {
+    "build": "echo \"static package\""
+  }
+}
