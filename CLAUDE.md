@@ -10,28 +10,36 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-Accuracy testing pipeline complete. Migration 006 live. 172 tests passing. Live at pedalpath.app.
+Upload bug fixed. Delete projects added. 172 tests passing. Live at pedalpath.app.
 
-**Completed this session (2026-02-27 — session 3):**
-- ✅ Migration 006: 5 new tables — reference_circuits, reference_bom_items, supplier_links, accuracy_test_runs, accuracy_discrepancies
-- ✅ tools/accuracy_test.py — scores Claude Vision BOM output vs reference; auto-files GitHub issues for <85%
-- ✅ tools/populate_ground_truth.py — seeds reference BOMs from JSON files in _INBOX/ground-truth/
-- ✅ tools/populate_supplier_links.py — upserts Tayda/Mouser URLs from supplier_links.json
-- ✅ api/supplier-links.ts — GET /api/supplier-links?type=X&value=Y → Tayda+Mouser links
-- ✅ BOMTable.tsx — [T]/[M] supplier badge links per row (orange=Tayda, blue=Mouser, grey=not found)
-- ✅ Plan doc saved to _OUTPUT/PedalPath_AccuracyTestingPlan_2026-02-27.md
+**Completed this session (2026-03-02 — session 4):**
+- ✅ CRITICAL FIX: analyze-schematic.ts — trim API key (strips CRLF that caused `Headers.append` error + leaked key in response)
+- ✅ SECURITY: removed `VITE_ANTHROPIC_API_KEY` fallback; error responses no longer expose raw SDK messages
+- ✅ Dashboard: delete project button — two-click confirm (trash icon → Confirm/Cancel)
+- ✅ useProjects.ts: deleteProject mutation — deletes bom_items/enclosure_recommendations/power_requirements/schematics in order
+- ✅ GitHub issue #28: affiliate links — Tayda, Mouser, StompBoxParts, PedalPartsAndKits
+- ✅ _TRASH folder created at _INBOX/../_TRASH for Rob's manual review
+- ✅ tools/verify_alignment.py — copied from _INBOX; MB-102 mechanical audit
+- ✅ _INBOX audit complete — all new intel captured (see MEMORY.md for details)
 
-**BLOCKING — needs you before next session (free tier, no Claude Code):**
-1. **Track B** — Run ChatGPT/Gemini on 4 PDFs → JSON BOMs → `_INBOX/ground-truth/*.json` → run `populate_ground_truth.py`
-2. **Track C** — Run ChatGPT-4o Browse for 160 supplier URLs → `_INBOX/ground-truth/supplier_links.json` → run `populate_supplier_links.py`
-3. Prompts for both are in `_OUTPUT/PedalPath_AccuracyTestingPlan_2026-02-27.md`
+**⚠️ ACTION REQUIRED (Rob):** Rotate the Anthropic API key immediately — it was exposed in a screenshot
+(console.anthropic.com → API Keys)
 
-**Next session priority order (once B+C complete):**
-1. **Run `python3 tools/accuracy_test.py`** — get baseline scores for 4 circuits; review GitHub issues filed
-2. **Fix highest-impact prompt issues** in `api/analyze-schematic.ts` based on discrepancy data
-3. **Re-run accuracy tests** — confirm improvement; target all 4 circuits ≥85%
-4. **Decide pricing model** — Free-only launch vs Free+Paid (deferred, discuss with Rob)
-5. **Stripe integration** — products/prices/env vars/checkout flow/success page
+**New intel from _INBOX (ready to process):**
+- 7 ground-truth BOMs: 1_Knob_Fuzz_V2, ratticus_V1, dart_v2, sunburn_v2, BOMs_All + 3 existing
+- New schematics: OKF-v2-2021, SHO-Nuff-v4, Super-Sonic-02, T-AMP 1.1, One Knob Clang 2.0
+- Stripe files built in another AI session (create-checkout-session.ts, stripe-webhook.ts) — in _INBOX/pedalpath-v2-main/
+- iOS web shell (pedalpath-ios-web-shell-gh) — tokens, components, PWA — for Phase 8
+- pedal_factory.py + new "Lego Gold Standard" PRD — physics kernel + rendering overhaul spec
+- pedalpath_integration.py — Python component decoder bridge (resistor/capacitor lookup API)
+
+**Next session priority order:**
+1. **IMMEDIATE**: Run `python3 tools/populate_ground_truth.py` — 7 BOMs waiting in _INBOX/ground-truth/
+2. **IMMEDIATE**: Run `python3 tools/accuracy_test.py` — get baseline scores; review GitHub issues
+3. **Fix highest-impact prompt issues** in `api/analyze-schematic.ts` based on discrepancy data
+4. **Re-run accuracy tests** — target all circuits ≥85%
+5. **Stripe integration** — copy files from _INBOX/pedalpath-v2-main/pedalpath-app/api/ + wire up
+6. **New PRD integration** — pedal_factory.py architecture: SVG contact shadows, active grid labels, material-based transistors
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
@@ -72,6 +80,7 @@ vercel --prod --yes  # deploy
 - `tools/populate_ground_truth.py` — seeds reference_circuits + reference_bom_items from _INBOX/ground-truth/*.json
 - `tools/populate_supplier_links.py` — upserts supplier_links from _INBOX/ground-truth/supplier_links.json
 - `tools/accuracy_test.py` — runs BOM accuracy tests against reference circuits; files GitHub issues for <85% scores
+- `tools/verify_alignment.py` — MB-102 mechanical audit: verifies coordinate-to-grid mapping + Matrix-5 power rail positions
 - `start_session.sh` — runs all sync tools + git status before starting Claude Code
 
 ---

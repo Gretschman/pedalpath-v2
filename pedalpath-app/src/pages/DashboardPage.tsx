@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Upload, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { useProjects } from '../hooks/useProjects'
 
 export default function DashboardPage() {
-  const { projects, isLoading, error } = useProjects()
+  const { projects, isLoading, error, deleteProject, isDeleting } = useProjects()
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const totalProjects = projects.length
   // Count 'draft' with schematics as in_progress — status update can fail silently
@@ -137,18 +139,49 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-600">AI confidence: {confidence}%</p>
                     )}
 
-                    {processingStatus === 'completed' && schematic ? (
-                      <Link
-                        to={`/results/${schematic.id}`}
-                        className="self-end text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
-                      >
-                        View Results →
-                      </Link>
-                    ) : processingStatus === 'failed' ? (
-                      <p className="self-end text-sm text-gray-400">Analysis failed</p>
-                    ) : (
-                      <p className="self-end text-sm text-gray-400">Processing...</p>
-                    )}
+                    <div className="flex items-center justify-between mt-auto pt-1">
+                      {processingStatus === 'completed' && schematic ? (
+                        <Link
+                          to={`/results/${schematic.id}`}
+                          className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                        >
+                          View Results →
+                        </Link>
+                      ) : processingStatus === 'failed' ? (
+                        <p className="text-sm text-gray-400">Analysis failed</p>
+                      ) : (
+                        <p className="text-sm text-gray-400">Processing...</p>
+                      )}
+
+                      {confirmDeleteId === project.id ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              deleteProject(project.id)
+                              setConfirmDeleteId(null)
+                            }}
+                            disabled={isDeleting}
+                            className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(project.id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors"
+                          title="Delete project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )
               })}

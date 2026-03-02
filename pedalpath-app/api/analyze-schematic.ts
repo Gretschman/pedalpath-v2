@@ -130,12 +130,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Initialize Anthropic (server-side - secure!)
-    const apiKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
+    // .trim() strips any trailing newline/CRLF that can be introduced when
+    // copy-pasting the key into Vercel's env var UI — undici rejects header
+    // values that contain control characters (\r, \n) and would otherwise
+    // expose the raw key in the error message returned to the client.
+    const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
     if (!apiKey) {
       console.error('ANTHROPIC_API_KEY not configured');
       return res.status(500).json({
         success: false,
-        error: 'Server configuration error: API key not found'
+        error: 'Server configuration error. Please contact support.'
       });
     }
 
@@ -305,11 +309,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Generic error response
+    // Generic error response — do NOT return error.message here as it can
+    // contain sensitive values (e.g. the API key if SDK header validation fails).
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'An unknown error occurred during schematic analysis.',
-      details: 'An unexpected error occurred. This has been logged.',
+      error: 'An unexpected error occurred during schematic analysis. Please try again.',
+      details: 'This error has been logged.',
     });
   }
 }

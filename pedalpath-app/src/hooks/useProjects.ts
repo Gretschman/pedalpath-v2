@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { ProjectWithSchematics } from '../types/database.types'
 
 export function useProjects() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const { data: projects, isLoading, error } = useQuery({
     queryKey: ['projects', user?.id],
@@ -25,5 +26,35 @@ export function useProjects() {
     enabled: !!user,
   })
 
-  return { projects: projects ?? [], isLoading, error }
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      // Delete in dependency order (no guaranteed cascade on these tables).
+      // 1. bom_items → via schematics
+      const project = (projects ?? []).find(p => p.id === projectId)
+      if (project) {
+        const schematicIds = project.schematics.map(s => s.id)
+        if (schematicIds.length > 0) {
+          await supabase.from('bom_items').delete().in('schematic_id', schematicIds)
+          await supabase.from('enclosure_recommendations').delete().in('schematic_id', schematicIds)
+          await supabase.from('power_requirements').delete().in('schematic_id', schematicIds)
+        }
+        // 2. schematics
+        await supabase.from('schematics').delete().eq('project_id', projectId)
+      }
+      // 3. project row
+      const { error } = await supabase.from('projects').delete().eq('id', projectId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', user?.id] })
+    },
+  })
+
+  return {
+    projects: projects ?? [],
+    isLoading,
+    error,
+    deleteProject: deleteProjectMutation.mutate,
+    isDeleting: deleteProjectMutation.isPending,
+  }
 }
