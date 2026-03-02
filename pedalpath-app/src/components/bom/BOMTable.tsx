@@ -3,6 +3,7 @@ import type { BOMComponent, BOMData } from '../../types/bom.types';
 import { updateBOMComponent, submitComponentCorrections } from '../../services/schematic-processor';
 import type { ComponentCorrection } from '../../services/schematic-processor';
 import { Edit2, Check, X, ExternalLink, Flag, AlertTriangle, Send } from 'lucide-react';
+import { ComponentGallery } from './ComponentGallery';
 
 // ─── Supplier link types + fetcher ────────────────────────────────
 
@@ -275,6 +276,9 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
           </div>
         </div>
       </div>
+
+      {/* Component Gallery — collapsible visual overview */}
+      <ComponentGallery bomData={bomData} />
 
       {/* Components by Type */}
       {Object.entries(groupedComponents).map(([type, components]) => (

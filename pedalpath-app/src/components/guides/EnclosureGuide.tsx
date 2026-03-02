@@ -799,7 +799,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
       <div className="bg-gradient-to-r from-orange-600 to-orange-800 rounded-lg p-6 text-white">
         <h2 className="text-2xl font-bold mb-2">Enclosure Build Guide</h2>
         <p className="text-orange-100 mb-4">
-          LEGO-style assembly instructions for your final pedal build
+          Step-by-step assembly instructions for your final pedal build
         </p>
 
         {/* Enclosure Size Selector */}

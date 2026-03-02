@@ -5,12 +5,16 @@ import { processSchematic } from '../services/schematic-processor'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import { supabase } from '../services/supabase'
+import { useSubscription } from '../hooks/useSubscription'
+import { UpgradeModal } from '../components/UpgradeModal'
 
 export default function UploadPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { checkUsage, incrementUsage } = useSubscription(user?.id)
 
   const handleUploadComplete = async (file: File) => {
     setLoading(true)
@@ -26,6 +30,14 @@ export default function UploadPage() {
 
     try {
       const userId = user.id // NO FALLBACK - must be authenticated
+
+      // STEP 0: Check upload quota before doing anything
+      const usage = await checkUsage()
+      if (!usage.allowed) {
+        setLoading(false)
+        setShowUpgrade(true)
+        return
+      }
 
       console.log('Starting upload process:', {
         fileName: file.name,
@@ -61,6 +73,8 @@ export default function UploadPage() {
       console.log('Process schematic result:', result)
 
       if (result.success && result.schematicId) {
+        // STEP 3: Record usage after successful upload
+        incrementUsage(result.schematicId)
         navigate(`/results/${result.schematicId}`)
       } else {
         const errorMsg = result.error || 'Analysis failed'
@@ -105,6 +119,13 @@ export default function UploadPage() {
           <SchematicUpload onUploadComplete={handleUploadComplete} />
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        userId={user?.id ?? ''}
+        userEmail={user?.email ?? ''}
+      />
     </div>
   )
 }

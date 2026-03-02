@@ -1,101 +1,70 @@
-# Session Log — 2026-02-24
+# Session Log — 2026-03-02 (Session 4)
 
 ## What We Accomplished
-- Rewrote CLAUDE.md from ~2500 tokens down to ~310 tokens (lean version)
-- Built tools/sync_github_issues.py — pulls 7 open issues → docs/generated/issues_current.md
-- Built tools/sync_upload_queue.py — scans upload-queue/, extracts docx previews → docs/generated/session_manifest.md
-- Built start_session.sh — orchestrates both sync tools + git status at session start
-- Added docs/generated/ to .gitignore (generated output never committed)
-- Fixed PyGithub deprecation warning (Auth.Token)
+
+### Track 1 — Accuracy (partial)
+- Ground truth population + accuracy test pipeline was built in Session 3
+- **Next session**: Run `python3 tools/populate_ground_truth.py` + `python3 tools/accuracy_test.py`
+
+### Track 2 — First Sale / Stripe (complete)
+
+**Stripe integration wired end-to-end:**
+- `api/create-checkout-session.ts` — copied from _INBOX, customer create/find + checkout session creation
+- `api/stripe-webhook.ts` — copied from _INBOX, handles checkout.session.completed, subscription.created/updated/deleted, invoice events
+- `stripe` npm package installed
+- Migration `supabase/migrations/003_add_subscriptions.sql` already existed (subscriptions, payment_transactions, usage_events tables, RLS, can_user_upload/increment_usage RPCs)
+- `src/hooks/useSubscription.ts` + `src/types/subscription.types.ts` already existed (copied from _INBOX in prior session or pre-existing)
+- `src/components/UpgradeModal.tsx` — new: simple "limit reached" CTA modal, calls /api/create-checkout-session, redirects to Stripe
+- `src/pages/UploadPage.tsx` — updated: calls `checkUsage()` before upload, shows UpgradeModal if blocked, calls `incrementUsage()` after success
+
+**Env vars needed in Vercel:**
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID`
+- `VITE_STRIPE_PRO_PRICE_ID`, `VITE_STRIPE_ONETIME_PRICE_ID` (used in subscription.types.ts pricing plans)
+- `VITE_APP_URL` (for checkout success/cancel redirects)
+
+### Track 3 — Component Intelligence (complete)
+
+**LEGO references removed (3 occurrences):**
+- `LandingPage.tsx` — "like LEGO" → "step by step"
+- `ResultsPage.tsx` — "LEGO-style instructions" → "Step-by-step instructions"
+- `EnclosureGuide.tsx` — "LEGO-style assembly instructions" → "Step-by-step assembly instructions"
+
+**Germanium transistor detection:**
+- `api/analyze-schematic.ts` — prompt now instructs Claude to set `material:"Ge"` for known Ge parts (AC128, OC71, OC76, AC127, OC44, OC45, OC72, AC125, AC126, 2N1308, 2SB75, NKT275)
+- `TransistorSVG.tsx` — added `material?: 'Si' | 'Ge'` prop; `material === 'Ge'` forces TO-18 Metal Can rendering
+
+**Transistor pinout protection:**
+- `bom-layout.ts` — added `pinout` field to `TransistorPlacement`, static `PINOUT_MAP` lookup (EBC/CBE/SGD/DSG) + `lookupPinout()` for 20+ common transistors
+- `BreadboardGuide.tsx` — step 3 now shows "Transistor Orientation" panel with flat-face diagram for each unique transistor in the BOM
+
+### Track 4 — High-Fidelity Rendering (complete)
+
+**ComponentGallery (new component):**
+- `src/components/bom/ComponentGallery.tsx` — collapsible dark-green header band + 2–4 column grid of component cards (SVG render, value, type badge, quantity badge, identification hint)
+- `BOMTable.tsx` — ComponentGallery added between Confidence Score and Components by Type table
+
+**SVG shadow/bevel filters:**
+- `BreadboardBase.tsx` — added `<defs>` with `holeBevel` (inset bevel for holes) and `componentShadow` (drop shadow) filters; holeBevel applied to hole centers
+- `BomBreadboardView.tsx` — added `componentShadow` filter defs to overlay SVG; applied to all component `<g>` wrappers
+
+**Active grid labels:**
+- `BreadboardBase.tsx` — added `activeCol?: number` and `activeRow?: string` props; active column/row labels render bold + larger
+- `BomBreadboardView.tsx` — passes `activeCol`/`activeRow` through to BreadboardBase
+- `BreadboardGuide.tsx` — computes active col/row from first focused placement of current step
+
+**Step thumbnail enhancements:**
+- `BreadboardGuide.tsx` `ComponentThumbnail` — increased to 120×64px; added inline `thumbShadow` filter defs + `<g filter>` wrappers; updated transistor, IC, pot y-coordinates for new height
+- Card wrappers now show: quantity badge (top-right, gray-900 pill), identification hint (italic gray below reference designators)
+
+## Build Status
+- 172/172 tests passing
+- `npm run build` — TypeScript clean, vite build clean
 
 ## What Is Next
-- Build session_end.py — updates session_log.md, stages new tools, commits, pushes
-- Build export_doc.py — generates .docx with Rob's header/footer spec
 
-## Key Paths
-- Repo: /home/rob/pedalpath-v2
-- Upload queue: /home/rob/pedalpath-v2/upload-queue
-- Secrets: /home/rob/.pedalpath_env
-- Tools: /home/rob/pedalpath-v2/tools/
-- Generated output: /home/rob/pedalpath-v2/docs/generated/ (not committed)
-
-## Session Startup (use every session)
-```bash
-cd /home/rob/pedalpath-v2
-bash start_session.sh
-claude
-```
-Then open with: `Read docs/generated/session_log.md`
-
-## Tools Built So Far
-- tools/check_prereqs.py — 21/21 checks
-- tools/sync_github_issues.py — GitHub issues → issues_current.md
-- tools/sync_upload_queue.py — upload queue scan → session_manifest.md
-- start_session.sh — runs all of the above
-
-## Planned Tools Library
-
-### Tier 1 — Build Next Session
-- session_end.py — updates session_log.md, commits new tools, pushes
-- export_doc.py — generates .docx with Rob's exact header/footer spec
-- summarize_session.py — reads Dev Sessions Fathom exports, extracts decisions and next steps, writes to session_log.md
-
-### Tier 2 — Build Soon
-- new_project_scaffold.py — creates complete new project structure in one command (reusable for VeloQuote etc.)
-- export_meeting_notes.py — formats Fathom transcript exports as structured docx with action items extracted
-- sync_vercel_status.py — pulls Vercel deployment status to docs/generated/deploy_status.md
-- lint_claude_md.py — counts tokens in CLAUDE.md, warns if over 400, flags bloat patterns
-
-### Tier 3 — Build When Needed
-- generate_changelog.py — reads git log between commits, formats as changelog entry
-- export_bom_csv.py — exports PedalPath BOM JSON from Supabase to formatted CSV/Excel
-- check_supabase_health.py — pings Supabase, checks row counts, writes to docs/generated/db_health.md
-- archive_old_sessions.py — moves Dev Sessions docs older than 30 days to dated archive subfolder
-- generate_component_reference.py — reads src/utils/decoders/ and generates human-readable component reference md
-
-### Tier 4 — Cross-Project (VeloQuote + PedalPath)
-- export_linkedin_post.py — takes transcript or summary, generates LinkedIn post draft in Rob's voice
-- sync_medium_drafts.py — flags which VeloQuote transcripts haven't been turned into Medium articles yet
-- project_status_report.py — reads session_log, issues, deploy_status and generates weekly one-page status docx
-
-## Tool Building Rules
-- Every new tool gets one line added to CLAUDE.md Tools Available section immediately after creation
-- Tools that read secrets use /home/rob/.pedalpath_env via python-dotenv
-- All output files go to docs/generated/ (ephemeral, not committed)
-- All tools go in /home/rob/pedalpath-v2/tools/
-- Naming: sync_*.py for fetching, export_*.py for generating files, validate_*.py for checks, generate_*.py for boilerplate
-
-## Context From Previous Sessions
-
-### Development State (as of 2026-02-21)
-- Phase 1 COMPLETE: Component decoders (resistor/capacitor), BreadboardBase, 156 tests
-- Phase 2 COMPLETE: All 5 SVG components, BomBreadboardView, bom-layout, 168 tests passing
-- Phase 3 NOT STARTED: Mobile responsiveness, touch zoom/pan, stripboard enhancements
-- Phase 4 NOT STARTED: Stripe payment integration, marketing, user testing
-
-### Immediate Next Development Tasks (Priority Order)
-1. Breadboard rewrite — BreadboardGuide.tsx complete rewrite, TransistorSVG, realistic sizing
-2. Stripboard rewrite — StripboardGuide.tsx, tagboardeffects.com style
-3. Enclosure drill templates — all 1590-series, Tayda format
-4. Offboard wiring diagram — jacks/pot/LED/3PDT step
-5. AI accuracy — passive circuit detection
-
-### Known Outstanding Issues (from GitHub)
-- #2  Stripboard visualization missing
-- #4  iOS/PWA support
-- #9  Transistor components not rendered
-- #10 Breadboard overlays not realistic
-- #11 Build guide steps missing component visuals
-- #15 Major bugs + resources (main visual overhaul ticket)
-- #16 Demo Project no longer accessible
-
-### Both Vercel Deployments Active
-- Primary: https://pedalpath-v2.vercel.app
-- Secondary: https://pedalpath-app.vercel.app
-
-### Key Source Paths
-- App source: pedalpath-app/src/
-- Component SVGs: src/components/visualizations/components-svg/
-- Decoders: src/utils/decoders/
-- Tests: src/utils/__tests__/ and src/utils/decoders/__tests__/
-- Visual overhaul docs: /visual-overhaul-2026/
+1. **IMMEDIATE**: Rotate Anthropic API key (exposed in screenshot) — console.anthropic.com → API Keys
+2. **IMMEDIATE**: Run `python3 tools/populate_ground_truth.py` — 7 BOMs waiting
+3. **IMMEDIATE**: Run `python3 tools/accuracy_test.py` — baseline scores; review GitHub issues
+4. **Fix prompt issues** in `analyze-schematic.ts` based on discrepancy data; target ≥85% all circuits
+5. **Stripe**: Set Vercel env vars + test checkout flow in test mode
+6. **iOS**: Phase 8 — ios-web-shell from _INBOX

@@ -64,6 +64,37 @@ export interface TransistorPlacement {
   startHole: string;
   /** Alias for cHole — keeps existing TypeScript narrowing happy */
   endHole: string;
+  /** Pin order left→right when flat face is toward the builder, e.g. 'EBC', 'GSD' */
+  pinout: string;
+}
+
+// ── Pinout lookup ──────────────────────────────────────────────────────────
+// Maps part number (upper-case, no suffix) → left-to-right pin order
+// when the flat face is facing the builder (standard TO-92 orientation).
+const PINOUT_MAP: Record<string, string> = {
+  // BJT NPN/PNP — EBC (most common TO-92 BJTs)
+  '2N3904': 'EBC', '2N3906': 'EBC', 'BC547': 'EBC', 'BC548': 'EBC',
+  'BC549': 'EBC', 'BC549C': 'EBC', 'BC550': 'EBC', 'BC550C': 'EBC',
+  'BC337': 'EBC', '2N5088': 'EBC', '2N5089': 'EBC', '2N5087': 'EBC',
+  'MPSA18': 'EBC', '2N2222': 'EBC', '2N3393': 'EBC', '2SC1815': 'EBC',
+  // BJT CBE order
+  '2N1308': 'CBE', 'AC128': 'CBE', 'OC71': 'CBE', 'OC76': 'CBE',
+  'AC127': 'CBE', 'OC44': 'CBE', 'NKT275': 'CBE',
+  // JFET — SGD
+  'J201': 'SGD', '2N5457': 'SGD', 'MPF4393': 'SGD',
+  // MOSFET — DSG (BS170, 2N7000 TO-92 flat face forward)
+  'BS170': 'DSG', '2N7000': 'DSG',
+};
+
+/** Return pinout string for a transistor value/part number. */
+function lookupPinout(value: string): string {
+  const key = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (PINOUT_MAP[key]) return PINOUT_MAP[key];
+  // Try prefix match for suffixed parts like BC549C, 2N5457JFET
+  for (const [k, v] of Object.entries(PINOUT_MAP)) {
+    if (key.startsWith(k)) return v;
+  }
+  return 'EBC'; // safe default for unknown BJTs
 }
 
 /** A jumper wire connecting two breadboard holes */
@@ -130,6 +161,7 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
         cHole: `d${tCol + 2}`,
         startHole: `d${tCol}`,
         endHole: `d${tCol + 2}`,
+        pinout: lookupPinout(t.value),
       });
       tCol += 5; // 3 holes used + 2-hole gap
     }

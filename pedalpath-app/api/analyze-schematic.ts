@@ -28,6 +28,9 @@ These are the most frequently used components in guitar effects schematics, rank
 Transistors (most→least common):
   J201 · 2N5088 · BC549C · 2N3904 · BS170 · 2N5089 · MPSA18 · 2N3906 · BC548 · MPF4393 · 2N7000 · 2N5457 · BC550C · 2SC1815 · 2N2222 · BC549 · OC71 · 2N5087 · 2N1308
 
+  Germanium transistors — set material:"Ge" for these part numbers:
+    AC128 · OC71 · OC76 · AC127 · OC44 · OC45 · OC72 · AC125 · AC126 · 2N1308 · 2SB75 · NKT275 · PNP Ge (any label ending in "Ge" or "Germanium")
+
 Diodes:
   1N4148 · 1N5817 · 1N914 · 1N34A · 1N4001 · BAT41 · BAT46 · BAT42 · 1N270 · 1N4007 · MA856 · 1N4739
   Note: 1N914 = 1N4148 (identical function); 1N34A and 1N270 are germanium (soft clipping)
@@ -66,7 +69,8 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
    • 7–8 controls → 1590XX or 1590LB
    • 9+ controls  → 1590DD
 6. Power — ONLY include the "power" field if the schematic contains active components (Q, U, IC, op-amp). Passive circuits (R, C, L, D, pot, switch, jack only) need NO power supply — omit "power" entirely.
-7. Return ONLY valid JSON. No markdown, no commentary.
+7. Transistor material: for components with component_type "transistor", include "material":"Ge" when the part number is a known germanium device (AC128, OC71, OC76, AC127, OC44, OC45, OC72, AC125, AC126, 2N1308, 2SB75, NKT275, or any part explicitly labeled "Ge" or "Germanium"). Omit the field entirely for silicon transistors.
+8. Return ONLY valid JSON. No markdown, no commentary.
 
 Return this exact structure:
 
@@ -78,6 +82,7 @@ Return this exact structure:
       "quantity": 1,
       "reference_designators": ["R1"],
       "confidence": 95,
+      "material": "Ge",
       "notes": "Optional: legibility issues or special observations"
     }
   ],

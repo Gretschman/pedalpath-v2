@@ -26,6 +26,8 @@ export interface TransistorSVGProps {
   label?: string;
   /** Pin spacing in px — defaults to 24 (breadboard hole spacing) */
   pinSpacing?: number;
+  /** Semiconductor material — 'Ge' forces TO-18 Metal Can rendering */
+  material?: 'Si' | 'Ge';
 }
 
 // ============================================================================
@@ -96,9 +98,11 @@ const TransistorSVG: React.FC<TransistorSVGProps> = ({
   spec,
   label,
   pinSpacing = 24,
+  material,
 }) => {
   // Scale: 24px = 2.54mm → 9.45px/mm
-  const isTO18 = spec.package === 'TO-18';
+  // Ge material always uses the TO-18 Metal Can regardless of spec.package
+  const isTO18 = material === 'Ge' || spec.package === 'TO-18';
 
   // TO-18: round can, ~5.6mm dia → radius 27px
   // TO-92: D-shape, ~5mm wide → bw=46, bh=46

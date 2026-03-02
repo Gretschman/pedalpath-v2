@@ -35,6 +35,10 @@ export interface BomBreadboardViewProps {
   focusComponentTypes?: string[];
   /** Additional CSS class name */
   className?: string;
+  /** Column to highlight in grid labels */
+  activeCol?: number;
+  /** Row to highlight in grid labels */
+  activeRow?: string;
 }
 
 // ============================================================================
@@ -226,7 +230,7 @@ function OffboardComponents({ bomData }: { bomData: BOMData }) {
 // Component
 // ============================================================================
 
-export default function BomBreadboardView({ bomData, focusComponentTypes, className = '' }: BomBreadboardViewProps) {
+export default function BomBreadboardView({ bomData, focusComponentTypes, className = '', activeCol, activeRow }: BomBreadboardViewProps) {
   const placements = generateBreadboardLayout(bomData);
   const { totalWidth, totalHeight } = LAYOUT_830;
 
@@ -254,7 +258,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
         <div className="relative w-full overflow-x-auto rounded-lg">
           <div className="relative" style={{ minWidth: 1200 }}>
             {/* SVG breadboard base */}
-            <BreadboardBase size="830" highlightHoles={highlightHoles} />
+            <BreadboardBase size="830" highlightHoles={highlightHoles} activeCol={activeCol} activeRow={activeRow} />
 
             {/* Component overlay — same viewBox as BreadboardBase */}
             <svg
@@ -269,6 +273,13 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                 pointerEvents: 'none',
               }}
             >
+              {/* Filters for component drop shadow */}
+              <defs>
+                <filter id="componentShadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="1" dy="1.5" stdDeviation="0.8" floodOpacity="0.4" />
+                </filter>
+              </defs>
+
               {/* Offboard jacks and pots */}
               <OffboardComponents bomData={bomData} />
 
@@ -301,7 +312,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <g key={idx} opacity={opacity}>
+                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
                         <ResistorSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -318,7 +329,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <g key={idx} opacity={opacity}>
+                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
                         <CapacitorSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -342,7 +353,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     }
 
                     return (
-                      <g key={idx} opacity={opacity}>
+                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
                         <ICSVG
                           pin1X={pin1.x}        pin1Y={pin1.y}
                           bottomRowY={bottomRow.y}
@@ -367,7 +378,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                         })();
 
                     return (
-                      <g key={idx} opacity={opacity}>
+                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
                         <DiodeSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -383,7 +394,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const bPin = holeToCoordinates(placement.bHole, LAYOUT_830);
                     const spec = makeTransistorSpec(placement.value);
                     return (
-                      <g key={idx} opacity={opacity}>
+                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
                         <TransistorSVG
                           x={bPin.x}
                           y={bPin.y}

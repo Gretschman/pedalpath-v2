@@ -32,6 +32,12 @@ export interface BreadboardBaseProps {
 
   /** Scale factor for rendering */
   scale?: number;
+
+  /** Column number to emphasise (bold + larger) in the column labels */
+  activeCol?: number;
+
+  /** Row letter to emphasise (bold + larger) in the row labels */
+  activeRow?: string;
 }
 
 export function BreadboardBase({
@@ -40,6 +46,8 @@ export function BreadboardBase({
   onHoleClick,
   className = '',
   scale = 1,
+  activeCol,
+  activeRow,
 }: BreadboardBaseProps) {
   const config = getLayout(size);
   const { totalWidth, totalHeight } = config;
@@ -53,6 +61,21 @@ export function BreadboardBase({
       xmlns="http://www.w3.org/2000/svg"
       style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
     >
+      {/* SVG filter defs — hole bevel + component drop shadow */}
+      <defs>
+        <filter id="holeBevel" x="-20%" y="-20%" width="140%" height="140%">
+          <feOffset dx="0" dy="0.4" />
+          <feGaussianBlur stdDeviation="0.25" result="blur" />
+          <feComposite operator="out" in="SourceGraphic" in2="blur" result="inner" />
+          <feFlood floodColor="#000" floodOpacity="0.6" result="color" />
+          <feComposite operator="in" in="color" in2="inner" result="shadow" />
+          <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+        </filter>
+        <filter id="componentShadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="1" dy="1.5" stdDeviation="0.8" floodOpacity="0.4" />
+        </filter>
+      </defs>
+
       {/* Clean SVG board — no photo dependency */}
       <BoardBackground config={config} />
 
@@ -96,7 +119,7 @@ export function BreadboardBase({
       />
 
       {/* Labels */}
-      <Labels config={config} />
+      <Labels config={config} activeCol={activeCol} activeRow={activeRow} />
     </svg>
   );
 }
@@ -355,8 +378,8 @@ function Hole({
       {/* Metallic ring */}
       <circle cx={x} cy={y} r={5} fill="#888888" />
 
-      {/* Dark hole center */}
-      <circle cx={x} cy={y} r={3} fill="#3A3A3A" />
+      {/* Dark hole center — holeBevel gives inset shadow depth */}
+      <circle cx={x} cy={y} r={3} fill="#3A3A3A" filter="url(#holeBevel)" />
 
       {/* Highlight ring when occupied */}
       {highlighted && (
@@ -376,7 +399,7 @@ function Hole({
 // Labels
 // ============================================================================
 
-function Labels({ config }: { config: BreadboardLayout }) {
+function Labels({ config, activeCol, activeRow }: { config: BreadboardLayout; activeCol?: number; activeRow?: string }) {
   const { columns, terminalStripStart, holeSpacing, centerGap } = config;
 
   // Polarity marker x: inside board left margin, left of active area
@@ -393,16 +416,18 @@ function Labels({ config }: { config: BreadboardLayout }) {
 
         if (col % 5 !== 0 && col !== 1 && col !== columns) return null;
 
+        const isActive = col === activeCol;
         return (
           <React.Fragment key={`col-${col}`}>
             {/* Above row a */}
             <text
               x={x}
               y={terminalStripStart.y - 14}
-              fontSize="9"
-              fill="#888888"
+              fontSize={isActive ? 11 : 9}
+              fill={isActive ? '#1f2937' : '#888888'}
               textAnchor="middle"
               fontFamily="Arial, sans-serif"
+              fontWeight={isActive ? 'bold' : 'normal'}
             >
               {col}
             </text>
@@ -410,10 +435,11 @@ function Labels({ config }: { config: BreadboardLayout }) {
             <text
               x={x}
               y={terminalStripStart.y + 9 * holeSpacing + centerGap + 20}
-              fontSize="9"
-              fill="#888888"
+              fontSize={isActive ? 11 : 9}
+              fill={isActive ? '#1f2937' : '#888888'}
               textAnchor="middle"
               fontFamily="Arial, sans-serif"
+              fontWeight={isActive ? 'bold' : 'normal'}
             >
               {col}
             </text>
@@ -425,17 +451,18 @@ function Labels({ config }: { config: BreadboardLayout }) {
       {ROW_NAMES.map((row, idx) => {
         let y = terminalStripStart.y + idx * holeSpacing;
         if (idx >= 5) y += centerGap;
+        const isActiveRow = row === activeRow;
 
         return (
           <text
             key={`row-${row}`}
             x={terminalStripStart.x - 22}
             y={y + 4}
-            fontSize="11"
-            fill="#888888"
+            fontSize={isActiveRow ? 13 : 11}
+            fill={isActiveRow ? '#1f2937' : '#888888'}
             textAnchor="end"
             fontFamily="Arial, sans-serif"
-            fontWeight="600"
+            fontWeight={isActiveRow ? 'bold' : '600'}
           >
             {row}
           </text>
