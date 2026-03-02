@@ -50,8 +50,8 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
-            Build guitar pedals<br />
-            <span className="text-yellow-300">step by step</span>
+            Upload a schematic.<br />
+            <span className="text-yellow-300">Walk away with a build plan.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-white/75 max-w-xl mx-auto leading-relaxed mb-10">
