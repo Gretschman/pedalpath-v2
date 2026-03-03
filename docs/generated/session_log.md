@@ -1,3 +1,40 @@
+# Session Log — 2026-03-03 (Session 7)
+
+## Session 7 Close (2026-03-03)
+
+### What was completed
+- **GT1–GT19 ground truth pipeline** — 18 new JSON files; DB now 51 circuits / 967 components
+- **page_number bug fixed** — all gt*.json files updated (field was "page", must be "page_number")
+- **Accuracy tested**: 19/31 circuits ≥85%; 8 new circuits pass on first run:
+  PlexAmp 94.8%, ColorTone Supa Tonebender 94.8%, Pump'd Up Tonebender 93.2%,
+  Super Sonic 93.2%, One-Knob Fuzz 93.1%, SHO Nuff 92.9%, Marsha Tone 92.9%, Afterblaster 89.1%
+  Notable: Ratticus Turbo jumped from ~70% → 92.4%
+- **Failures to investigate next session**: Aeon Drive 61.5%, Buff N Blend 64.7%,
+  Stage 3 Booster 2020/v1 ~68% (likely structural), Black Dog 79.3%, Bass OD 81.1%
+- **1590A enclosure spec** added to enclosure-drill-templates.ts — confirmed from FuzzDog FuzzPups V2 build guide
+  Face 35×78mm, footswitch Y=66mm (12mm from bottom), DC on north end Y=18mm centered,
+  Input jack (west) at 34mm, Output jack (east) at 45mm from top
+- **HOLE_MM corrected** from _INBOX/drill_hole_diameter_prompt.json:
+  dc_barrel 8→12mm, led_5mm 7.9→5.1mm, led_3mm 6.35→3.2mm; added 5 new constants
+- **build_guide_1590A.pdf** studied (13 pages) — FuzzDog FuzzPups V2 build sequence documented
+- **Tayda SKUs indexed** — memory/tayda_and_drill.md has all pot/cap/resistor SKUs
+- **_INBOX path confirmed permanently**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX
+
+### Production state at session end
+- 172/172 tests passing
+- TypeScript: clean, Vite: clean
+- GitHub: main branch pushed (commit 72b5ecd)
+- Vercel: deployed to pedalpath.app
+- Supabase: 51 circuits / 967 components seeded
+
+### Next session priorities
+1. Accuracy failures — Aeon Drive 61.5%, Buff N Blend 64.7%, Black Dog 79.3%
+2. Re-test WattAmp + Three Time Champ (gt3/gt7 sync timing at last test run)
+3. iOS Phase 8 — _INBOX/pedalpath-ios-web-shell-gh/ design tokens + native-feel UI
+4. 1590A EnclosureGuide.tsx — wire up east/west jacks + 3-potter face layout
+
+---
+
 # Session Log — 2026-03-02 (Sessions 4 & 5)
 
 ## Session Close (2026-03-02, end of day)
