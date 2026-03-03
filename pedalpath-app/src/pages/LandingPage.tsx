@@ -132,26 +132,55 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it works ── */}
-      <section className="py-24 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-16">
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-12 text-center">
             How it works
           </h2>
-          <div className="grid sm:grid-cols-3 gap-10">
-            {[
+
+          {/* Mobile: vertical connected steps */}
+          {(() => {
+            const steps = [
               { n: '1', title: 'Upload', sub: 'Drop in your schematic image or file' },
               { n: '2', title: 'Analyze', sub: 'AI extracts every component in seconds' },
               { n: '3', title: 'Build', sub: 'Follow the visual guide to completion' },
-            ].map(({ n, title, sub }) => (
-              <div key={n} className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary-600 text-white font-black text-xl flex items-center justify-center mb-4 shadow-lg shadow-primary-600/25">
-                  {n}
+            ]
+            return (
+              <>
+                <div className="sm:hidden flex flex-col px-2">
+                  {steps.map(({ n, title, sub }, i) => (
+                    <div key={n} className="flex gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 rounded-full bg-primary-600 text-white font-black text-base flex items-center justify-center flex-shrink-0 shadow-md shadow-primary-600/30">
+                          {n}
+                        </div>
+                        {i < steps.length - 1 && (
+                          <div className="w-0.5 flex-1 bg-primary-200 my-2" />
+                        )}
+                      </div>
+                      <div className="pb-8 pt-1.5">
+                        <h3 className="font-bold text-gray-900 text-base mb-1">{title}</h3>
+                        <p className="text-gray-500 text-sm">{sub}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-1">{title}</h3>
-                <p className="text-gray-500 text-sm">{sub}</p>
-              </div>
-            ))}
-          </div>
+
+                {/* Desktop: grid */}
+                <div className="hidden sm:grid sm:grid-cols-3 gap-10 text-center">
+                  {steps.map(({ n, title, sub }) => (
+                    <div key={n} className="flex flex-col items-center">
+                      <div className="w-14 h-14 rounded-2xl bg-primary-600 text-white font-black text-xl flex items-center justify-center mb-4 shadow-lg shadow-primary-600/25">
+                        {n}
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-lg mb-1">{title}</h3>
+                      <p className="text-gray-500 text-sm">{sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )
+          })()}
         </div>
       </section>
 

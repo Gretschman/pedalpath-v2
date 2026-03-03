@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight } from 'lucide-react'
+import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight, RefreshCw } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { useProjects } from '../hooks/useProjects'
 
@@ -9,9 +9,25 @@ function haptic() {
 }
 
 export default function DashboardPage() {
-  const { projects, isLoading, error, deleteProject, isDeleting } = useProjects()
+  const { projects, isLoading, error, refetch, deleteProject, isDeleting } = useProjects()
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const touchStartY = useRef(-1)
   const navigate = useNavigate()
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = window.scrollY === 0 ? e.touches[0].clientY : -1
+  }
+  const handleTouchEnd = async (e: React.TouchEvent) => {
+    if (touchStartY.current < 0) return
+    if (e.changedTouches[0].clientY - touchStartY.current > 70) {
+      haptic()
+      setRefreshing(true)
+      await refetch()
+      setRefreshing(false)
+    }
+    touchStartY.current = -1
+  }
 
   const totalProjects = projects.length
   // Count 'draft' with schematics as in_progress — status update can fail silently
@@ -22,54 +38,43 @@ export default function DashboardPage() {
     new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString))
 
   return (
-    <div className="page-shell bg-gray-50">
+    <div
+      className="page-shell bg-gray-50"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Manage your pedal builds and schematics
-          </p>
+
+      {/* Pull-to-refresh spinner */}
+      {refreshing && (
+        <div className="flex justify-center py-3">
+          <RefreshCw className="w-5 h-5 text-primary-600 animate-spin" />
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
+          <p className="text-sm text-gray-500">Your pedal builds and schematics</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Projects</h3>
-              <Clock className="w-5 h-5 text-gray-400" />
-            </div>
-            {isLoading ? (
-              <div className="h-9 w-12 bg-gray-200 rounded animate-pulse" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-900">{totalProjects}</p>
-            )}
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">In Progress</h3>
-              <Upload className="w-5 h-5 text-blue-500" />
-            </div>
-            {isLoading ? (
-              <div className="h-9 w-12 bg-gray-200 rounded animate-pulse" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-900">{inProgress}</p>
-            )}
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Completed</h3>
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            </div>
-            {isLoading ? (
-              <div className="h-9 w-12 bg-gray-200 rounded animate-pulse" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-900">{completed}</p>
-            )}
+        {/* Stats — iOS grouped inline row */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+          <div className="flex divide-x divide-gray-100">
+            {[
+              { label: 'Projects', value: totalProjects, icon: Clock, iconClass: 'text-gray-400' },
+              { label: 'In Progress', value: inProgress, icon: Upload, iconClass: 'text-blue-500' },
+              { label: 'Completed', value: completed, icon: CheckCircle, iconClass: 'text-green-500' },
+            ].map(({ label, value, icon: Icon, iconClass }) => (
+              <div key={label} className="flex-1 py-4 px-2 text-center">
+                <Icon className={`w-4 h-4 ${iconClass} mx-auto mb-1.5`} />
+                {isLoading
+                  ? <div className="h-6 w-8 bg-gray-100 rounded animate-pulse mx-auto" />
+                  : <div className="text-2xl font-bold text-gray-900 leading-none">{value}</div>
+                }
+                <div className="text-xs text-gray-500 mt-1">{label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -143,12 +148,13 @@ export default function DashboardPage() {
                     <div className="relative z-10 p-5 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-gray-900 leading-snug">{project.title}</h3>
-                        <span className={`flex-shrink-0 text-xs font-medium px-2 py-1 rounded-full ${
+                        <span className={`flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
                           project.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {project.status === 'completed' ? 'Completed' : 'In Progress'}
+                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}`} />
+                          {project.status === 'completed' ? 'Done' : 'Active'}
                         </span>
                       </div>
 

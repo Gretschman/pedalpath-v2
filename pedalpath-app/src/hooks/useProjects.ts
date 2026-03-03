@@ -7,7 +7,7 @@ export function useProjects() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  const { data: projects, isLoading, error } = useQuery({
+  const { data: projects, isLoading, error, refetch } = useQuery({
     queryKey: ['projects', user?.id],
     queryFn: async (): Promise<ProjectWithSchematics[]> => {
       const { data, error } = await supabase
@@ -54,6 +54,7 @@ export function useProjects() {
     projects: projects ?? [],
     isLoading,
     error,
+    refetch,
     deleteProject: deleteProjectMutation.mutate,
     isDeleting: deleteProjectMutation.isPending,
   }
