@@ -1,6 +1,16 @@
 import { useState, useRef } from 'react';
 import { Box, Drill, Wrench, Cable, CheckCircle, Circle, AlertTriangle, Printer } from 'lucide-react';
 import type { BOMData } from '../../types/bom.types';
+import {
+  ENCLOSURE_SPECS,
+  FACE_LAYOUTS_125B,
+  FACE_LAYOUTS_1590B,
+  NORTH_SIDE_JACKS,
+  autoSelectLayout,
+  holeDiameter,
+  type DrillPoint,
+  type FaceLayout,
+} from '../../utils/enclosure-drill-templates';
 
 interface EnclosureGuideProps {
   bomData: BOMData;
@@ -33,14 +43,15 @@ interface EnclosureDimensions {
 }
 
 // All standard Hammond/Tayda 1590-series + 125B enclosures.
-// Face dimensions are internal working area (mm).
+// 125B and 1590B use confirmed portrait dimensions from Pedal Parts Plus templates.
+// (see src/utils/enclosure-drill-templates.ts for full source notes)
 const ENCLOSURE_SIZES: Record<string, EnclosureDimensions> = {
-  '1590A':  { name: '1590A (Mini)',     width: 92,    height: 38,   depth: 31,   firstDrillY: 12 },
-  '1590B':  { name: '1590B (Standard)', width: 112,   height: 60,   depth: 31,   firstDrillY: 20 },
-  '125B':   { name: '125B (Tall)',       width: 62.7,  height: 118,  depth: 34,   firstDrillY: 32 },
-  '1590N1': { name: '1590N1 (Tall)',     width: 57.5,  height: 111,  depth: 31,   firstDrillY: 30 },
-  '1590BB': { name: '1590BB (Large)',    width: 119,   height: 94,   depth: 56,   firstDrillY: 22 },
-  '1590DD': { name: '1590DD (XL)',       width: 190.5, height: 119,  depth: 59,   firstDrillY: 22 },
+  '1590A':  { name: '1590A (Mini)',     width: 92,    height: 38,    depth: 31,   firstDrillY: 12 },
+  '1590B':  { name: '1590B (Standard)', width: 60.7,  height: 112.3, depth: 26.7, firstDrillY: 20 },
+  '125B':   { name: '125B (Tall)',       width: 66.0,  height: 121.2, depth: 35.6, firstDrillY: 28 },
+  '1590N1': { name: '1590N1 (Tall)',     width: 57.5,  height: 111,   depth: 31,   firstDrillY: 30 },
+  '1590BB': { name: '1590BB (Large)',    width: 119,   height: 94,    depth: 56,   firstDrillY: 22 },
+  '1590DD': { name: '1590DD (XL)',       width: 190.5, height: 119,   depth: 59,   firstDrillY: 22 },
 };
 
 // Forbidden Zones — hardware collision areas per enclosure face.
@@ -56,29 +67,29 @@ interface ForbiddenZone {
 const FORBIDDEN_ZONES: Record<string, ForbiddenZone[]> = {
   // 1590A: tiny, footswitch dominates bottom ~35%
   '1590A':  [
-    { label: 'FOOTSWITCH ZONE', yMin: 24, yMax: 38,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 24,  yMax: 38,    color: '#ef4444' },
   ],
-  // 1590B: standard. Footswitch centered at ~50mm from top.
+  // 1590B portrait (60.7×112.3): jacks on sides, footswitch at bottom 28mm
   '1590B':  [
-    { label: 'FOOTSWITCH ZONE', yMin: 42, yMax: 60,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 88,  yMax: 112.3, color: '#ef4444' },
   ],
-  // 125B (tall vertical): jacks/DC at top, footswitch at bottom
+  // 125B (66×121): jacks/DC on North face top, footswitch at bottom
   '125B': [
-    { label: 'JACKS / DC ZONE',  yMin: 0,   yMax: 25,  color: '#ef4444' },
-    { label: 'FOOTSWITCH ZONE',  yMin: 95,  yMax: 118, color: '#ef4444' },
+    { label: 'JACKS / DC ZONE', yMin: 0,   yMax: 22,    color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 95,  yMax: 121.2, color: '#ef4444' },
   ],
   // 1590N1 (tall): proportionally similar to 125B
   '1590N1': [
-    { label: 'JACKS / DC ZONE',  yMin: 0,   yMax: 22,  color: '#ef4444' },
-    { label: 'FOOTSWITCH ZONE',  yMin: 89,  yMax: 111, color: '#ef4444' },
+    { label: 'JACKS / DC ZONE', yMin: 0,   yMax: 22,    color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 89,  yMax: 111,   color: '#ef4444' },
   ],
   // 1590BB: larger box, footswitch near bottom
   '1590BB': [
-    { label: 'FOOTSWITCH ZONE',  yMin: 74,  yMax: 94,  color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 74,  yMax: 94,    color: '#ef4444' },
   ],
   // 1590DD: XL box, footswitch zone near bottom
   '1590DD': [
-    { label: 'FOOTSWITCH ZONE',  yMin: 98,  yMax: 119, color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 98,  yMax: 119,   color: '#ef4444' },
   ],
 };
 
@@ -86,101 +97,90 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   const [selectedStep, setSelectedStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [selectedEnclosure, setSelectedEnclosure] = useState<string>(bomData.enclosure?.size || '1590B');
+  const [selectedLayoutName, setSelectedLayoutName] = useState<string | null>(null);
   const printTemplateRef = useRef<HTMLDivElement>(null);
 
   const enclosureSize = selectedEnclosure;
   const dimensions = ENCLOSURE_SIZES[enclosureSize];
   const forbiddenZones = FORBIDDEN_ZONES[enclosureSize] ?? [];
 
-  // Generate drill template based on components with accurate positioning
-  // faceHoles = top face of enclosure (pots, footswitch, LED)
-  const faceHoles: DrillHole[] = [];
-  const pots = bomData.components.filter(c => c.component_type === 'potentiometer');
+  // ── Layout preset selection ──────────────────────────────────────────────────
+  const pots    = bomData.components.filter(c => c.component_type === 'potentiometer');
+  const toggles = bomData.components.filter(c => c.component_type === 'switch');
   const potCount = pots.length;
+  const hasToggle = toggles.length > 0;
 
-  // Calculate proper pot spacing based on enclosure width.
-  // Formula: divide usable width (minus 20mm margins on each side) into (n+1) equal segments.
-  // This centers the group for any pot count, including single-pot.
-  const potSpacing = (dimensions.width - 40) / (potCount + 1);
-  // Use enclosure's firstDrillY so pots always land below any top forbidden zone
-  const potYPosition = dimensions.firstDrillY;
+  // Available layout presets for current enclosure
+  const availableLayouts: FaceLayout[] =
+    enclosureSize === '125B' ? FACE_LAYOUTS_125B :
+    enclosureSize === '1590B' ? FACE_LAYOUTS_1590B : [];
 
-  // Add pots with proper spacing
-  pots.forEach((pot, idx) => {
-    faceHoles.push({
-      id: `pot-${idx}`,
-      component: `${pot.value} Pot (${pot.reference_designators.join(', ')})`,
-      diameter: '8mm',
-      x: 20 + potSpacing * (idx + 1),
-      y: potYPosition,
-      notes: 'For 16mm pot with mounting nut'
-    });
+  // Auto-select best layout from BOM, or use user override
+  const autoLayout =
+    (enclosureSize === '125B' || enclosureSize === '1590B')
+      ? autoSelectLayout(enclosureSize as '125B' | '1590B', potCount, hasToggle)
+      : null;
+
+  const activeLayout: FaceLayout | null =
+    selectedLayoutName
+      ? (availableLayouts.find(l => l.name === selectedLayoutName) ?? autoLayout)
+      : autoLayout;
+
+  // Convert DrillPoint[] from preset to legacy DrillHole[] (component retains internal type)
+  const drillPointToHole = (p: DrillPoint, idx: number): DrillHole => ({
+    id: `${p.type}-${idx}`,
+    component: p.label,
+    diameter: `${holeDiameter(p)}mm`,
+    x: p.x,
+    y: p.y,
+    notes: p.notes,
   });
 
-  // Add footswitch (centered horizontally, lower on enclosure)
-  if (bomData.components.some(c => c.component_type === 'footswitch')) {
-    faceHoles.push({
-      id: 'footswitch',
-      component: '3PDT Footswitch',
-      diameter: '12mm',
-      x: dimensions.width / 2,
-      y: dimensions.height - 19, // 19mm from bottom
-      notes: 'Center of enclosure for true bypass switching'
-    });
-  }
+  // Face holes — use preset layout if available, else fall back to simple linear layout
+  const faceHoles: DrillHole[] = activeLayout
+    ? activeLayout.holes.map(drillPointToHole)
+    : (() => {
+        const holes: DrillHole[] = [];
+        const potSpacing = (dimensions.width - 40) / (potCount + 1);
+        pots.forEach((pot, idx) => {
+          holes.push({
+            id: `pot-${idx}`,
+            component: `${pot.value} Pot (${pot.reference_designators.join(', ')})`,
+            diameter: '7.9mm',
+            x: 20 + potSpacing * (idx + 1),
+            y: dimensions.firstDrillY,
+          });
+        });
+        if (bomData.components.some(c => c.component_type === 'footswitch')) {
+          holes.push({ id: 'footswitch', component: '3PDT Footswitch', diameter: '12.7mm',
+            x: dimensions.width / 2, y: dimensions.height - 22 });
+        }
+        if (bomData.components.some(c => c.component_type === 'led')) {
+          holes.push({ id: 'led', component: 'LED Indicator', diameter: '7.9mm',
+            x: dimensions.width / 2, y: dimensions.height - 40 });
+        }
+        return holes;
+      })();
 
-  // Add LED (centered horizontally, between pots and footswitch)
-  if (bomData.components.some(c => c.component_type === 'led')) {
-    faceHoles.push({
-      id: 'led',
-      component: 'LED Indicator',
-      diameter: '5mm',
-      x: dimensions.width / 2,
-      y: dimensions.height / 2,
-      notes: 'Above footswitch for visibility'
-    });
-  }
+  // North-side (top narrow face) jack holes — confirmed real measurements
+  const northJacks = NORTH_SIDE_JACKS[enclosureSize] ?? [];
+  const northSpec = ENCLOSURE_SPECS[enclosureSize];
 
-  // Side-panel holes: jacks go on separate panels, not the top face
-  // Side panels are dimensions.height × dimensions.depth (e.g., 60×31 for 1590B)
-  // End panel is dimensions.width × dimensions.depth
-  const hasInputJack = !!bomData.components.find(c => c.component_type === 'input-jack');
+  // Legacy side panel holes for non-125B/1590B enclosures
+  const hasInputJack  = !!bomData.components.find(c => c.component_type === 'input-jack');
   const hasOutputJack = !!bomData.components.find(c => c.component_type === 'output-jack');
-  const hasDCJack = !!bomData.components.find(c => c.component_type === 'dc-jack');
-
-  const sidePanelCenterX = dimensions.height / 2; // centered along side panel width
-  const sidePanelCenterY = dimensions.depth / 2;  // centered in panel height (depth)
-
-  const inputSideHole: DrillHole = {
-    id: 'input',
-    component: 'Input Jack',
-    diameter: '9.5mm',
-    x: sidePanelCenterX,
-    y: sidePanelCenterY,
-    notes: 'Centered on left side panel (1/4" mono jack)'
-  };
-  const outputSideHole: DrillHole = {
-    id: 'output',
-    component: 'Output Jack',
-    diameter: '9.5mm',
-    x: sidePanelCenterX,
-    y: sidePanelCenterY,
-    notes: 'Centered on right side panel (1/4" mono jack)'
-  };
-  const dcEndHole: DrillHole = {
-    id: 'power',
-    component: 'DC Power Jack',
-    diameter: '7.5mm',
-    x: dimensions.width / 2,
-    y: dimensions.depth / 2,
-    notes: 'Centered on top end panel (2.1mm barrel jack)'
-  };
+  const hasDCJack     = !!bomData.components.find(c => c.component_type === 'dc-jack');
+  const sidePanelCenterX = dimensions.height / 2;
+  const sidePanelCenterY = dimensions.depth / 2;
+  const inputSideHole:  DrillHole = { id: 'input',  component: 'Input Jack',    diameter: '9.5mm',  x: sidePanelCenterX, y: sidePanelCenterY };
+  const outputSideHole: DrillHole = { id: 'output', component: 'Output Jack',   diameter: '9.5mm',  x: sidePanelCenterX, y: sidePanelCenterY };
+  const dcEndHole:      DrillHole = { id: 'power',  component: 'DC Power Jack', diameter: '8.0mm',  x: dimensions.width / 2, y: dimensions.depth / 2 };
 
   const allDrillHoles = [
     ...faceHoles,
-    ...(hasInputJack ? [inputSideHole] : []),
-    ...(hasOutputJack ? [outputSideHole] : []),
-    ...(hasDCJack ? [dcEndHole] : []),
+    ...(northJacks.length === 0 && hasInputJack  ? [inputSideHole]  : []),
+    ...(northJacks.length === 0 && hasOutputJack ? [outputSideHole] : []),
+    ...(northJacks.length === 0 && hasDCJack     ? [dcEndHole]      : []),
   ];
 
   // Hardware Collision Detection — flag face holes landing in forbidden zones
@@ -820,6 +820,29 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
           </select>
         </div>
 
+        {/* Layout Preset Selector — 125B / 1590B only */}
+        {availableLayouts.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-orange-100 mb-2">
+              Knob Layout:
+            </label>
+            <select
+              value={selectedLayoutName ?? autoLayout?.name ?? ''}
+              onChange={(e) => setSelectedLayoutName(e.target.value || null)}
+              className="w-full md:w-auto px-4 py-2 rounded-lg bg-orange-700 text-white border-2 border-orange-500 focus:outline-none focus:border-orange-300"
+            >
+              {availableLayouts.map(l => (
+                <option key={l.name} value={l.name}>
+                  {l.name}{autoLayout?.name === l.name ? ' (Auto)' : ''}
+                </option>
+              ))}
+            </select>
+            {activeLayout && (
+              <p className="text-xs text-orange-200 mt-1">{activeLayout.description}</p>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="bg-orange-700 rounded-lg p-3">
             <div className="text-xs text-orange-200">Dimensions</div>
@@ -919,8 +942,23 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               )}
             </div>
 
-            {/* SIDE PANELS */}
-            {(hasInputJack || hasOutputJack) && (
+            {/* NORTH FACE — DC jack + jacks (top-mount enclosures: 125B, 1590B) */}
+            {northJacks.length > 0 && northSpec && (
+              <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                  North Face (Top Narrow End) — {northSpec.northSouth.width.toFixed(1)}×{northSpec.northSouth.height.toFixed(1)}mm (DC jack, Input, Output)
+                </h4>
+                {renderDrillTemplate(
+                  northJacks.map(drillPointToHole),
+                  northSpec.northSouth.width,
+                  northSpec.northSouth.height,
+                  'North Face'
+                )}
+              </div>
+            )}
+
+            {/* SIDE PANELS (non-top-mount enclosures only) */}
+            {northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {hasInputJack && (
                   <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
@@ -941,8 +979,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </div>
             )}
 
-            {/* END PANEL for DC */}
-            {hasDCJack && (
+            {/* END PANEL for DC (non-top-mount enclosures only) */}
+            {northJacks.length === 0 && hasDCJack && (
               <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
                 <h4 className="font-semibold text-gray-800 mb-3 text-center">
                   Top End Panel — DC Power Jack ({dimensions.width}×{dimensions.depth}mm)
@@ -986,7 +1024,40 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </>
             )}
 
-            {(hasInputJack || hasOutputJack) && (
+            {northJacks.length > 0 && (
+              <>
+                <p className="text-sm font-medium text-gray-700 mt-2">North Face (Top End)</p>
+                {northJacks.map((pt, idx) => {
+                  const hole = drillPointToHole(pt, idx);
+                  return (
+                    <div key={hole.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-purple-100 text-purple-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-xs">
+                              {idx + 1}N
+                            </div>
+                            <div>
+                              <h5 className="font-semibold text-gray-900">{hole.component}</h5>
+                              <div className="text-sm text-gray-600 mt-1">
+                                Diameter: <span className="font-medium">{hole.diameter}</span> |
+                                Position: <span className="font-medium">X: {hole.x}mm, Y: {hole.y}mm</span>
+                              </div>
+                              {hole.notes && (
+                                <div className="text-sm text-gray-700 mt-2 italic">{hole.notes}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Circle className="w-6 h-6 text-gray-300" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
               <>
                 <p className="text-sm font-medium text-gray-700 mt-2">Side Panels</p>
                 {hasInputJack && (
@@ -1036,7 +1107,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </>
             )}
 
-            {hasDCJack && (
+            {northJacks.length === 0 && hasDCJack && (
               <>
                 <p className="text-sm font-medium text-gray-700 mt-2">End Panel</p>
                 <div key="power" className="border border-gray-200 rounded-lg p-4">
