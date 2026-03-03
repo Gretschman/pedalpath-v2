@@ -86,19 +86,19 @@ function getCapacitorColor(spec: CapacitorSpec): string {
 
   switch (spec.capType) {
     case 'ceramic':
-      return '#D4A574'; // tan/brown
+      return '#C8A86B'; // warm tan/brown disc — matches reference photo
 
     case 'film_box':
-      return '#FFD700'; // yellow/gold (Polyester film)
+      return '#E8D5A3'; // cream/polyester — matches reference photo (not yellow)
 
     case 'electrolytic':
-      return '#2C3E50'; // dark blue/black
+      return '#1A2E4A'; // dark navy blue — matches reference photo electrolytics
 
     case 'tantalum':
-      return '#FFB347'; // orange/tan
+      return '#DDBB00'; // yellow bead — matches reference photo small yellow tantalum
 
     default:
-      return '#808080'; // gray
+      return '#888888'; // gray
   }
 }
 
@@ -236,26 +236,27 @@ function ElectrolyticBody({ width, height, color, spec, gradientId }: CapBodyPro
         rx={radius}
       />
 
-      {/* Polarity stripe (negative side) */}
+      {/* Polarity stripe — white band on negative (left / start) side */}
       {spec.polarized && (
         <g>
           <rect
-            x={radius - 3}
+            x={-radius}
             y={-height / 2}
-            width={2}
+            width={radius * 0.55}
             height={height}
-            fill="#CCCCCC"
-            opacity="0.8"
+            fill="#D0D8E0"
+            rx={radius}
+            opacity="0.85"
           />
           <text
-            x={radius - 2}
-            y={0}
+            x={-radius * 0.6}
+            y={3}
             textAnchor="middle"
-            fontSize="6"
+            fontSize="7"
             fontWeight="bold"
-            fill="#FFFFFF"
+            fill="#1A2E4A"
           >
-            -
+            −
           </text>
         </g>
       )}

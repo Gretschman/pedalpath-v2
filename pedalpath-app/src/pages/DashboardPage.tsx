@@ -135,17 +135,8 @@ export default function DashboardPage() {
                   : null
 
                 return (
-                  <div key={project.id} className="relative bg-white rounded-xl shadow flex flex-col gap-3 overflow-hidden">
-                    {/* Full-card tap target for completed projects (iOS list row convention) */}
-                    {resultUrl && (
-                      <button
-                        onClick={() => { haptic(); navigate(resultUrl) }}
-                        className="absolute inset-0 z-0"
-                        aria-label={`View results for ${project.title}`}
-                      />
-                    )}
-
-                    <div className="relative z-10 p-5 flex flex-col gap-3">
+                  <div key={project.id} className="bg-white rounded-xl shadow flex flex-col gap-3 overflow-hidden">
+                    <div className="p-5 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-gray-900 leading-snug">{project.title}</h3>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -166,9 +157,12 @@ export default function DashboardPage() {
 
                       <div className="flex items-center justify-between mt-auto pt-1">
                         {resultUrl ? (
-                          <span className="text-sm font-medium text-primary-600 flex items-center gap-0.5">
+                          <button
+                            onClick={() => { haptic(); navigate(resultUrl) }}
+                            className="flex-grow text-left text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-0.5 transition-colors"
+                          >
                             View Results <ChevronRight className="w-3.5 h-3.5" />
-                          </span>
+                          </button>
                         ) : processingStatus === 'failed' ? (
                           <p className="text-sm text-gray-400">Analysis failed</p>
                         ) : (

@@ -15,20 +15,20 @@ import type { ResistorColor, ResistorSpec } from '@/types/component-specs.types'
 // ===========================================================================
 
 const RESISTOR_COLOR_HEX: Record<ResistorColor, string> = {
-  black: '#000000',
-  brown: '#8B4513',
-  red: '#FF0000',
-  orange: '#FF8C00',
+  black:  '#1a1a1a',
+  brown:  '#7B3F00',
+  red:    '#CC0000',
+  orange: '#FF8000',
   yellow: '#FFD700',
-  green: '#008000',
-  blue: '#0000FF',
-  violet: '#8B00FF',
-  purple: '#8B00FF',  // alias
-  gray: '#808080',
-  grey: '#808080',    // alias
-  white: '#FFFFFF',
-  gold: '#FFD700',
-  silver: '#C0C0C0',
+  green:  '#007A00',
+  blue:   '#0033BB',
+  violet: '#7700BB',
+  purple: '#7700BB',  // alias
+  gray:   '#888888',
+  grey:   '#888888',  // alias
+  white:  '#F5F5F5',
+  gold:   '#C5A028',  // metallic gold — distinct from yellow digit band
+  silver: '#A8A8A8',  // metallic silver
 };
 
 // ===========================================================================
@@ -83,7 +83,7 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
   endY,
   spec,
   label,
-  bodyColor = '#D2B48C', // tan
+  bodyColor,
   visible = true,
   onClick,
 }) => {
@@ -94,6 +94,9 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
 
   // Use 5-band if 5 colors, otherwise 4-band
   const displayBands = bands.length >= 5 ? bands.slice(0, 5) : bands.slice(0, 4);
+
+  // 5-band = metal film (blue body), 4-band = carbon film (tan body)
+  const resolvedBodyColor = bodyColor ?? (displayBands.length >= 5 ? '#4A7DB5' : '#D2B48C');
 
   // Calculate resistor orientation and dimensions
   const totalLength = calculateDistance(startX, startY, endX, endY);
@@ -128,8 +131,8 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
         {/* Cylindrical gradient for body */}
         <linearGradient id={bodyGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
-          <stop offset="30%" stopColor={bodyColor} stopOpacity="0.9" />
-          <stop offset="70%" stopColor={bodyColor} stopOpacity="1" />
+          <stop offset="30%" stopColor={resolvedBodyColor} stopOpacity="0.9" />
+          <stop offset="70%" stopColor={resolvedBodyColor} stopOpacity="1" />
           <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
         </linearGradient>
 
