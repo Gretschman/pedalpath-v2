@@ -117,6 +117,45 @@ function GalleryThumbnail({ component }: { component: BOMComponent }) {
         </svg>
       );
     }
+    if (component.component_type === 'input-jack' || component.component_type === 'output-jack') {
+      const isIn = component.component_type === 'input-jack';
+      return (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          <rect x={18} y={26} width={58} height={8} fill="#888" rx={2} />
+          <ellipse cx={76} cy={30} rx={7} ry={8} fill="#AAA" stroke="#666" strokeWidth="1" />
+          <rect x={28} y={23} width={6} height={14} fill="#555" rx={1} />
+          <rect x={40} y={24} width={5} height={12} fill="#666" rx={1} />
+          <text x={50} y={52} textAnchor="middle" fontSize="8" fontFamily="sans-serif"
+            fill="#555" fontWeight="600">{isIn ? 'INPUT' : 'OUTPUT'}</text>
+        </svg>
+      );
+    }
+    if (component.component_type === 'dc-jack') {
+      return (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          <circle cx={50} cy={27} r={20} fill="#444" stroke="#222" strokeWidth="1.5" />
+          <circle cx={50} cy={27} r={13} fill="#666" stroke="#333" strokeWidth="1" />
+          <circle cx={50} cy={27} r={5} fill="#AAA" />
+          <text x={38} y={53} fontSize="7" fontFamily="sans-serif" fill="#C00" fontWeight="700">+</text>
+          <text x={55} y={53} fontSize="7" fontFamily="sans-serif" fill="#AAA" fontWeight="700">−</text>
+          <text x={50} y={53} textAnchor="middle" fontSize="7" fontFamily="sans-serif" fill="#888">|</text>
+        </svg>
+      );
+    }
+    if (component.component_type === 'footswitch') {
+      return (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          <rect x={22} y={6} width={56} height={42} fill="#555" stroke="#333" strokeWidth="1.5" rx={3} />
+          {([0, 1, 2] as number[]).flatMap(row => ([0, 1, 2] as number[]).map(col => (
+            <circle key={`${row}-${col}`}
+              cx={35 + col * 15} cy={16 + row * 12}
+              r={4} fill="#AAA" stroke="#888" strokeWidth="0.5" />
+          )))}
+          <text x={50} y={57} textAnchor="middle" fontSize="8" fontFamily="sans-serif"
+            fill="#555" fontWeight="600">3PDT</text>
+        </svg>
+      );
+    }
   } catch {
     // fall through
   }
