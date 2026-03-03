@@ -14,7 +14,7 @@ export default function UploadPage() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { checkUsage, incrementUsage } = useSubscription(user?.id)
+  useSubscription(user?.id) // kept for future quota enforcement
 
   const handleUploadComplete = async (file: File) => {
     setLoading(true)
@@ -31,13 +31,8 @@ export default function UploadPage() {
     try {
       const userId = user.id // NO FALLBACK - must be authenticated
 
-      // STEP 0: Check upload quota before doing anything
-      const usage = await checkUsage()
-      if (!usage.allowed) {
-        setLoading(false)
-        setShowUpgrade(true)
-        return
-      }
+      // STEP 0: Upload quota check — disabled until product launch
+      // Re-enable by restoring: const usage = await checkUsage(); if (!usage.allowed) { ... }
 
       console.log('Starting upload process:', {
         fileName: file.name,
@@ -73,8 +68,8 @@ export default function UploadPage() {
       console.log('Process schematic result:', result)
 
       if (result.success && result.schematicId) {
-        // STEP 3: Record usage after successful upload
-        incrementUsage(result.schematicId)
+        // STEP 3: Usage tracking disabled until product launch
+        // incrementUsage(result.schematicId)
         navigate(`/results/${result.schematicId}`)
       } else {
         const errorMsg = result.error || 'Analysis failed'
