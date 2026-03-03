@@ -1,4 +1,29 @@
-# Session Log — 2026-03-02 (Session 5)
+# Session Log — 2026-03-02 (Sessions 4 & 5)
+
+## Session Close (2026-03-02, end of day)
+
+### Wrap-up actions completed
+- Progress report exported: `docs/generated/PedalPath_Progress_Report_2026-03-02.md` → `_OUTPUT/PedalPath_Progress_Report_2026-03-02_v2.docx`
+- _INBOX cleaned: used/done files moved to `_ARCHIVE/2026-03-02/`; 13 files/folders archived
+- CLAUDE.md revised with accurate completed-items list and next-session priorities
+- All changes committed and pushed to GitHub
+- Vercel auto-deployed from main branch
+
+### What _INBOX contains now (actively needed)
+- `ground-truth/` — 9 JSON files (source for populate_ground_truth.py)
+- `pedalpath-ios-web-shell-gh/` — Phase 8 iOS integration (not started)
+- Accuracy test PDFs: BD_Emerald-Ring, Hammond Toneworks All, StratoBlaster, Tone-TwEQ-v1-2020
+- New circuit source files: OKF-v2, SHO-Nuff-v4, Super-Sonic-02, T-AMP 1.1, One Knob Clang 2.0
+
+### Production state at session end
+- 172/172 tests passing
+- TypeScript: clean, Vite: clean
+- GitHub: main branch up to date
+- Vercel: latest build deployed to pedalpath.app
+- Supabase: migrations 001–006 applied, 32 circuits / 554 components seeded
+
+---
+
 
 ## Session 5 Additions (2026-03-02, later)
 

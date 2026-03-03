@@ -10,36 +10,43 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-Upload bug fixed. Delete projects added. 172 tests passing. Live at pedalpath.app.
+**Sessions 4 & 5 complete (2026-03-02). 172 tests passing. Live at pedalpath.app.**
 
-**Completed this session (2026-03-02 — session 4):**
-- ✅ CRITICAL FIX: analyze-schematic.ts — trim API key (strips CRLF that caused `Headers.append` error + leaked key in response)
-- ✅ SECURITY: removed `VITE_ANTHROPIC_API_KEY` fallback; error responses no longer expose raw SDK messages
-- ✅ Dashboard: delete project button — two-click confirm (trash icon → Confirm/Cancel)
-- ✅ useProjects.ts: deleteProject mutation — deletes bom_items/enclosure_recommendations/power_requirements/schematics in order
-- ✅ GitHub issue #28: affiliate links — Tayda, Mouser, StompBoxParts, PedalPartsAndKits
-- ✅ _TRASH folder created at _INBOX/../_TRASH for Rob's manual review
-- ✅ tools/verify_alignment.py — copied from _INBOX; MB-102 mechanical audit
-- ✅ _INBOX audit complete — all new intel captured (see MEMORY.md for details)
+**Completed sessions 4 & 5:**
+- ✅ Reset password page (`/reset-password`) — Supabase PASSWORD_RECOVERY flow
+- ✅ Stripe integration — code deployed, quota gate disabled for beta (all uploads free until launch)
+- ✅ DB migrations 001–006 live in production; subscriptions + payment_transactions tables seeded
+- ✅ LEGO references removed (3 occurrences across codebase)
+- ✅ Germanium transistor detection — `material:"Ge"` → TO-18 Metal Can SVG
+- ✅ Transistor pinout protection — PINOUT_MAP for 20+ transistors, orientation diagram in step 3
+- ✅ ComponentGallery — visual grid of all BOM components with SVG, type badge, quantity, ID hint
+- ✅ SVG depth filters — holeBevel on holes, componentShadow on placed components
+- ✅ Active grid labels — current step's column/row shown bold in breadboard
+- ✅ Step thumbnails enlarged to 120×64px with shadow and quantity badge
+- ✅ Ground truth pipeline — 32 circuits, 554 components across 8 JSON files
+- ✅ BOM accuracy: all circuits ≥85% (Stratoblaster 59%→90%, Sunburn 57%→85%)
+- ✅ Prompt improvements: Rule 0 OVERRIDE (taper prefix = pot), European notation, pot label rule
 
-**⚠️ ACTION REQUIRED (Rob):** Rotate the Anthropic API key immediately — it was exposed in a screenshot
-(console.anthropic.com → API Keys)
+**⚠️ ACTION REQUIRED (Rob):** Ask your company engineer to rotate the Anthropic API key
+— it was exposed in a screenshot. Generate new key at console.anthropic.com → API Keys.
 
-**New intel from _INBOX (ready to process):**
-- 7 ground-truth BOMs: 1_Knob_Fuzz_V2, ratticus_V1, dart_v2, sunburn_v2, BOMs_All + 3 existing
-- New schematics: OKF-v2-2021, SHO-Nuff-v4, Super-Sonic-02, T-AMP 1.1, One Knob Clang 2.0
-- Stripe files built in another AI session (create-checkout-session.ts, stripe-webhook.ts) — in _INBOX/pedalpath-v2-main/
-- iOS web shell (pedalpath-ios-web-shell-gh) — tokens, components, PWA — for Phase 8
-- pedal_factory.py + new "Lego Gold Standard" PRD — physics kernel + rendering overhaul spec
-- pedalpath_integration.py — Python component decoder bridge (resistor/capacitor lookup API)
+**When ready to charge (Stripe):**
+Set these 5 env vars in Vercel Dashboard, then register the webhook:
+1. `STRIPE_SECRET_KEY` — Stripe Dashboard → Developers → API keys
+2. `STRIPE_WEBHOOK_SECRET` — Stripe Dashboard → Webhooks (after creating endpoint)
+3. `SUPABASE_SERVICE_ROLE_KEY` — Supabase → Settings → API → service_role
+4. `VITE_APP_URL` = `https://pedalpath.app`
+5. `VITE_STRIPE_PRO_PRICE_ID` — Stripe Dashboard → Product catalog
+Webhook endpoint: `https://pedalpath.app/api/stripe-webhook`
+To re-enable quota at launch: uncomment 2 clearly marked lines in `src/pages/UploadPage.tsx`
 
 **Next session priority order:**
-1. **IMMEDIATE**: Run `python3 tools/populate_ground_truth.py` — 7 BOMs waiting in _INBOX/ground-truth/
-2. **IMMEDIATE**: Run `python3 tools/accuracy_test.py` — get baseline scores; review GitHub issues
-3. **Fix highest-impact prompt issues** in `api/analyze-schematic.ts` based on discrepancy data
-4. **Re-run accuracy tests** — target all circuits ≥85%
-5. **Stripe integration** — copy files from _INBOX/pedalpath-v2-main/pedalpath-app/api/ + wire up
-6. **New PRD integration** — pedal_factory.py architecture: SVG contact shadows, active grid labels, material-based transistors
+1. **Phase 4 — Collision & Safety** — enclosure boundaries, forbidden zones, proactive alerts
+   - Create `src/utils/enclosure-boundaries.ts` and `src/components/sidebar/CollisionAlert.tsx`
+   - 125B: 62.7×118mm; 1590B: 60.3×94mm; forbidden Y<25mm (jacks), Y>95mm (footswitch)
+2. **iOS Phase 8** — integrate `_INBOX/pedalpath-ios-web-shell-gh/` design tokens + native-feel UI
+3. **New ground truth circuits** — add BOMs for: OKF-v2, SHO-Nuff-v4, Super-Sonic-02, T-AMP 1.1, One Knob Clang 2.0
+   - Source PDFs/docs are in `_INBOX/`
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
