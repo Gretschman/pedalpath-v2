@@ -1,10 +1,51 @@
-# Session Log — 2026-03-02 (Session 4)
+# Session Log — 2026-03-02 (Session 5)
 
-## What We Accomplished
+## Session 5 Additions (2026-03-02, later)
+
+### Reset Password Page (new)
+- `src/pages/ResetPasswordPage.tsx` — Supabase password recovery flow: `onAuthStateChange(PASSWORD_RECOVERY)` + `getSession()` to set `sessionReady`, password/confirm validation (min 8 chars), `updateUser({ password })`, signs out, redirects to `/signin` after 3s
+- `App.tsx` — added `/reset-password` route
+
+### Track 1 — Accuracy (complete, 5 runs)
+
+**Ground truth pipeline:**
+- Fixed 5 broken JSON files in `_INBOX/ground-truth/` (trailing commas, truncated arrays, missing braces)
+- Added `page_number` support to both `populate_ground_truth.py` and `accuracy_test.py`
+- `populate_ground_truth.py` — added DELETE before INSERT to prevent duplicate rows on re-runs
+- Seeded: 32 circuits, 554 components across 8 JSON files
+
+**Accuracy test improvements (`tools/accuracy_test.py`):**
+- Improved `normalise()`: jack `1/4"` prefix strip, R-suffix ohms (100r→100), taper prefix A/B/C removal, annotation strip (16V tant, reverse log), SI+unit suffix strip (47nf→47n)
+- `COMPATIBLE_TYPE_GROUPS` dict + `types_compatible()` — `ic` and `op-amp` now match cross-type
+- Added `accuracy` GitHub label; auto-files issues for circuits < 85%
+- Fixed `ORDER BY run_at DESC` (was broken UUID ordering)
+
+**Prompt improvements (`api/analyze-schematic.ts`):**
+- Rule 0 (OVERRIDE): taper-prefix potentiometer classification (A/B/C prefix = always potentiometer)
+- European notation: `1M5 = 1.5MΩ`, `4k7 = 4.7k` — return value exactly as written
+- Pot label rule: value field = resistance only, never include knob label (Volume/Boost/Drive/Gain)
+
+**Accuracy results (run 5 of 5):**
+| Circuit | Score | Status |
+|---|---|---|
+| Emerald Ring | 96.8% | PASS |
+| Ratticus V1 Original/Reissue/Ver2/YDR | 90–92% | PASS |
+| Tone TwEQ v1 2020 | 96.1% | PASS |
+| Stratoblaster | **90.0%** | **PASS (was 59%)** |
+| Sunburn V3 | **85.0%** | **PASS (was 57%)** |
+| Dart V2 | usually ~90% | Usually PASS |
+| Ratticus Turbo | ~70% | Structural limit: page 12 layout |
+| 1 Knob Fuzz V2 × 6 | 47–76% | Structural limit: 6-variant BOM table on shared page |
+
+Deployed to pedalpath.app. 172/172 tests passing. tsc + vite clean.
+
+---
+
+## What We Accomplished (Session 4 — earlier same day)
 
 ### Track 1 — Accuracy (partial)
 - Ground truth population + accuracy test pipeline was built in Session 3
-- **Next session**: Run `python3 tools/populate_ground_truth.py` + `python3 tools/accuracy_test.py`
+- **Session 5**: Completed (see above)
 
 ### Track 2 — First Sale / Stripe (complete)
 
@@ -60,11 +101,19 @@
 - 172/172 tests passing
 - `npm run build` — TypeScript clean, vite build clean
 
-## What Is Next
+## What Is Next (after Session 5)
 
 1. **IMMEDIATE**: Rotate Anthropic API key (exposed in screenshot) — console.anthropic.com → API Keys
-2. **IMMEDIATE**: Run `python3 tools/populate_ground_truth.py` — 7 BOMs waiting
-3. **IMMEDIATE**: Run `python3 tools/accuracy_test.py` — baseline scores; review GitHub issues
-4. **Fix prompt issues** in `analyze-schematic.ts` based on discrepancy data; target ≥85% all circuits
-5. **Stripe**: Set Vercel env vars + test checkout flow in test mode
-6. **iOS**: Phase 8 — ios-web-shell from _INBOX
+2. **Stripe env vars** — set these 5 in Vercel Dashboard to enable first sale:
+   - `STRIPE_SECRET_KEY` (Stripe Dashboard → API keys)
+   - `STRIPE_WEBHOOK_SECRET` (Stripe Dashboard → Webhooks → endpoint secret)
+   - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API)
+   - `VITE_APP_URL` = `https://pedalpath.app`
+   - `VITE_STRIPE_PRO_PRICE_ID` (Stripe Dashboard → Products)
+   - Also register webhook endpoint: `https://pedalpath.app/api/stripe-webhook`
+3. **Stripe test**: Test mode checkout → webhook fires → subscription updates → upload unblocks
+4. **Phase 4 (Collision & Safety)** — NOT started:
+   - Enclosure boundary mapping (125B: 62.7×118mm, 1590B: 60.3×94mm)
+   - Forbidden zone detection (Y<25mm = jacks area, Y>95mm = footswitch area)
+   - "Hardware Collision" proactive alert in sidebar
+5. **iOS**: Phase 8 — ios-web-shell from _INBOX
