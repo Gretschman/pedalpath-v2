@@ -46,6 +46,7 @@ for json_path in json_files:
             circuit_name = circuit.get("circuit_name", "").strip()
             source_file = circuit.get("source_file", "").strip()
             circuit_type = circuit.get("circuit_type", None)
+            page_number = circuit.get("page_number", None)
             components = circuit.get("components", [])
 
             if not circuit_name or not source_file:
@@ -55,18 +56,22 @@ for json_path in json_files:
             # Upsert circuit row; return id whether inserted or already existed
             cur.execute(
                 """
-                INSERT INTO public.reference_circuits (name, source_file, circuit_type)
-                VALUES (%s, %s, %s)
+                INSERT INTO public.reference_circuits (name, source_file, circuit_type, page_number)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (name) DO UPDATE
                     SET source_file = EXCLUDED.source_file,
-                        circuit_type = COALESCE(EXCLUDED.circuit_type, reference_circuits.circuit_type)
+                        circuit_type = COALESCE(EXCLUDED.circuit_type, reference_circuits.circuit_type),
+                        page_number = COALESCE(EXCLUDED.page_number, reference_circuits.page_number)
                 RETURNING id
                 """,
-                (circuit_name, source_file, circuit_type),
+                (circuit_name, source_file, circuit_type, page_number),
             )
             row = cur.fetchone()
             circuit_id = row[0]
             circuits_inserted += 1
+
+            # Delete existing components so re-runs don't duplicate rows
+            cur.execute("DELETE FROM public.reference_bom_items WHERE circuit_id = %s", (circuit_id,))
 
             for comp in components:
                 comp_type = comp.get("component_type", "other")

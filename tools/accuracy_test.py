@@ -35,6 +35,12 @@ VALUE_ALIASES: dict[str, str] = {
     "tc1044s": "icl7660",
 }
 
+# Component types that are interchangeable for matching purposes
+COMPATIBLE_TYPE_GROUPS: dict[str, str] = {
+    "ic": "active_ic",
+    "op-amp": "active_ic",
+}
+
 # Scoring weights
 SCORE_EXACT = 1.0
 SCORE_ALIAS = 0.9
@@ -46,8 +52,33 @@ PASS_THRESHOLD = 85.0
 
 
 def normalise(value: str) -> str:
-    """Lowercase + strip whitespace for comparison."""
-    return value.strip().lower()
+    """
+    Normalise a component value for comparison.
+    - Lowercase + strip whitespace
+    - Normalise µ → u, strip Ω/ohm
+    - Potentiometer taper prefix: A100K → 100k, B50K → 50k, C10K → 10k
+    - Strip trailing annotations: "10uF 16V tant" → "10uf" → "10u"
+      Also: "50k reverse log taper" → "50k"
+    - Strip trailing unit letter after SI prefix (47nF → 47n, 100uF → 100u)
+    - Resistor R-suffix: 100r → 100, 680r → 680 (plain ohms notation)
+    """
+    import re
+    v = value.strip().lower()
+    v = v.replace('µ', 'u').replace('ω', '').replace('ohm', '').replace('ohms', '')
+    # Potentiometer taper prefix: a100k → 100k, b50k → 50k, c10k → 10k
+    v = re.sub(r'^[abc](\d)', r'\1', v)
+    # Strip everything after the primary value token (number + optional SI prefix + optional unit char)
+    # Covers: "10uf 16v tant"→"10uf", "50k reverse log"→"50k", "1.5uf tant"→"1.5uf"
+    # [fhvawr] catches: f=farads, h=henries, v=volts, a=amps, w=watts, r=ohms
+    v = re.sub(r'^(\d+(?:\.\d+)?[pnumk]?[fhvawr]?)\s+.*$', r'\1', v)
+    # Strip trailing unit letter after SI prefix: 47nf→47n, 100uf→100u, 220nf→220n
+    v = re.sub(r'([0-9])([pnumk])[fhvaw]$', r'\1\2', v)
+    # Resistor R-suffix (plain ohms notation): 100r → 100, 680r → 680
+    v = re.sub(r'^(\d+(?:\.\d+)?)r$', r'\1', v)
+    # Jack value normalisation: strip '1/4"' or '1/4 inch' prefix — all guitar pedal jacks are 1/4"
+    # "1/4\" mono" → "mono", "1/4\" stereo" → "stereo", "1/4 inch mono" → "mono"
+    v = re.sub(r'^1/4["\s]?\s*(inch\s+)?', '', v)
+    return v.strip()
 
 
 def is_alias(a: str, b: str) -> bool:
@@ -56,10 +87,20 @@ def is_alias(a: str, b: str) -> bool:
     return VALUE_ALIASES.get(na) == nb or VALUE_ALIASES.get(nb) == na
 
 
-def image_to_base64(path: Path) -> tuple[str, str]:
+def types_compatible(type_a: str, type_b: str) -> bool:
+    """Return True if two component types can be matched against each other."""
+    if type_a == type_b:
+        return True
+    group_a = COMPATIBLE_TYPE_GROUPS.get(type_a)
+    group_b = COMPATIBLE_TYPE_GROUPS.get(type_b)
+    return group_a is not None and group_a == group_b
+
+
+def image_to_base64(path: Path, page_number: int | None = None) -> tuple[str, str]:
     """
     Convert an image or PDF to base64.
-    For PDFs: extract page 1 as PNG using pdf2image.
+    For PDFs: extract the specified page (1-based) as PNG using pdf2image.
+    If page_number is None, defaults to page 1.
     Returns (base64_string, mime_type).
     """
     suffix = path.suffix.lower()
@@ -71,9 +112,10 @@ def image_to_base64(path: Path) -> tuple[str, str]:
             print("  ERROR: pdf2image not installed. Run: pip install pdf2image")
             raise
 
-        pages = convert_from_path(str(path), first_page=1, last_page=1, dpi=150)
+        pg = page_number or 1
+        pages = convert_from_path(str(path), first_page=pg, last_page=pg, dpi=150)
         if not pages:
-            raise ValueError(f"Could not extract page from PDF: {path}")
+            raise ValueError(f"Could not extract page {pg} from PDF: {path}")
         buf = io.BytesIO()
         pages[0].save(buf, format="PNG")
         return base64.b64encode(buf.getvalue()).decode(), "image/png"
@@ -129,17 +171,23 @@ def score_components(
             found_type = found_comp.get("component_type", "")
             found_value = found_comp.get("value", "")
 
-            if found_type != ref_type:
+            if not types_compatible(found_type, ref_type):
                 continue  # wrong type entirely — keep looking
 
             norm_ref = normalise(ref_value)
             norm_found = normalise(found_value)
 
+            # Cross-type matches (e.g. ic vs op-amp) cap at SCORE_ALIAS
+            type_mismatch = found_type != ref_type
+
             if norm_ref == norm_found:
-                best_match_score = SCORE_EXACT
-                best_match_idx = i
-                best_disc_type = "exact"
-                break  # perfect match, stop
+                match_score = SCORE_ALIAS if type_mismatch else SCORE_EXACT
+                if match_score > best_match_score:
+                    best_match_score = match_score
+                    best_match_idx = i
+                    best_disc_type = "exact" if not type_mismatch else "alias"
+                if not type_mismatch:
+                    break  # perfect match, stop
             elif is_alias(ref_value, found_value):
                 if best_match_score < SCORE_ALIAS:
                     best_match_score = SCORE_ALIAS
@@ -258,7 +306,7 @@ def main() -> None:
     cur = conn.cursor()
 
     # Load all reference circuits
-    cur.execute("SELECT id, name, source_file FROM public.reference_circuits ORDER BY name")
+    cur.execute("SELECT id, name, source_file, page_number FROM public.reference_circuits ORDER BY name")
     circuits = cur.fetchall()
 
     if not circuits:
@@ -270,7 +318,7 @@ def main() -> None:
 
     results = []
 
-    for circuit_id, circuit_name, source_file in circuits:
+    for circuit_id, circuit_name, source_file, page_number in circuits:
         print(f"[{circuit_name}]")
 
         # Find image file
@@ -288,9 +336,24 @@ def main() -> None:
             )
             continue
 
+        # If no page_number for a multi-page PDF, warn and skip
+        if img_path.suffix.lower() == ".pdf" and page_number is None:
+            print(f"  WARNING: multi-page PDF '{source_file}' has no page_number set — skipping")
+            print(f"  Add \"page_number\": N to the ground-truth JSON and re-run populate_ground_truth.py")
+            results.append(
+                {
+                    "name": circuit_name,
+                    "expected": 0,
+                    "found": 0,
+                    "score": None,
+                    "status": "SKIP (no page_number)",
+                }
+            )
+            continue
+
         # Convert to base64
         try:
-            img_b64, img_type = image_to_base64(img_path)
+            img_b64, img_type = image_to_base64(img_path, page_number=page_number)
         except Exception as e:
             print(f"  ERROR: could not convert image: {e} — skipping")
             results.append(

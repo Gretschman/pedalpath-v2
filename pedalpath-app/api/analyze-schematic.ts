@@ -49,6 +49,7 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
   B100K · A100K · B50K · B10K · B25K · A50K · A1M · A10K · A500K · A250K · B250K · B500K · B1M
 
 ━━━ RULES ━━━
+0. POTENTIOMETER CLASSIFICATION (OVERRIDE): Any component whose value begins with a taper prefix — A (audio/log), B (linear), or C (reverse-log) — followed by a resistance (e.g. A100K, B50K, C10K, A500K, B250K, A1M) MUST be classified as component_type "potentiometer". This overrides any other classification. These values are NEVER resistors.
 1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read. Never set value to "unspecified" — always give a best estimate.
 2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical. If values are partially legible or could differ, report each component separately with its own entry and individual confidence score. A wrong value is worse than a duplicate entry.
 3. Value accuracy — watch for common misreads:
@@ -57,9 +58,10 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
    • 47n vs 4.7n, 22n vs 2.2n — look for decimal points
    • Capacitor shorthand: U or u suffix = µF (e.g. .1U = 0.1µF, 1U = 1µF, 4.7U = 4.7µF)
    • Leading decimal: .1 means 0.1, .047 means 0.047, .01 means 0.01 — always include the leading zero
+   • European notation: a letter replaces the decimal point — 4k7 = 4.7k, 1M5 = 1.5MΩ, 2k2 = 2.2k, 3n3 = 3.3nF. Return the value EXACTLY as written (e.g. 1M5, not 1M or 1.5M).
    • NEVER return "unspecified" as a value — if a value is hard to read, provide your best estimate with low confidence and explain in the notes field. An estimate is always more useful than "unspecified".
 4. Component symbols to look for:
-   • Potentiometer (P, RV, VR): resistor symbol with an arrow through it, or a 3-terminal resistor symbol
+   • Potentiometer (P, RV, VR): resistor symbol with an arrow through it, or a 3-terminal resistor symbol. Value = resistance only (e.g. 50k, B50K). NEVER include the knob label (Volume, Boost, Drive, Gain, Treble, Bass, Tone, Mix, Level) in the value field.
    • Switch (SW): open-circuit line with a hinge/pivot, often labeled On-Off-On, SPDT, or DPDT
    • These are frequently in passive tone/EQ circuits — look carefully even if hard to see
 5. Enclosure size — count only off-board hardware (pots, switches, LEDs; not jacks which are always present):

@@ -14,12 +14,14 @@ import ICDemo from './pages/ICDemo'
 import DiodeDemo from './pages/DiodeDemo'
 import WireDemo from './pages/WireDemo'
 import StripboardDemo from './pages/StripboardDemo'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/signin" element={<SignInPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/demo" element={<DemoPage />} />
       <Route path="/breadboard-demo" element={<BreadboardDemo />} />
