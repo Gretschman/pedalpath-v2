@@ -3,11 +3,11 @@ import { Camera, Zap, Layers, ArrowRight, Guitar, ChevronRight } from 'lucide-re
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white antialiased">
+    <div className="page-shell bg-white antialiased">
 
       {/* ── Nav ── */}
-      <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 safe-top">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-primary-600 rounded-xl flex items-center justify-center shadow-sm">
               <Guitar className="w-5 h-5 text-white" />
@@ -22,9 +22,10 @@ export default function LandingPage() {
             >
               Sign In
             </Link>
+            {/* Hidden on mobile — hero has the primary CTA; 44pt+ touch target on sm+ */}
             <Link
               to="/signup"
-              className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-primary-600/20"
+              className="hidden sm:flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-primary-600/20"
             >
               Get Started
               <ChevronRight className="w-3.5 h-3.5" />
@@ -35,7 +36,7 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section
-        className="pt-32 pb-28 px-4 relative overflow-hidden"
+        className="pt-28 pb-20 px-4 relative overflow-hidden"
         style={{ background: 'linear-gradient(150deg, #1a4eaa 0%, #2E86DE 55%, #3498DB 100%)' }}
       >
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -49,7 +50,7 @@ export default function LandingPage() {
             Powered by Claude AI Vision
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
             Upload a schematic.<br />
             <span className="text-yellow-300">Walk away with a build plan.</span>
           </h1>
@@ -185,7 +186,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="bg-gray-950 py-8 px-4">
+      <footer className="hidden sm:block bg-gray-950 py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-primary-600 rounded-lg flex items-center justify-center">

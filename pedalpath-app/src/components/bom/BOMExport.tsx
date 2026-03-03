@@ -1,4 +1,5 @@
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { useState } from 'react';
+import { Download, FileText, FileSpreadsheet, Share2, Check } from 'lucide-react';
 import type { BOMData, BOMComponent } from '../../types/bom.types';
 import { estimateBOMCost } from '../../services/claude-vision';
 
@@ -8,6 +9,7 @@ interface BOMExportProps {
 }
 
 export default function BOMExport({ bomData, projectName = 'Pedal Build' }: BOMExportProps) {
+  const [copied, setCopied] = useState(false)
 
   /**
    * Export BOM as CSV file
@@ -201,10 +203,33 @@ export default function BOMExport({ bomData, projectName = 'Pedal Build' }: BOME
     ).join('\n');
 
     navigator.clipboard.writeText(shoppingList).then(() => {
-      alert('Shopping list copied to clipboard!');
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }).catch(() => {
-      alert('Failed to copy to clipboard. Please try again.');
+      // fallback: show prompt
+      prompt('Copy this shopping list:', shoppingList)
     });
+  };
+
+  /**
+   * Native iOS share sheet — falls back to CSV download if not available
+   */
+  const shareNative = async () => {
+    navigator.vibrate?.(10)
+    const text = bomData.components.map((c: BOMComponent) =>
+      `${c.quantity}x ${c.value} ${c.component_type}`
+    ).join('\n')
+    const shareData = { title: `${projectName} BOM`, text }
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        // user cancelled — no-op
+      }
+    } else {
+      exportAsCSV()
+    }
   };
 
   const totalCost = estimateBOMCost(bomData.components);
@@ -225,6 +250,17 @@ export default function BOMExport({ bomData, projectName = 'Pedal Build' }: BOME
           </div>
         </div>
       </div>
+
+      {/* iOS native share — only rendered when Web Share API is available */}
+      {'share' in navigator && (
+        <button
+          onClick={shareNative}
+          className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-semibold py-3.5 px-6 rounded-xl transition-colors"
+        >
+          <Share2 className="w-5 h-5" />
+          Share BOM
+        </button>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* CSV Export */}
@@ -256,8 +292,11 @@ export default function BOMExport({ bomData, projectName = 'Pedal Build' }: BOME
           onClick={copyShoppingList}
           className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
         >
-          <Download className="w-12 h-12 text-purple-600 mb-3" />
-          <div className="font-medium text-gray-900">Copy Shopping List</div>
+          {copied
+            ? <Check className="w-12 h-12 text-green-500 mb-3" />
+            : <Download className="w-12 h-12 text-purple-600 mb-3" />
+          }
+          <div className="font-medium text-gray-900">{copied ? 'Copied!' : 'Copy Shopping List'}</div>
           <div className="text-xs text-gray-600 mt-1 text-center">
             Quick list for supplier search
           </div>

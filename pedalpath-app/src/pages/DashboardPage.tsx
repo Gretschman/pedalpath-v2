@@ -1,12 +1,17 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Upload, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { useProjects } from '../hooks/useProjects'
+
+function haptic() {
+  navigator.vibrate?.(10)
+}
 
 export default function DashboardPage() {
   const { projects, isLoading, error, deleteProject, isDeleting } = useProjects()
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const totalProjects = projects.length
   // Count 'draft' with schematics as in_progress — status update can fail silently
@@ -17,7 +22,7 @@ export default function DashboardPage() {
     new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString))
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-shell bg-gray-50">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
@@ -120,67 +125,76 @@ export default function DashboardPage() {
                 const confidence = schematic?.ai_confidence_score
                 const processingStatus = schematic?.processing_status
 
+                const resultUrl = processingStatus === 'completed' && schematic
+                  ? `/results/${schematic.id}`
+                  : null
+
                 return (
-                  <div key={project.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-gray-900 leading-snug">{project.title}</h3>
-                      <span className={`flex-shrink-0 text-xs font-medium px-2 py-1 rounded-full ${
-                        project.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {project.status === 'completed' ? 'Completed' : 'In Progress'}
-                      </span>
-                    </div>
-
-                    <p className="text-sm text-gray-500">Uploaded {formatDate(project.created_at)}</p>
-
-                    {confidence != null && (
-                      <p className="text-sm text-gray-600">AI confidence: {confidence}%</p>
+                  <div key={project.id} className="relative bg-white rounded-xl shadow flex flex-col gap-3 overflow-hidden">
+                    {/* Full-card tap target for completed projects (iOS list row convention) */}
+                    {resultUrl && (
+                      <button
+                        onClick={() => { haptic(); navigate(resultUrl) }}
+                        className="absolute inset-0 z-0"
+                        aria-label={`View results for ${project.title}`}
+                      />
                     )}
 
-                    <div className="flex items-center justify-between mt-auto pt-1">
-                      {processingStatus === 'completed' && schematic ? (
-                        <Link
-                          to={`/results/${schematic.id}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
-                        >
-                          View Results →
-                        </Link>
-                      ) : processingStatus === 'failed' ? (
-                        <p className="text-sm text-gray-400">Analysis failed</p>
-                      ) : (
-                        <p className="text-sm text-gray-400">Processing...</p>
+                    <div className="relative z-10 p-5 flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-gray-900 leading-snug">{project.title}</h3>
+                        <span className={`flex-shrink-0 text-xs font-medium px-2 py-1 rounded-full ${
+                          project.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {project.status === 'completed' ? 'Completed' : 'In Progress'}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-gray-500">Uploaded {formatDate(project.created_at)}</p>
+
+                      {confidence != null && (
+                        <p className="text-sm text-gray-600">AI confidence: {confidence}%</p>
                       )}
 
-                      {confirmDeleteId === project.id ? (
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between mt-auto pt-1">
+                        {resultUrl ? (
+                          <span className="text-sm font-medium text-primary-600 flex items-center gap-0.5">
+                            View Results <ChevronRight className="w-3.5 h-3.5" />
+                          </span>
+                        ) : processingStatus === 'failed' ? (
+                          <p className="text-sm text-gray-400">Analysis failed</p>
+                        ) : (
+                          <p className="text-sm text-gray-400">Processing...</p>
+                        )}
+
+                        {confirmDeleteId === project.id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { deleteProject(project.id); setConfirmDeleteId(null) }}
+                              disabled={isDeleting}
+                              className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded transition-colors disabled:opacity-50"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1.5"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => {
-                              deleteProject(project.id)
-                              setConfirmDeleteId(null)
-                            }}
-                            disabled={isDeleting}
-                            className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                            onClick={() => { haptic(); setConfirmDeleteId(project.id) }}
+                            className="p-2 -mr-1 text-gray-300 hover:text-red-500 transition-colors"
+                            title="Delete project"
                           >
-                            Confirm
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDeleteId(project.id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors"
-                          title="Delete project"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 )
