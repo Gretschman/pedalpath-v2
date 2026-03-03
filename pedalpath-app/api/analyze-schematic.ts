@@ -51,11 +51,12 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
 ━━━ RULES ━━━
 0. POTENTIOMETER CLASSIFICATION (OVERRIDE): Any component whose value begins with a taper prefix — A (audio/log), B (linear), or C (reverse-log) — followed by a resistance (e.g. A100K, B50K, C10K, A500K, B250K, A1M) MUST be classified as component_type "potentiometer". This overrides any other classification. These values are NEVER resistors.
 1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read. Never set value to "unspecified" — always give a best estimate.
-2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical. If values are partially legible or could differ, report each component separately with its own entry and individual confidence score. A wrong value is worse than a duplicate entry.
+2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical — meaning you can read every digit of both labels and they match exactly. ANY doubt = separate entries. NEVER group two adjacent components just because they look similar or share a reference prefix (e.g. R9 and R10 might be different values even though they are neighbours). Read each label individually before deciding to group.
 3. Value accuracy — watch for common misreads:
    • 1k vs 1M (one-k vs one-meg) — check for the Ω or k/M suffix carefully
+   • 22n vs 220n vs 2.2n — count ALL digits: "220n" has THREE digits before the n; "22n" has only two. Do NOT drop a leading or trailing digit. When a cap sits next to another cap with a similar-looking value, read each one individually.
    • 10n vs 100n vs 10p — check the multiplier prefix (n=nano, p=pico, u=micro)
-   • 47n vs 4.7n, 22n vs 2.2n — look for decimal points
+   • 47n vs 4.7n — look for decimal points
    • Capacitor shorthand: U or u suffix = µF (e.g. .1U = 0.1µF, 1U = 1µF, 4.7U = 4.7µF)
    • Leading decimal: .1 means 0.1, .047 means 0.047, .01 means 0.01 — always include the leading zero
    • European notation: a letter replaces the decimal point — 4k7 = 4.7k, 1M5 = 1.5MΩ, 2k2 = 2.2k, 3n3 = 3.3nF. Return the value EXACTLY as written (e.g. 1M5, not 1M or 1.5M).
