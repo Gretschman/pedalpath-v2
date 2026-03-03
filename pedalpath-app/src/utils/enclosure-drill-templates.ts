@@ -6,6 +6,7 @@
  *  • General Guitar Gadgets 125B-0Knob (face height 118-122mm, north side 67×35mm, hole pattern)
  *  • Real 1590B photos with red measurement overlays (60.5mm wide north face, confirmed jack coords)
  *  • Rob's "DRill Templates.pdf" — 7-page in-INBOX PDF, 3-knob + 4-knob layouts on 125B and 1590B
+ *  • FuzzDog FuzzPups V2 build guide — confirmed 1590A drill positions, FuzzPup 3-potter layout
  *
  * Coordinate system:
  *   • All positions in mm
@@ -17,16 +18,39 @@
  *   1590B face: 60.7mm wide × 112.3mm tall
  */
 
-// ─── Hole size constants (inches → mm, from AmplifyFun legend) ───────────────
+// ─── Hole size constants — canonical values from drill_hole_diameter_prompt.json ──────────────
+//
+// Source: _INBOX/drill_hole_diameter_prompt.json (authoritative pedal drill reference)
+// Rule: use datasheet dimensions when part number is known; these are defaults.
+// +0.2–0.5mm extra clearance recommended over bare metal if powder-coated enclosure.
 
 export const HOLE_MM = {
-  footswitch: 12.7,   // 1/2"  — 3PDT footswitch
-  jack_14:     9.5,   // 3/8"  — standard 1/4" mono/stereo jack
-  pot:         7.9,   // 5/16" — 16mm Alpha pot shaft
-  led_5mm:     7.9,   // 5/16" — 5mm LED bezel
-  led_3mm:     6.35,  // 1/4"  — 3mm LED (tight fit)
-  dc_barrel:   8.0,   // ~5/16" — 5.5/2.1mm barrel connector (8mm common size)
-  toggle:      6.35,  // 1/4"  — standard mini toggle switch
+  // Footswitches
+  footswitch:      12.7,  // 1/2"   — 3PDT / DPDT mechanical stomp switch (blue 3PDT)
+  footswitch_soft: 12.0,  // ~1/2"  — soft-touch momentary (12mm or 16mm; verify per part)
+
+  // Jacks
+  jack_14:          9.5,  // 3/8"   — Switchcraft open-frame ¼" mono/stereo jack (11/12A class)
+  jack_enclosed:   10.0,  // ~3/8"  — enclosed Cliff/panel-mount ¼" jack (10–12mm; check datasheet)
+
+  // Potentiometers
+  pot:              7.9,  // 5/16"  — 16mm / 24mm Alpha / CTS pot shaft (8mm common metric target)
+  pot_9mm:          7.0,  // ~9/32" — 9mm mini pot, Alpha RV09 / Bourns style
+
+  // LEDs (bare through-hole — NOT bezel)
+  led_5mm:          5.1,  // ~13/64"— bare 5mm LED body (5.0–5.2mm range; 13/64" = 5.16mm)
+  led_3mm:          3.2,  // 1/8"   — bare 3mm LED body (3.175mm; round up to 3.2mm metric)
+
+  // LED bezels / panel-mount holders
+  led_bezel:        8.0,  // 5/16"  — standard LED panel bezel (8mm common; 10mm also used)
+
+  // DC power jacks
+  dc_barrel:       12.0,  // ~1/2"  — standard panel-mount 2.1mm threaded bushing (most common)
+  dc_barrel_mini:   8.0,  // 5/16"  — small board-mount DC barrel (FuzzDog 1590A style; verify part)
+
+  // Toggle switches
+  toggle:           6.35, // 1/4"   — full-size mini toggle SPDT/DPDT (many use 6mm; 6.35mm safe)
+  toggle_sub:       5.5,  // ~7/32" — sub-mini toggle (5–6mm; verify per part)
 } as const;
 
 // ─── Enclosure dimensions ──────────────────────────────────────────────────────
@@ -63,6 +87,17 @@ export interface EnclosureSpec {
  *   1590B face: 2.39" × 4.42" = 60.7mm × 112.3mm
  *   1590B North/South: 2.37" × 1.05" = 60.2mm × 26.7mm
  *   1590B East/West: 4.41" × 1.05" = 112.0mm × 26.7mm
+ *
+ * 1590A measurements confirmed from FuzzDog FuzzPups V2 build guide (drilling guide page):
+ *   Face: 35.0mm × 78.0mm (derived: footswitch 12mm from bottom + 66mm to top = 78mm total)
+ *   North/South: 35.0mm × 27.0mm  |  East/West: 78.0mm × 27.0mm
+ *   Drill sizes confirmed: Jacks=9mm, Footswitch=12mm, DC Socket=8mm, Pots=7mm
+ *   Jack spec: Lumberg KLBM3 mono ¼" on EAST/WEST long sides (not north face)
+ *   DC socket: north end panel only, centered, 18mm from top edge (CONFIRMED)
+ *   Input jack (west side): 34mm from top  |  Output jack (east side): 45mm from top (CONFIRMED)
+ *   Footswitch: Y=66mm (12mm from bottom) centered (CONFIRMED)
+ *   Middle pot (3-pot layout): Y=49mm (CONFIRMED from drilling guide "49" measurement)
+ *   Upper pots (3-pot layout): Y≈15mm, X≈9mm from each edge (estimated from diagram)
  */
 export const ENCLOSURE_SPECS: Record<string, EnclosureSpec> = {
   '125B': {
@@ -82,6 +117,15 @@ export const ENCLOSURE_SPECS: Record<string, EnclosureSpec> = {
     northSouth: { width: 60.5, height: 26.7 },
     eastWest:   { width: 112.0, height: 26.7 },
     cornerR: 3,
+  },
+  '1590A': {
+    name: '1590A (Compact)',
+    faceW: 35.0,
+    faceH: 78.0,   // confirmed: 66mm to footswitch + 12mm to bottom = 78mm
+    depth: 27.0,
+    northSouth: { width: 35.0, height: 27.0 },
+    eastWest:   { width: 78.0, height: 27.0 },
+    cornerR: 2,
   },
 };
 
@@ -104,13 +148,13 @@ export interface DrillPoint {
 export function holeDiameter(p: DrillPoint): number {
   if (p.diameterMm !== undefined) return p.diameterMm;
   switch (p.type) {
-    case 'pot':        return HOLE_MM.pot;
-    case 'footswitch': return HOLE_MM.footswitch;
-    case 'led':        return HOLE_MM.led_5mm;
+    case 'pot':        return HOLE_MM.pot;        // 7.9mm — 16mm Alpha shaft
+    case 'footswitch': return HOLE_MM.footswitch; // 12.7mm — 3PDT stomp
+    case 'led':        return HOLE_MM.led_5mm;    // 5.1mm — bare 5mm LED (use diameterMm:8 for bezel)
     case 'jack_in':
-    case 'jack_out':   return HOLE_MM.jack_14;
-    case 'dc_barrel':  return HOLE_MM.dc_barrel;
-    case 'toggle':     return HOLE_MM.toggle;
+    case 'jack_out':   return HOLE_MM.jack_14;    // 9.5mm — Switchcraft open-frame
+    case 'dc_barrel':  return HOLE_MM.dc_barrel;  // 12mm — panel-mount threaded (use diameterMm:8 for mini)
+    case 'toggle':     return HOLE_MM.toggle;     // 6.35mm — full-size mini toggle
   }
 }
 
@@ -147,7 +191,7 @@ const led = (x: number, y: number): DrillPoint => ({
   label: 'LED',
   type: 'led',
   x, y,
-  notes: '5mm LED bezel',
+  notes: '5mm LED — 5.1mm hole; use diameterMm:8 for bezel mount',
 });
 
 const toggle = (x: number, y: number, label = 'Toggle'): DrillPoint => ({
@@ -225,6 +269,48 @@ export const FACE_LAYOUTS_125B: FaceLayout[] = [
       pot(4, 49, 57, 'P4'),
       led(33, 74),
       footswitch(33, 90),
+    ],
+  },
+];
+
+// ── 1590A face layouts (35mm × 78mm) ─────────────────────────────────────────
+//
+// Source: FuzzDog FuzzPups V2 build guide — standardised FuzzPup 3-potter layout
+// Reference grid: X center = 17.5mm, usable X band ≈ 7–28mm
+// No face forbidden zone at top (DC socket on north END panel, not face)
+// Confirmed: footswitch Y=66mm (12mm from bottom), middle pot Y=49mm
+// Estimated: upper pots Y≈15mm, X≈9mm from each edge
+// Drill sizes (FuzzDog guide): pots=7mm, footswitch=12mm, jacks=9mm, DC=8mm
+
+export const FACE_LAYOUTS_1590A: FaceLayout[] = [
+  {
+    name: '1-Knob',
+    description: 'Single centered pot — booster / buffer (e.g. SHO style)',
+    holes: [
+      pot(1, 17.5, 22),
+      led(17.5, 49),
+      footswitch(17.5, 66),
+    ],
+  },
+  {
+    name: '2-Knob',
+    description: 'Two pots side by side (upper row)',
+    holes: [
+      pot(1, 9,  17, 'L'),
+      pot(2, 26, 17, 'R'),
+      led(17.5, 49),
+      footswitch(17.5, 66),
+    ],
+  },
+  {
+    name: '3-Potter (2+1)',
+    description: 'FuzzPup standard: 2 pots upper row + 1 pot center — confirmed from FuzzDog drilling guide',
+    holes: [
+      pot(1, 9,    15, 'P1'),   // upper left  — Y≈15mm (estimated from diagram)
+      pot(2, 26,   15, 'P2'),   // upper right — Y≈15mm (estimated)
+      pot(3, 17.5, 49, 'P3'),   // center      — Y=49mm (CONFIRMED)
+      led(17.5, 57),
+      footswitch(17.5, 66),     // Y=66mm (CONFIRMED: 12mm from bottom of 78mm face)
     ],
   },
 ];
@@ -341,6 +427,26 @@ export const NORTH_SIDE_JACKS: Record<string, DrillPoint[]> = {
     { label: 'Input',     type: 'jack_in',   x: 14.5,  y: 22.2, notes: 'Left, 14.5mm from left edge — ¼" mono jack' },
     { label: 'Output',    type: 'jack_out',  x: 51.8,  y: 22.2, notes: 'Right, 14.5mm from right edge — ¼" mono jack' },
   ],
+  // 1590A: DC socket only on north end — audio jacks are on east/west long sides (see EAST_WEST_JACKS_1590A)
+  '1590A': [
+    { label: 'DC Power',  type: 'dc_barrel', x: 17.5,  y: 18.0, notes: 'Center, 18mm from top edge — CONFIRMED FuzzDog drilling guide' },
+  ],
+};
+
+// ─── 1590A east/west side jack positions (asymmetric — confirmed from FuzzDog guide) ───────────
+//
+// FuzzDog FuzzPups V2 drilling guide specifies:
+//   Input  (west/left side):  34mm from top of face along the long axis — CONFIRMED
+//   Output (east/right side): 45mm from top of face along the long axis — CONFIRMED
+//   Jack spec: Lumberg KLBM3 mono ¼" jack socket (9mm drill)
+//   Jacks sit in the side wall — y here = depth midpoint (13.5mm in 27mm deep wall)
+//
+// Coordinate: x = distance from top along the long face axis (0 = top/north end)
+//             y = distance from face edge into side wall (0 = flush with face)
+
+export const EAST_WEST_JACKS_1590A: { input: DrillPoint; output: DrillPoint } = {
+  input:  { label: 'Input',  type: 'jack_in',  x: 34, y: 13.5, notes: '34mm from top on west (left) side — CONFIRMED FuzzDog guide; Lumberg KLBM3' },
+  output: { label: 'Output', type: 'jack_out', x: 45, y: 13.5, notes: '45mm from top on east (right) side — CONFIRMED FuzzDog guide; Lumberg KLBM3' },
 };
 
 // ─── East/West side jack layouts (alternative to top-mount) ──────────────────
@@ -360,11 +466,14 @@ export function eastWestJacks(spec: EnclosureSpec): { input: DrillPoint; output:
 // ─── Auto-select face layout from pot count ───────────────────────────────────
 
 export function autoSelectLayout(
-  enclosureKey: '125B' | '1590B',
+  enclosureKey: '125B' | '1590B' | '1590A',
   potCount: number,
   hasToggle: boolean,
 ): FaceLayout {
-  const layouts = enclosureKey === '125B' ? FACE_LAYOUTS_125B : FACE_LAYOUTS_1590B;
+  const layouts =
+    enclosureKey === '125B'  ? FACE_LAYOUTS_125B  :
+    enclosureKey === '1590A' ? FACE_LAYOUTS_1590A :
+                               FACE_LAYOUTS_1590B;
 
   if (potCount === 0) return layouts.find(l => l.name === '0-Knob')!;
   if (potCount === 1) return layouts.find(l => l.name === '1-Knob')!;
@@ -398,5 +507,10 @@ export const FACE_FORBIDDEN_ZONES: Record<string, ForbiddenZone[]> = {
   '1590B': [
     // Top-mount: jacks on north side — no forbidden zone on face
     { label: 'FOOTSWITCH ZONE', yMin: 88, yMax: 112 },
+  ],
+  '1590A': [
+    // DC socket on north END panel (not face) — no top forbidden zone
+    // Footswitch Y=66mm (confirmed) — keep components clear of lower 12mm
+    { label: 'FOOTSWITCH ZONE', yMin: 60, yMax: 78 },
   ],
 };

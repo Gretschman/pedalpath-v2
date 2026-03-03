@@ -10,22 +10,17 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-**Sessions 4 & 5 complete (2026-03-02). 172 tests passing. Live at pedalpath.app.**
+**Session 7 complete (2026-03-03). 172 tests passing. Live at pedalpath.app.**
 
-**Completed sessions 4 & 5:**
-- ✅ Reset password page (`/reset-password`) — Supabase PASSWORD_RECOVERY flow
-- ✅ Stripe integration — code deployed, quota gate disabled for beta (all uploads free until launch)
-- ✅ DB migrations 001–006 live in production; subscriptions + payment_transactions tables seeded
-- ✅ LEGO references removed (3 occurrences across codebase)
-- ✅ Germanium transistor detection — `material:"Ge"` → TO-18 Metal Can SVG
-- ✅ Transistor pinout protection — PINOUT_MAP for 20+ transistors, orientation diagram in step 3
-- ✅ ComponentGallery — visual grid of all BOM components with SVG, type badge, quantity, ID hint
-- ✅ SVG depth filters — holeBevel on holes, componentShadow on placed components
-- ✅ Active grid labels — current step's column/row shown bold in breadboard
-- ✅ Step thumbnails enlarged to 120×64px with shadow and quantity badge
-- ✅ Ground truth pipeline — 32 circuits, 554 components across 8 JSON files
-- ✅ BOM accuracy: all circuits ≥85% (Stratoblaster 59%→90%, Sunburn 57%→85%)
-- ✅ Prompt improvements: Rule 0 OVERRIDE (taper prefix = pot), European notation, pot label rule
+**Completed session 7:**
+- ✅ GT1–GT19 ground truth pipeline — 18 new JSON files, DB now 51 circuits / 967 components
+- ✅ Accuracy tested: 19/31 circuits ≥85% (8 new circuits pass immediately on first run)
+- ✅ Fixed page_number bug — ground truth JSON must use `"page_number"` not `"page"`
+- ✅ 1590A enclosure spec added to `enclosure-drill-templates.ts` — confirmed from FuzzDog build guide
+  - Face 35×78mm; footswitch Y=66mm; DC on north end Y=18mm; jacks east/west at 34mm & 45mm
+- ✅ build_guide_1590A.pdf studied (13 pages) — all measurements extracted + EAST_WEST_JACKS_1590A
+- ✅ HOLE_MM constants corrected from canonical drill guide: dc_barrel 8→12mm, led_5mm 7.9→5.1mm, led_3mm 6.35→3.2mm
+- ✅ Tayda SKUs indexed (memory/tayda_and_drill.md) — vetted pot/cap/resistor SKUs for BOM shopping
 
 **⚠️ ACTION REQUIRED (Rob):** Ask your company engineer to rotate the Anthropic API key
 — it was exposed in a screenshot. Generate new key at console.anthropic.com → API Keys.
@@ -41,12 +36,11 @@ Webhook endpoint: `https://pedalpath.app/api/stripe-webhook`
 To re-enable quota at launch: uncomment 2 clearly marked lines in `src/pages/UploadPage.tsx`
 
 **Next session priority order:**
-1. **Phase 4 — Collision & Safety** — enclosure boundaries, forbidden zones, proactive alerts
-   - Create `src/utils/enclosure-boundaries.ts` and `src/components/sidebar/CollisionAlert.tsx`
-   - 125B: 62.7×118mm; 1590B: 60.3×94mm; forbidden Y<25mm (jacks), Y>95mm (footswitch)
+1. **Accuracy failures** — investigate Aeon Drive (61.5%), Buff N Blend (64.7%), Black Dog (79.3%);
+   re-test WattAmp + Three Time Champ (gt3/gt7 PDFs, sync timing issue on last run)
 2. **iOS Phase 8** — integrate `_INBOX/pedalpath-ios-web-shell-gh/` design tokens + native-feel UI
-3. **New ground truth circuits** — add BOMs for: OKF-v2, SHO-Nuff-v4, Super-Sonic-02, T-AMP 1.1, One Knob Clang 2.0
-   - Source PDFs/docs are in `_INBOX/`
+3. **Phase 4 sidebar CollisionAlert** — `src/components/sidebar/CollisionAlert.tsx`
+4. **1590A EnclosureGuide** — wire up 1590A spec + east/west jacks in EnclosureGuide.tsx
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 
