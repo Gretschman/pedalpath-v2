@@ -101,6 +101,91 @@ Return this exact structure:
   "confidence_score": 85
 }`;
 
+// ─── Off-board hardware injection ─────────────────────────────────────────────
+// Physical pedal builds always require these components even when they don't
+// appear in the schematic (off-board parts are assumed assembly constants and
+// are routinely omitted from circuit schematics).
+//
+// Strategy: inject any type that isn't already present in the AI-detected BOM.
+// LED + its CLR are treated as a pair: inject both or neither.
+
+interface OffBoardComponent {
+  component_type: string;
+  value: string;
+  quantity: number;
+  reference_designators: string[];
+  confidence: number;
+  notes: string;
+}
+
+const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
+  {
+    component_type: 'input-jack',
+    value: '1/4" Mono Jack',
+    quantity: 1,
+    reference_designators: ['J_IN'],
+    confidence: 99,
+    notes: 'Off-board — required for all pedal builds; not shown in most schematics',
+  },
+  {
+    component_type: 'output-jack',
+    value: '1/4" Mono Jack',
+    quantity: 1,
+    reference_designators: ['J_OUT'],
+    confidence: 99,
+    notes: 'Off-board — required for all pedal builds; not shown in most schematics',
+  },
+  {
+    component_type: 'dc-jack',
+    value: '2.1mm Barrel Jack (center-negative)',
+    quantity: 1,
+    reference_designators: ['J_DC'],
+    confidence: 99,
+    notes: 'Off-board — 9V center-negative DC power; required for all pedal builds',
+  },
+  {
+    component_type: 'footswitch',
+    value: '3PDT',
+    quantity: 1,
+    reference_designators: ['FS1'],
+    confidence: 99,
+    notes: 'Off-board — true bypass footswitch; required for all pedal builds',
+  },
+];
+
+// LED + CLR injected as a pair only when the schematic has neither
+const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
+  {
+    component_type: 'led',
+    value: '5mm Red LED',
+    quantity: 1,
+    reference_designators: ['LED1'],
+    confidence: 90,
+    notes: 'Off-board — status indicator; standard addition for all pedal builds',
+  },
+  {
+    component_type: 'resistor',
+    value: '4.7k',
+    quantity: 1,
+    reference_designators: ['R_CLR'],
+    confidence: 90,
+    notes: 'Off-board — LED current-limiting resistor (4.7kΩ typical for 9V supply)',
+  },
+];
+
+function injectOffBoardComponents(components: any[]): any[] {
+  const existingTypes = new Set(components.map((c: any) => c.component_type));
+
+  const injected = OFF_BOARD_DEFAULTS.filter(c => !existingTypes.has(c.component_type));
+
+  // Inject LED + CLR only if schematic has no LED at all
+  if (!existingTypes.has('led')) {
+    injected.push(...OFF_BOARD_LED_PAIR);
+  }
+
+  return [...components, ...injected];
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -258,6 +343,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!hasActiveComponents) {
         bomData.power = undefined;
       }
+
+      // Inject off-board hardware always required for a physical build
+      // but routinely omitted from schematics (jacks, footswitch, LED, CLR)
+      bomData.components = injectOffBoardComponents(bomData.components);
 
       // Validate that we got some components
       if (!bomData.components || bomData.components.length === 0) {
