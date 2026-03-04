@@ -54,6 +54,7 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
 2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical — meaning you can read every digit of both labels and they match exactly. ANY doubt = separate entries. NEVER group two adjacent components just because they look similar or share a reference prefix (e.g. R9 and R10 might be different values even though they are neighbours). Read each label individually before deciding to group.
 3. Value accuracy — watch for common misreads:
    • 1k vs 1M (one-k vs one-meg) — check for the Ω or k/M suffix carefully
+   • 1M vs 2M — 1M is very common in pedal bias/input circuits; 2M is rare. If the label is ambiguous between 1M and 2M, choose 1M
    • 22n vs 220n vs 2.2n — count ALL digits: "220n" has THREE digits before the n; "22n" has only two. Do NOT drop a leading or trailing digit. When a cap sits next to another cap with a similar-looking value, read each one individually.
    • 10n vs 100n vs 10p — check the multiplier prefix (n=nano, p=pico, u=micro)
    • 47n vs 4.7n — look for decimal points

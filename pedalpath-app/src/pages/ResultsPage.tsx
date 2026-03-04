@@ -46,11 +46,11 @@ export default function ResultsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('status')
+        .select('status, title')
         .eq('id', projectId!)
         .single()
       if (error) throw error
-      return data as { status: string }
+      return data as { status: string; title: string }
     },
     enabled: !!projectId,
   })
@@ -222,7 +222,7 @@ export default function ResultsPage() {
             </div>
 
             <BOMTable bomData={bomData} schematicId={schematicId} onUpdate={() => console.log('BOM updated')} />
-            <BOMExport bomData={bomData} projectName="My Pedal Build" />
+            <BOMExport bomData={bomData} projectName={projectRow?.title ?? 'Pedal Build'} />
           </div>
         )}
 
@@ -235,7 +235,7 @@ export default function ResultsPage() {
                 Track your progress as you complete each step.
               </p>
             </div>
-            <BreadboardGuide bomData={bomData} projectName="My Pedal Build" />
+            <BreadboardGuide bomData={bomData} projectName={projectRow?.title ?? 'Pedal Build'} />
           </div>
         )}
 
@@ -248,7 +248,7 @@ export default function ResultsPage() {
                 track cuts, and wiring instructions.
               </p>
             </div>
-            <StripboardGuide bomData={bomData} projectName="My Pedal Build" />
+            <StripboardGuide bomData={bomData} projectName={projectRow?.title ?? 'Pedal Build'} />
           </div>
         )}
 
@@ -261,7 +261,7 @@ export default function ResultsPage() {
                 Includes drill template and 3PDT wiring diagram.
               </p>
             </div>
-            <EnclosureGuide bomData={bomData} projectName="My Pedal Build" />
+            <EnclosureGuide bomData={bomData} projectName={projectRow?.title ?? 'Pedal Build'} />
           </div>
         )}
       </div>

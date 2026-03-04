@@ -124,7 +124,7 @@ const COMPONENT_TYPE_LABELS: Record<string, string> = {
 
 // Confidence level colors
 const getConfidenceColor = (confidence?: number): string => {
-  if (!confidence) return 'bg-gray-100 text-gray-800';
+  if (!confidence) return 'bg-gray-200 text-gray-700';
   if (confidence >= 90) return 'bg-green-100 text-green-800';
   if (confidence >= 70) return 'bg-yellow-100 text-yellow-800';
   return 'bg-red-100 text-red-800';
@@ -338,13 +338,13 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                     {component.reference_designators.map((ref) => (
                       <span
                         key={ref}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-gray-700 text-gray-100"
                       >
                         {ref}
                       </span>
                     ))}
                     {component.confidence && (
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getConfidenceColor(component.confidence)}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold ${getConfidenceColor(component.confidence)}`}>
                         {component.confidence}%
                       </span>
                     )}
@@ -503,7 +503,7 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                           {component.reference_designators.map((ref) => (
                             <span
                               key={ref}
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-gray-700 text-gray-100"
                             >
                               {ref}
                             </span>
@@ -513,7 +513,7 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
 
                       <td className="px-4 py-3 whitespace-nowrap">
                         {component.confidence && (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getConfidenceColor(component.confidence)}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold ${getConfidenceColor(component.confidence)}`}>
                             {component.confidence}%
                           </span>
                         )}

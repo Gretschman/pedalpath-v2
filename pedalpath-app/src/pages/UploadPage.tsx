@@ -47,7 +47,15 @@ export default function UploadPage() {
         .from('projects')
         .insert({
           user_id: userId,
-          title: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+          title: (() => {
+            const base = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim()
+            const generic = ['image', 'photo', 'img', 'screenshot', 'file', 'scan', 'document', 'pic', 'untitled']
+            if (generic.includes(base.toLowerCase()) || /^img[\s_]?\d+$/i.test(base)) {
+              const d = new Date()
+              return `Schematic ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+            }
+            return base
+          })(),
           status: 'draft'
         })
         .select()
