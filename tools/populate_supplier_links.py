@@ -10,7 +10,7 @@ from pathlib import Path
 import psycopg2
 from dotenv import load_dotenv
 
-INPUT_FILE = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX/ground-truth/supplier_links.json")
+INPUT_FILE = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/ground-truth/supplier_links.json")
 
 load_dotenv("/home/rob/.pedalpath_env")
 DB_URL = os.environ.get("SUPABASE_DB_URL")
