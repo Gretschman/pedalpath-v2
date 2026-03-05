@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import type { BOMData, BOMComponent, BomSection } from '@/types/bom.types';
 import {
   encodeResistor,
@@ -92,7 +92,7 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
 
     if (component.component_type === 'capacitor') {
       const spec = decodeCapacitor(component.value);
-      // Electrolytic/tantalum: render upright — they always stand vertical in real life
+      // Electrolytic/tantalum: render upright cylinder — they always stand vertical
       if (spec.capType === 'electrolytic' || spec.capType === 'tantalum') {
         const bodyW = spec.capType === 'tantalum' ? 18 : 22;
         const bodyH = spec.capType === 'tantalum' ? 26 : 36;
@@ -102,7 +102,6 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
         return (
           <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
             {shadowDefs}
-            {/* Leads going down from body base */}
             <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
             <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
             <g filter="url(#thumbShadow)">
@@ -112,6 +111,28 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
               )}
               {spec.polarized && (
                 <text x={bx + bodyW * 0.19} y={by + bodyH * 0.58} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#1A2E4A">−</text>
+              )}
+            </g>
+          </svg>
+        );
+      }
+      // Film box: render upright portrait rectangle — shows face marking as it appears on the part
+      if (spec.capType === 'film_box') {
+        const bodyW = 28; const bodyH = 36;
+        const bx = (w - bodyW) / 2; const by = 4;
+        const leadX1 = w / 2 - 6; const leadX2 = w / 2 + 6;
+        return (
+          <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+            {shadowDefs}
+            <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+            <g filter="url(#thumbShadow)">
+              <rect x={bx} y={by} width={bodyW} height={bodyH} fill="#E8D5A3" stroke="#8B7355" strokeWidth="0.5" rx={1} />
+              {spec.marking && (
+                <text x={w / 2} y={by + bodyH * 0.43} textAnchor="middle" fontSize="6" fontFamily="monospace" fontWeight="600" fill="#333">{spec.marking}</text>
+              )}
+              {spec.voltageMax && (
+                <text x={w / 2} y={by + bodyH * 0.7} textAnchor="middle" fontSize="5" fontFamily="monospace" fill="#666">{spec.voltageMax}V</text>
               )}
             </g>
           </svg>
@@ -330,6 +351,196 @@ function TransistorPinoutDiagram({ placement }: { placement: TransistorPlacement
 }
 
 // ============================================================================
+// Resistor Color Band Reference  (IEC 60062 — universal standard)
+// ============================================================================
+
+/** Per-build resistor identification panel: IEC color band table + every resistor in this BOM. */
+function ResistorReference({ resistors }: { resistors: BOMComponent[] }) {
+  const [open, setOpen] = useState(false);
+
+  // IEC 60062 color code table — international standard, not proprietary
+  const BANDS = [
+    { name: 'Black',  hex: '#1a1a1a', text: '#fff', digit: '0', mult: '×1'         },
+    { name: 'Brown',  hex: '#6B3A2A', text: '#fff', digit: '1', mult: '×10',    tol: '±1%'  },
+    { name: 'Red',    hex: '#CC2200', text: '#fff', digit: '2', mult: '×100',   tol: '±2%'  },
+    { name: 'Orange', hex: '#E07000', text: '#fff', digit: '3', mult: '×1K'         },
+    { name: 'Yellow', hex: '#D4BE00', text: '#333', digit: '4', mult: '×10K'        },
+    { name: 'Green',  hex: '#2A7A2A', text: '#fff', digit: '5', mult: '×100K',  tol: '±0.5%'},
+    { name: 'Blue',   hex: '#0044CC', text: '#fff', digit: '6', mult: '×1M',    tol: '±0.25%'},
+    { name: 'Violet', hex: '#7700BB', text: '#fff', digit: '7', mult: '×10M'        },
+    { name: 'Gray',   hex: '#888888', text: '#fff', digit: '8', mult: '×100M'       },
+    { name: 'White',  hex: '#F0F0F0', text: '#333', digit: '9', mult: '×1G'         },
+    { name: 'Gold',   hex: '#B8860B', text: '#fff', digit: '—', mult: '×0.1',   tol: '±5%'  },
+    { name: 'Silver', hex: '#A8A8A8', text: '#333', digit: '—', mult: '×0.01',  tol: '±10%' },
+  ];
+
+  // Unique resistors in this build
+  const seen = new Set<string>();
+  const unique = resistors.filter(r => {
+    if (seen.has(r.value)) return false;
+    seen.add(r.value); return true;
+  });
+
+  return (
+    <div className="rounded-lg border border-amber-200 overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between bg-amber-50 px-4 py-3"
+      >
+        <div className="text-left">
+          <div className="font-semibold text-sm text-amber-900">Identify Your Resistors</div>
+          <div className="text-xs text-amber-700">Color band decoder + every value in this build</div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-amber-700" />}
+      </button>
+
+      {open && (
+        <div className="bg-white p-4 space-y-5">
+          {/* Color band table */}
+          <div>
+            <p className="text-xs text-gray-500 mb-2">
+              Read bands left → right. Tolerance band (gold/silver) is always on the right.
+              For a 4-band resistor: <span className="font-mono bg-gray-100 px-1 rounded">digit · digit · multiplier · tolerance</span>
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 text-gray-600">
+                    <th className="text-left px-2 py-1.5 font-semibold">Color</th>
+                    <th className="text-center px-2 py-1.5 font-semibold">Digit</th>
+                    <th className="text-center px-2 py-1.5 font-semibold">Multiplier</th>
+                    <th className="text-center px-2 py-1.5 font-semibold">Tolerance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {BANDS.map(b => (
+                    <tr key={b.name} className="border-t border-gray-100">
+                      <td className="px-2 py-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block w-4 h-4 rounded-sm border border-gray-300 flex-shrink-0"
+                            style={{ background: b.hex }}
+                          />
+                          <span className="font-medium text-gray-800">{b.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-center px-2 py-1 text-gray-700 font-mono">{b.digit}</td>
+                      <td className="text-center px-2 py-1 text-gray-700 font-mono">{b.mult}</td>
+                      <td className="text-center px-2 py-1 text-gray-500">{b.tol ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Per-build resistor gallery */}
+          {unique.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-gray-700 mb-3">
+                Resistors in this build — verify your color bands before placing:
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {unique.map((r, i) => {
+                  try {
+                    const ohms = parseOhmsForThumbnail(r.value);
+                    const encoded = encodeResistor(ohms, 5);
+                    const spec = decodeResistor(encoded.bands4 ?? encoded.bands5);
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <svg width={90} height={50} viewBox="0 0 90 50" style={{ display: 'block' }}>
+                          {/* U-bent leads */}
+                          <line x1={10} y1={24} x2={10} y2={46} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+                          <line x1={80} y1={24} x2={80} y2={46} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+                          <ResistorSVG startX={10} startY={24} endX={80} endY={24} spec={spec} />
+                        </svg>
+                        <span className="text-xs font-bold text-gray-900">{r.value}</span>
+                      </div>
+                    );
+                  } catch { return null; }
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Film Capacitor Marking Explainer  (EIA standard notation)
+// ============================================================================
+
+/** Collapsible explainer for EIA film cap marking formats — factual/technical, original language. */
+function CapMarkingExplainer({ capacitors }: { capacitors: BOMComponent[] }) {
+  const [open, setOpen] = useState(false);
+
+  const hasFilm = capacitors.some(c => {
+    try { return ['film_box', 'ceramic'].includes(decodeCapacitor(c.value).capType); }
+    catch { return false; }
+  });
+  if (!hasFilm) return null;
+
+  return (
+    <div className="rounded-lg border border-sky-200 overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between bg-sky-50 px-4 py-3"
+      >
+        <div className="text-left">
+          <div className="font-semibold text-sm text-sky-900">Reading Capacitor Markings</div>
+          <div className="text-xs text-sky-700">Two marking systems used on film and ceramic caps</div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-sky-700" /> : <ChevronDown className="w-4 h-4 text-sky-700" />}
+      </button>
+
+      {open && (
+        <div className="bg-white p-4 space-y-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 3-digit EIA code */}
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+              <div className="font-semibold text-gray-900 text-xs uppercase tracking-wide">3-Digit Code</div>
+              <div className="font-mono text-lg font-bold text-gray-800">104</div>
+              <p className="text-xs text-gray-600">
+                First two digits are significant figures. Third digit is the power-of-ten multiplier. Unit is <strong>picofarads (pF)</strong>.
+              </p>
+              <div className="space-y-0.5 text-xs font-mono text-gray-700">
+                <div><span className="font-bold">104</span> = 10 × 10⁴ pF = <strong>100nF</strong></div>
+                <div><span className="font-bold">223</span> = 22 × 10³ pF = <strong>22nF</strong></div>
+                <div><span className="font-bold">473</span> = 47 × 10³ pF = <strong>47nF</strong></div>
+                <div><span className="font-bold">101</span> = 10 × 10¹ pF = <strong>100pF</strong></div>
+              </div>
+            </div>
+
+            {/* Direct notation */}
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+              <div className="font-semibold text-gray-900 text-xs uppercase tracking-wide">Direct Notation</div>
+              <div className="font-mono text-lg font-bold text-gray-800">47n</div>
+              <p className="text-xs text-gray-600">
+                Value written directly with a unit prefix. Suffix letters indicate tolerance and voltage rating.
+              </p>
+              <div className="space-y-0.5 text-xs font-mono text-gray-700">
+                <div><span className="font-bold">47n</span> = <strong>47nF</strong></div>
+                <div><span className="font-bold">100p</span> = <strong>100pF</strong></div>
+                <div><span className="font-bold">1u</span> = <strong>1µF</strong></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Suffix K=±10%, J=±5%. Number = max volts (e.g. K100 = 100V).
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            The same capacitor value may carry different markings from different manufacturers — <span className="font-mono">47nK100</span> and <span className="font-mono">473J250</span> are both 47nF and will work identically.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -480,6 +691,16 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Resistor color band reference — shown on any step containing resistors */}
+          {currentStepData.items.some(c => c.component_type === 'resistor') && (
+            <ResistorReference resistors={currentStepData.items.filter(c => c.component_type === 'resistor')} />
+          )}
+
+          {/* Capacitor marking explainer — shown on any step containing film/ceramic caps */}
+          {currentStepData.items.some(c => c.component_type === 'capacitor') && (
+            <CapMarkingExplainer capacitors={currentStepData.items.filter(c => c.component_type === 'capacitor')} />
           )}
 
           {/* Transistor Pinout — shown on the Active Stage step */}

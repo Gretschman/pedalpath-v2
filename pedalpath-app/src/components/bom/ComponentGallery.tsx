@@ -60,17 +60,32 @@ function GalleryThumbnail({ component }: { component: BOMComponent }) {
         const leadX1 = w / 2 - 4; const leadX2 = w / 2 + 4;
         return (
           <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-            {/* Leads going down from body base */}
             <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
             <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
-            {/* Body */}
             <rect x={bx} y={by} width={bodyW} height={bodyH} fill={bodyColor} rx={bodyW / 2} stroke="#1a1a1a" strokeWidth="0.5" />
-            {/* Negative stripe */}
             {spec.polarized && (
               <rect x={bx} y={by} width={bodyW * 0.38} height={bodyH} fill="#D0D8E0" rx={bodyW / 2} opacity="0.85" />
             )}
             {spec.polarized && (
               <text x={bx + bodyW * 0.19} y={by + bodyH * 0.58} textAnchor="middle" fontSize="7" fontWeight="bold" fill="#1A2E4A">−</text>
+            )}
+          </svg>
+        );
+      }
+      if (spec.capType === 'film_box') {
+        const bodyW = 26; const bodyH = 34;
+        const bx = (w - bodyW) / 2; const by = 4;
+        const leadX1 = w / 2 - 5; const leadX2 = w / 2 + 5;
+        return (
+          <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+            <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
+            <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
+            <rect x={bx} y={by} width={bodyW} height={bodyH} fill="#E8D5A3" stroke="#8B7355" strokeWidth="0.5" rx={1} />
+            {spec.marking && (
+              <text x={w / 2} y={by + bodyH * 0.45} textAnchor="middle" fontSize="5.5" fontFamily="monospace" fontWeight="600" fill="#333">{spec.marking}</text>
+            )}
+            {spec.voltageMax && (
+              <text x={w / 2} y={by + bodyH * 0.72} textAnchor="middle" fontSize="4.5" fontFamily="monospace" fill="#666">{spec.voltageMax}V</text>
             )}
           </svg>
         );
