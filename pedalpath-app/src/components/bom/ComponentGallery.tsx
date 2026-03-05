@@ -51,6 +51,30 @@ function GalleryThumbnail({ component }: { component: BOMComponent }) {
     }
     if (component.component_type === 'capacitor') {
       const spec = decodeCapacitor(component.value);
+      // Electrolytic/tantalum: render upright — they always stand vertical in real life
+      if (spec.capType === 'electrolytic' || spec.capType === 'tantalum') {
+        const bodyW = spec.capType === 'tantalum' ? 16 : 20;
+        const bodyH = spec.capType === 'tantalum' ? 22 : 34;
+        const bodyColor = spec.capType === 'tantalum' ? '#DDBB00' : '#1A2E4A';
+        const bx = (w - bodyW) / 2; const by = 4;
+        const leadX1 = w / 2 - 4; const leadX2 = w / 2 + 4;
+        return (
+          <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+            {/* Leads going down from body base */}
+            <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
+            <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 3} stroke="#B8860B" strokeWidth="2" strokeLinecap="round" />
+            {/* Body */}
+            <rect x={bx} y={by} width={bodyW} height={bodyH} fill={bodyColor} rx={bodyW / 2} stroke="#1a1a1a" strokeWidth="0.5" />
+            {/* Negative stripe */}
+            {spec.polarized && (
+              <rect x={bx} y={by} width={bodyW * 0.38} height={bodyH} fill="#D0D8E0" rx={bodyW / 2} opacity="0.85" />
+            )}
+            {spec.polarized && (
+              <text x={bx + bodyW * 0.19} y={by + bodyH * 0.58} textAnchor="middle" fontSize="7" fontWeight="bold" fill="#1A2E4A">−</text>
+            )}
+          </svg>
+        );
+      }
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
           <CapacitorSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />

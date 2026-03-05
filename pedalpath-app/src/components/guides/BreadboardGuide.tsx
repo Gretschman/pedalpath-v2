@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle, Circle, AlertCircle } from 'lucide-react';
-import type { BOMData, BOMComponent } from '@/types/bom.types';
+import type { BOMData, BOMComponent, BomSection } from '@/types/bom.types';
 import {
   encodeResistor,
   decodeResistor,
@@ -20,13 +20,11 @@ interface BreadboardGuideProps {
 
 interface BreadboardStep {
   number: number;
+  section: BomSection;
   title: string;
-  description: string;
-  components: string[];
-  /** BOM component objects — renders visual thumbnails instead of plain text */
-  componentItems?: BOMComponent[];
-  /** Component types to highlight on the board view — others dim to 15% opacity */
-  focusComponentTypes?: string[];
+  /** One or two sentences explaining WHY this circuit section matters electrically. */
+  why: string;
+  items: BOMComponent[];
   tips?: string;
   warning?: string;
 }
@@ -82,6 +80,9 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
           {shadowDefs}
+          {/* U-bent leads: downward lines at each pin end to show real-component orientation */}
+          <line x1={sx} y1={sy} x2={sx} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1={ex} y1={sy} x2={ex} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
           <g filter="url(#thumbShadow)">
             <ResistorSVG startX={sx} startY={sy} endX={ex} endY={ey} spec={spec} />
           </g>
@@ -91,6 +92,31 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
 
     if (component.component_type === 'capacitor') {
       const spec = decodeCapacitor(component.value);
+      // Electrolytic/tantalum: render upright — they always stand vertical in real life
+      if (spec.capType === 'electrolytic' || spec.capType === 'tantalum') {
+        const bodyW = spec.capType === 'tantalum' ? 18 : 22;
+        const bodyH = spec.capType === 'tantalum' ? 26 : 36;
+        const bodyColor = spec.capType === 'tantalum' ? '#DDBB00' : '#1A2E4A';
+        const bx = (w - bodyW) / 2; const by = 5;
+        const leadX1 = w / 2 - 5; const leadX2 = w / 2 + 5;
+        return (
+          <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+            {shadowDefs}
+            {/* Leads going down from body base */}
+            <line x1={leadX1} y1={by + bodyH} x2={leadX1} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1={leadX2} y1={by + bodyH} x2={leadX2} y2={h - 4} stroke="#B8860B" strokeWidth="2.5" strokeLinecap="round" />
+            <g filter="url(#thumbShadow)">
+              <rect x={bx} y={by} width={bodyW} height={bodyH} fill={bodyColor} rx={bodyW / 2} stroke="#1a1a1a" strokeWidth="0.5" />
+              {spec.polarized && (
+                <rect x={bx} y={by} width={bodyW * 0.38} height={bodyH} fill="#D0D8E0" rx={bodyW / 2} opacity="0.85" />
+              )}
+              {spec.polarized && (
+                <text x={bx + bodyW * 0.19} y={by + bodyH * 0.58} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#1A2E4A">−</text>
+              )}
+            </g>
+          </svg>
+        );
+      }
       return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
           {shadowDefs}
@@ -209,6 +235,67 @@ function ComponentThumbnail({ component }: { component: BOMComponent }) {
 }
 
 // ============================================================================
+// Section classification helpers
+// ============================================================================
+
+function inferSection(c: BOMComponent): BomSection {
+  if (c.section) return c.section;
+  const t = c.component_type;
+  const v = c.value.toLowerCase();
+  if (t === 'dc-jack') return 'power';
+  if (t === 'input-jack') return 'input';
+  if (t === 'output-jack' || t === 'footswitch' || t === 'led') return 'output';
+  if (t === 'transistor' || t === 'ic' || t === 'op-amp') return 'active';
+  if (t === 'potentiometer') return 'tone';
+  if (t === 'diode') {
+    if (/4001|4004|4007|5817|5819/.test(v)) return 'power';
+    return 'clipping';
+  }
+  if (t === 'capacitor') {
+    const m = v.match(/(\d+\.?\d*)\s*(?:uf?|µf?)/i);
+    if (m && parseFloat(m[1]) >= 47) return 'power';
+    return 'active';
+  }
+  return 'active';
+}
+
+const SECTION_ORDER: BomSection[] = ['power', 'input', 'active', 'clipping', 'tone', 'output'];
+
+const SECTION_META: Record<BomSection, { title: string; why: string; tips?: string; warning?: string }> = {
+  power: {
+    title: 'Power Section',
+    why: 'Filters noise from the power supply and protects the circuit from reverse polarity damage.',
+    warning: 'Electrolytic capacitors are polarized — negative leg to ground. Verify power polarity before connecting.',
+  },
+  input: {
+    title: 'Input',
+    why: 'Blocks DC from your guitar while passing signal. The pulldown resistor (~1MΩ) prevents a loud pop when switching the effect on.',
+    tips: 'The input coupling capacitor value sets how much low-frequency content enters the circuit.',
+  },
+  active: {
+    title: 'Active Stage',
+    why: 'The gain core. Transistors and ICs amplify or shape the signal; bias resistors set their operating point.',
+    tips: 'ICs straddle the center gap — pin 1 at the notch or dot. Touch grounded metal before handling ICs.',
+    warning: 'Static electricity can damage ICs. Handle by the body, not the pins.',
+  },
+  clipping: {
+    title: 'Clipping Stage',
+    why: 'Signal diodes shunt peaks to ground, creating the clipping and overdrive character of the effect.',
+    tips: 'The stripe on a diode marks the cathode. Current flows anode → cathode (toward the stripe).',
+  },
+  tone: {
+    title: 'Tone Controls',
+    why: 'Shapes the frequency response — cut highs, boost lows, or sweep a frequency band.',
+    tips: 'Wire pots with jumper wires for breadboard testing. Left lug = GND, center = wiper, right = signal.',
+  },
+  output: {
+    title: 'Output',
+    why: 'Sets the final output level and routes the processed signal to your amplifier.',
+    tips: 'Test with guitar in and amp on output. Keep volume LOW on first power-up.',
+  },
+};
+
+// ============================================================================
 // Transistor Orientation Diagram
 // ============================================================================
 
@@ -250,157 +337,21 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
-  const steps: BreadboardStep[] = [
-    {
-      number: 1,
-      title: 'Gather Your Materials',
-      description: 'Before starting, collect all the components and tools you\'ll need for breadboard prototyping.',
-      components: [
-        'Full-size breadboard (830 tie points recommended)',
-        'Jumper wire kit (22AWG solid core)',
-        'All components from your BOM',
-        'Wire stripper and cutters',
-        '9V battery with clip (for testing)',
-        'Multimeter',
-        'Guitar cable and test guitar/signal generator'
-      ],
-      tips: 'Organize components by type in small containers or bags. Label everything!'
-    },
-    {
-      number: 2,
-      title: 'Prepare the Breadboard',
-      description: 'Set up your breadboard power rails and understand the layout.',
-      components: [
-        'Connect positive rail (red) on both sides',
-        'Connect negative/ground rail (blue) on both sides',
-        'Use wire bridges at the middle gap'
-      ],
-      tips: 'The two sides of a breadboard are not connected by default. Bridge the power rails if you need both sides.',
-      warning: 'Always double-check power connections before applying power. Reversed polarity can damage components.'
-    },
-    {
-      number: 3,
-      title: 'Place ICs and Transistors',
-      description: 'Start by placing the active components (ICs, transistors, op-amps) on the breadboard.',
-      components: bomData.components
-        .filter(c => ['ic', 'op-amp', 'transistor'].includes(c.component_type))
-        .map(c => `${c.quantity}x ${c.value}`),
-      componentItems: bomData.components.filter(c =>
-        ['ic', 'op-amp', 'transistor'].includes(c.component_type)
-      ),
-      focusComponentTypes: ['ic', 'op-amp', 'transistor'],
-      tips: 'ICs should straddle the center gap of the breadboard. Pin 1 is usually marked with a notch or dot.',
-      warning: 'Static electricity can damage ICs. Touch a grounded metal surface before handling.'
-    },
-    {
-      number: 4,
-      title: 'Add Resistors',
-      description: 'Place all resistors according to the schematic. Resistors are non-polarized, so orientation doesn\'t matter.',
-      components: bomData.components
-        .filter(c => c.component_type === 'resistor')
-        .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
-      componentItems: bomData.components.filter(c => c.component_type === 'resistor'),
-      focusComponentTypes: ['resistor'],
-      tips: 'Bend resistor leads at 90° to fit breadboard spacing. Keep leads short but manageable.',
-      warning: 'Double-check resistor color codes. A wrong value can prevent the circuit from working or cause damage.'
-    },
-    {
-      number: 5,
-      title: 'Add Capacitors',
-      description: 'Place capacitors carefully. Electrolytic capacitors are polarized — negative leg must go to ground.',
-      components: bomData.components
-        .filter(c => c.component_type === 'capacitor')
-        .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
-      componentItems: bomData.components.filter(c => c.component_type === 'capacitor'),
-      focusComponentTypes: ['capacitor'],
-      tips: 'Ceramic caps (small, yellow/brown) are non-polarized. Electrolytic caps (cylindrical) have polarity marked.',
-      warning: 'CRITICAL: Electrolytic capacitors can explode if connected backwards. Check polarity twice!'
-    },
-    {
-      number: 6,
-      title: 'Add Diodes',
-      description: 'Place any diodes in the circuit. Diodes are polarized — the stripe indicates the cathode (negative).',
-      components: bomData.components
-        .filter(c => c.component_type === 'diode' || c.component_type === 'led')
-        .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
-      componentItems: bomData.components.filter(c =>
-        c.component_type === 'diode' || c.component_type === 'led'
-      ),
-      focusComponentTypes: ['diode', 'led'],
-      tips: 'The stripe on a diode marks the cathode. Current flows from anode to cathode (towards the stripe).'
-    },
-    {
-      number: 7,
-      title: 'Add Potentiometers (Test Controls)',
-      description: 'Wire up potentiometers using jumper wires. For now, connect them with clips for testing.',
-      components: bomData.components
-        .filter(c => c.component_type === 'potentiometer')
-        .map(c => `${c.quantity}x ${c.value} — ${c.reference_designators.join(', ')}`),
-      componentItems: bomData.components.filter(c => c.component_type === 'potentiometer'),
-      focusComponentTypes: ['potentiometer'],
-      tips: 'Potentiometers typically have 3 pins: left (ground), middle (wiper/output), right (signal). Check the datasheet.'
-    },
-    {
-      number: 8,
-      title: 'Wire Input and Output',
-      description: 'Connect input and output jacks using alligator clips or direct wiring to test the circuit.',
-      components: [
-        'Input: Connect guitar cable tip to circuit input',
-        'Input: Connect guitar cable sleeve to ground',
-        'Output: Connect circuit output to amplifier',
-        'Output: Connect ground to amplifier ground'
-      ],
-      tips: 'Use alligator clips for initial testing. This makes troubleshooting easier.'
-    },
-    {
-      number: 9,
-      title: bomData.power ? 'Connect Power' : 'Test Your Circuit',
-      description: bomData.power
-        ? 'Connect your power supply. Most guitar pedals use 9V center-negative.'
-        : 'This is a passive circuit — no external power supply is needed. Connect your guitar and test directly.',
-      components: bomData.power ? [
-        `Power: ${bomData.power.voltage} ${bomData.power.polarity}`,
-        'Connect positive (+9V) to positive rail',
-        'Connect negative (ground) to ground rail',
-        'Add 100μF capacitor across power rails (near circuit)'
-      ] : [
-        'Connect input jack to guitar cable',
-        'Connect output jack to amplifier',
-        'No power supply required — this circuit is entirely passive',
-      ],
-      warning: bomData.power ? 'Verify polarity before connecting power! Guitar pedals are typically CENTER-NEGATIVE.' : undefined,
-      tips: bomData.power
-        ? 'Always use a current-limited power supply for first testing. Start with 50mA limit if possible.'
-        : 'Passive circuits (tone controls, passive buffers, filters) draw no power from a supply.',
-    },
-    {
-      number: 10,
-      title: 'Test and Troubleshoot',
-      description: 'Power on and test the circuit systematically.',
-      components: [
-        'Check power rails with multimeter (should read ~9V)',
-        'Verify IC pins have proper voltages',
-        'Connect guitar and amplifier',
-        'Test with known good signal',
-        'Adjust controls and listen for proper operation'
-      ],
-      tips: 'If it doesn\'t work, check: power connections, IC orientation, capacitor polarity, resistor values.',
-      warning: 'Keep volume LOW when first testing! Some circuits can produce very loud signals.'
-    },
-    {
-      number: 11,
-      title: 'Document and Prepare for Build',
-      description: 'Once working, take photos and notes before transferring to permanent board.',
-      components: [
-        'Take photos from multiple angles',
-        'Note any modifications from the original schematic',
-        'Measure voltages at test points',
-        'Write down any quirks or settings',
-        'Prepare for stripboard or PCB build'
-      ],
-      tips: 'Your breadboard prototype is your reference. Don\'t disassemble it until the final build is working!'
-    }
-  ];
+  const rawSteps = SECTION_ORDER
+    .map(sec => {
+      const meta = SECTION_META[sec];
+      return {
+        section: sec,
+        title: meta.title,
+        why: meta.why,
+        items: bomData.components.filter(c => inferSection(c) === sec),
+        tips: meta.tips,
+        warning: meta.warning,
+      };
+    })
+    .filter(s => s.items.length > 0);
+
+  const steps: BreadboardStep[] = rawSteps.map((s, i) => ({ ...s, number: i + 1 }));
 
   const toggleStepComplete = (stepNumber: number) => {
     setCompletedSteps(prev => {
@@ -417,8 +368,8 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
   const progress = (completedSteps.size / steps.length) * 100;
   const currentStepData = steps[currentStep];
 
-  const hasComponentThumbnails =
-    (currentStepData.componentItems?.length ?? 0) > 0;
+  const visibleSections: BomSection[] = steps.slice(0, currentStep + 1).map(s => s.section);
+  const highlightSection = steps[currentStep]?.section;
 
   return (
     <div className="space-y-6">
@@ -430,7 +381,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
         </p>
         <div className="flex items-center justify-between">
           <div className="text-sm">
-            Progress: {completedSteps.size} of {steps.length} steps completed
+            Progress: {completedSteps.size} of {steps.length} sections completed
           </div>
           <div className="text-sm font-medium">
             {Math.round(progress)}%
@@ -479,7 +430,7 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 Step {currentStepData.number}: {currentStepData.title}
               </h3>
-              <p className="text-gray-700">{currentStepData.description}</p>
+              <p className="text-gray-700">{currentStepData.why}</p>
             </div>
             <button
               onClick={() => toggleStepComplete(currentStepData.number)}
@@ -497,18 +448,17 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
         {/* Step Content */}
         <div className="p-6 space-y-4">
 
-          {/* What You Need — visual thumbnails for BOM steps */}
-          {hasComponentThumbnails && (
+          {/* Place These Components */}
+          {currentStepData.items.length > 0 && (
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">What You Need:</h4>
+              <h4 className="font-semibold text-gray-900 mb-3">Place These Components:</h4>
               <div className="flex flex-wrap gap-3">
-                {currentStepData.componentItems!.map((component, idx) => (
+                {currentStepData.items.map((component, idx) => (
                   <div
                     key={idx}
                     className="relative flex flex-col items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 shadow-sm"
                     style={{ minWidth: 130 }}
                   >
-                    {/* Quantity badge */}
                     {component.quantity > 1 && (
                       <span className="absolute top-1.5 right-1.5 bg-gray-900 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">
                         ×{component.quantity}
@@ -532,23 +482,8 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
             </div>
           )}
 
-          {/* What You Need — plain text list for non-BOM steps */}
-          {!hasComponentThumbnails && currentStepData.components.length > 0 && (
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-3">What You Need:</h4>
-              <ul className="space-y-2">
-                {currentStepData.components.map((component, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-gray-700">{component}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Transistor Pinout — shown in step 3 only */}
-          {currentStepData.number === 3 && (() => {
+          {/* Transistor Pinout — shown on the Active Stage step */}
+          {currentStepData.section === 'active' && (() => {
             const placements = generateBreadboardLayout(bomData);
             const tPlacements = placements.filter(
               (p): p is TransistorPlacement => p.type === 'transistor'
@@ -575,41 +510,15 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
             );
           })()}
 
-          {/* Breadboard visualization — shown for build steps 2–9 */}
-          {currentStepData.number >= 2 && currentStepData.number <= 9 && (() => {
-            // Compute activeCol/activeRow from the first focused placement for this step
-            let stepActiveCol: number | undefined;
-            let stepActiveRow: string | undefined;
-            if (currentStepData.focusComponentTypes) {
-              const allPlacements = generateBreadboardLayout(bomData);
-              const firstFocused = allPlacements.find(
-                p => currentStepData.focusComponentTypes!.includes(p.type)
-              );
-              if (firstFocused) {
-                const holeId = firstFocused.type === 'ic'
-                  ? firstFocused.pin1Hole
-                  : ('startHole' in firstFocused ? firstFocused.startHole : undefined);
-                if (holeId) {
-                  const rowMatch = holeId.match(/^([a-j])(\d+)$/i);
-                  if (rowMatch) {
-                    stepActiveRow = rowMatch[1];
-                    stepActiveCol = parseInt(rowMatch[2], 10);
-                  }
-                }
-              }
-            }
-            return (
-              <div className="my-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Your Components on the Breadboard:</h4>
-                <BomBreadboardView
-                  bomData={bomData}
-                  focusComponentTypes={currentStepData.focusComponentTypes}
-                  activeCol={stepActiveCol}
-                  activeRow={stepActiveRow}
-                />
-              </div>
-            );
-          })()}
+          {/* Breadboard visualization — cumulative: shows all sections placed so far */}
+          <div className="my-6">
+            <h4 className="font-semibold text-gray-900 mb-3">Board after this step:</h4>
+            <BomBreadboardView
+              bomData={bomData}
+              visibleSections={visibleSections}
+              highlightSection={highlightSection}
+            />
+          </div>
 
           {/* Tips */}
           {currentStepData.tips && (

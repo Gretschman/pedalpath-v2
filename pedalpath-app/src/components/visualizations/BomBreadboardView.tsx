@@ -21,7 +21,7 @@ import {
 } from '@/utils/decoders';
 import { holeToCoordinates, LAYOUT_830 } from '@/utils/breadboard-utils';
 import { generateBreadboardLayout } from '@/utils/bom-layout';
-import type { BOMData } from '@/types/bom.types';
+import type { BOMData, BomSection } from '@/types/bom.types';
 import type { ResistorSpec, ICSpec, TransistorSpec } from '@/types/component-specs.types';
 
 // ============================================================================
@@ -33,6 +33,10 @@ export interface BomBreadboardViewProps {
   bomData: BOMData;
   /** When set, only these component types render at full opacity; others dim to 15% */
   focusComponentTypes?: string[];
+  /** When set, only render components whose section is in this list (cumulative build view) */
+  visibleSections?: BomSection[];
+  /** Highlight components in this section as the "current" step — renders brighter with glow */
+  highlightSection?: BomSection;
   /** Additional CSS class name */
   className?: string;
   /** Column to highlight in grid labels */
@@ -99,6 +103,26 @@ function makeTransistorSpec(value: string): TransistorSpec {
 // Offboard Components
 // ============================================================================
 
+/** Infer circuit section for a board placement (fallback when section not stored in layout). */
+function inferPlacementSection(type: string, value?: string): BomSection {
+  if (type === 'jumper') return 'power';
+  value = value ?? '';
+  const v = value.toLowerCase();
+  if (type === 'ic' || type === 'op-amp') return 'active';
+  if (type === 'transistor') return 'active';
+  if (type === 'led') return 'output';
+  if (type === 'diode') {
+    if (/4001|4004|4007|5817|5819/.test(v)) return 'power';
+    return 'clipping';
+  }
+  if (type === 'capacitor') {
+    const m = v.match(/(\d+\.?\d*)\s*(?:uf?|µf?)/i);
+    if (m && parseFloat(m[1]) >= 47) return 'power';
+    return 'active';
+  }
+  return 'active';
+}
+
 /**
  * Renders input/output jacks and potentiometers outside the board area.
  * Uses the existing 1700×566 viewBox — jacks fit in the left/right margins.
@@ -155,11 +179,11 @@ function OffboardComponents({ bomData }: { bomData: BOMData }) {
 
       {/* ── Output Jack (right of board) ─────────────────────── */}
       <g className="output-jack">
-        {/* Orange signal wire: col 63 → jack */}
+        {/* Blue signal wire: col 63 → jack */}
         <line
           x1={col63X} y1={midY}
           x2={1628} y2={midY}
-          stroke="#FF8800" strokeWidth="2.5" strokeLinecap="round"
+          stroke="#0044CC" strokeWidth="2.5" strokeLinecap="round"
           opacity="0.85"
         />
 
@@ -230,7 +254,7 @@ function OffboardComponents({ bomData }: { bomData: BOMData }) {
 // Component
 // ============================================================================
 
-export default function BomBreadboardView({ bomData, focusComponentTypes, className = '', activeCol, activeRow }: BomBreadboardViewProps) {
+export default function BomBreadboardView({ bomData, focusComponentTypes, visibleSections, highlightSection, className = '', activeCol, activeRow }: BomBreadboardViewProps) {
   const placements = generateBreadboardLayout(bomData);
   const { totalWidth, totalHeight } = LAYOUT_830;
 
@@ -278,6 +302,9 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                 <filter id="componentShadow" x="-10%" y="-10%" width="120%" height="120%">
                   <feDropShadow dx="1" dy="1.5" stdDeviation="0.8" floodOpacity="0.4" />
                 </filter>
+                <filter id="currentStepGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#F59E0B" floodOpacity="0.9" />
+                </filter>
               </defs>
 
               {/* Offboard jacks and pots */}
@@ -285,9 +312,21 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
 
               {/* Board components */}
               {placements.map((placement, idx) => {
-                // Jumper wires always render at full opacity
-                const isFocused = placement.type === 'jumper' || !focusComponentTypes || focusComponentTypes.includes(placement.type);
-                const opacity = isFocused ? 1 : 0.15;
+                // Cumulative section filter — skip components not yet in the build sequence
+                const pvalue = 'value' in placement ? (placement as { value: string }).value : undefined;
+                if (visibleSections) {
+                  const sec = inferPlacementSection(placement.type, pvalue);
+                  if (!visibleSections.includes(sec)) return null;
+                }
+                // Opacity: current-step components glow; previous steps dim; focus filter still works
+                const placementSec = inferPlacementSection(placement.type, pvalue);
+                const isCurrent = highlightSection != null && placementSec === highlightSection;
+                const isFocused = placement.type === 'jumper'
+                  || (!focusComponentTypes && !highlightSection)
+                  || (focusComponentTypes != null && focusComponentTypes.includes(placement.type))
+                  || isCurrent;
+                const opacity = isFocused ? 1 : (highlightSection != null ? 0.4 : 0.15);
+                const filterAttr = isCurrent ? 'url(#currentStepGlow)' : 'url(#componentShadow)';
 
                 try {
                   // ── Jumper Wire ──────────────────────────────────────────
@@ -312,7 +351,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
+                      <g key={idx} opacity={opacity} filter={filterAttr}>
                         <ResistorSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -329,7 +368,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
                     return (
-                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
+                      <g key={idx} opacity={opacity} filter={filterAttr}>
                         <CapacitorSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -353,7 +392,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     }
 
                     return (
-                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
+                      <g key={idx} opacity={opacity} filter={filterAttr}>
                         <ICSVG
                           pin1X={pin1.x}        pin1Y={pin1.y}
                           bottomRowY={bottomRow.y}
@@ -378,7 +417,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                         })();
 
                     return (
-                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
+                      <g key={idx} opacity={opacity} filter={filterAttr}>
                         <DiodeSVG
                           startX={start.x} startY={start.y}
                           endX={end.x}     endY={end.y}
@@ -394,7 +433,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, classN
                     const bPin = holeToCoordinates(placement.bHole, LAYOUT_830);
                     const spec = makeTransistorSpec(placement.value);
                     return (
-                      <g key={idx} opacity={opacity} filter="url(#componentShadow)">
+                      <g key={idx} opacity={opacity} filter={filterAttr}>
                         <TransistorSVG
                           x={bPin.x}
                           y={bPin.y}
