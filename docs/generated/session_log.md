@@ -1,3 +1,79 @@
+# Session Log — 2026-03-04 (Session 8)
+
+## Session 8 Close (2026-03-04)
+
+### What was completed
+
+**New tool: `tools/analyze_docx_circuits.py`**
+- Extracts schematic images from the docx file in /tmp/docx_images/
+- Uploads each schematic to the live API, gets generated BOM
+- Compares against hand-transcribed reference BOMs from the document's BOM images
+- Reports score, missing components, extra components per circuit
+- Flags: `--circuit <name>` to test one; `--dump <name>` for raw API output
+- Added to CLAUDE.md Tools Available
+
+**Analyzed `schematics and BOM_03.04.2026.docx`**
+- 31 images extracted from docx → 12 circuits identified
+- Circuit-to-image mapping fully documented in the tool
+- Reference BOMs hand-transcribed for all 12 circuits from BOM images
+
+**12 circuits mapped and baselined:**
+| Circuit | Schematic | Score | Status |
+|---|---|---|---|
+| MSB DIY | img_21 | 98.3% | PASS ✓ |
+| BYOC Color Booster | img_18 | 85.2% | PASS ✓ |
+| T-AMP Gold v1 | img_00 | 71.7% | FAIL |
+| One Knob Clang | img_27 | 51.1% | FAIL |
+| ColorSound Jumbo ToneBender | img_06 | 49.8% | FAIL |
+| Halo Distortion/Sustainer | img_04 | 43.1% | FAIL |
+| Synthrotek Ratatak | img_25 | 38.2% | FAIL |
+| PE CSSTB | img_29 | 26.4% | FAIL |
+| Mimosa Jr. | img_15 | 23.2% | FAIL |
+| Big-Clang | img_23 | 20.0% | FAIL |
+| Rat w/Marshall EQ | img_02 | 13.7% | FAIL |
+| BYOC Parametric EQ | img_12 | 12.1% | FAIL |
+
+**Root causes identified for failures:**
+1. **Image quality** — Rat, Ratatak, Big-Clang have low-res or dark-background schematics; AI cannot read small labels reliably
+2. **100nF bias** — AI defaults to 100nF when capacitor label unclear; Rat has ~15 wrong cap values as a result
+3. **1M bias** — AI reads several resistors as 1M when unclear (Halo: 8 wrong 1M readings)
+4. **IC misidentification** — LM308 read as TL072/LF353N (Rat, Ratatak)
+5. **500pF classified as resistor** — ColorSound ToneBender affected
+6. **2N7000 MOSFET** — not reliably detected (One Knob Clang)
+7. **Multi-stage schematics** — AI sometimes reads only 1 of 3 identical stages (Halo)
+
+**Prompt improvements deployed (analyze-schematic.ts):**
+- Changed bias rule: "ONLY use known-values list when label is COMPLETELY ILLEGIBLE — if any digits visible, read those precisely"
+- Added 500pF to capacitor values list with explicit note: "500p is a CAPACITOR not a resistor"
+- Added note: "resistor reference designator ≠ value — if you can't read R10's value, don't write 'R10'"
+- Added 2N7000 MOSFET note, BC109, BC184C, PN2907 to transistor list
+- Added LM308/LM308N note: "NOT interchangeable with TL072"
+- Added LM386 note about 8-pin power amp
+- Extended capacitor list: 500pF, 30pF, 3.3nF, 2.7nF, 12nF, 2.2µF, 4µF
+- Extended resistor list: 560R, 8.2K, 39K, 390K, 82K
+- Added 1N4004, LF351, LF353, MAX1044 to component lists
+- Added note: small cap values (30p, 100p, 500p) are real — don't substitute 100nF
+
+**normalise() improvements in analyze_docx_circuits.py:**
+- European notation now handles ALL SI prefixes (n, p, u, k, m): 4n7→4.7n, 3p3→3.3p, etc.
+- MPRA18→MPSA18 alias (AI misread of MPSA18)
+- Many more value aliases (8k2, 1k5, 4k7, 2m2, etc.)
+
+### Production state at session end
+- 172/172 tests passing
+- TypeScript: clean, Vite: clean
+- Deployed to pedalpath.app
+- DB unchanged (no new ground truth added this session)
+
+### NOT completed — needs next session
+- **5 existing accuracy failures** NOT investigated: Aeon Drive 61.5%, Buff N Blend 64.7%, Black Dog 79.3%, Bass OD 81.1%, American Fuzz 82.2%
+  - PDFs are gt1.pdf (Aeon Drive), gt13.pdf (Buff N Blend), gt12.pdf (Black Dog), gt6.pdf (Bass OD), gt5.pdf (American Fuzz)
+  - accuracy_test.py --circuit commands were started but interrupted
+- Ground truth JSONs for the 12 new docx circuits NOT created yet
+- WattAmp + Three Time Champ still need retest
+
+---
+
 # Session Log — 2026-03-03 (Session 7)
 
 ## Session 7 Close (2026-03-03)
