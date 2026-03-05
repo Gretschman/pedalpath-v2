@@ -1,3 +1,44 @@
+# Session Log — 2026-03-05 (Session 10)
+
+## Session 10 Close (2026-03-05)
+
+### What was completed
+
+**iOS bug fixes — save + share (blocking UX bugs)**
+
+Diagnosed and fixed two blocking iOS bugs from live user testing:
+
+1. **Save button gave no feedback, no naming** — The text label was `hidden sm:inline` so only the icon showed on mobile. No circuit naming flow existed (title stayed as auto-generated filename like "Schematic Mar 5, 2026").
+   - Fix: Save button now opens a bottom-sheet rename modal with a text input pre-filled with the current title
+   - User can rename and tap Save; mutation updates both `title` and `status: completed` in one call
+   - Green "Saved!" toast (check icon, 2.5s) replaces hidden text state
+   - Already-saved circuits show "Rename" instead of disabled
+
+2. **Share icon navigated to upload page** — The `<Upload>` lucide icon on the "Upload Another" button is visually identical to the iOS system share icon. Rob was tapping it thinking it was Share.
+   - Fix: Changed icon to `<Plus>`, label changed to "New" (always visible, no `hidden sm:inline`)
+
+**IOMMIC BOOST analysis investigation**
+
+- Rob uploaded IMG_7472.jpeg (IOMMIC BOOST schematic, a Rangemaster-style Ge transistor boost based on the DAM B13) — our system scored 65% confidence and generated a completely wrong BOM
+- Reference BOM (from IOMMIC BOOST 1.0.docx): R1=1M, R2=470k, R3=56k, R4=3k9; 10 caps (4n7×2, 4.7µF, 10n, 22n, 56n, 100n, 220n, 47µF, 22µF); Q1=NPN Ge; D1=1N4001; 3 pots (C1M, B10k, A100k trim); FAC=2P6T rotary
+- Our output had completely wrong values — likely a PCB photo rather than clean schematic
+- Circuit is a good candidate for ground truth addition once a proper schematic image is sourced
+
+**Coppersound Single Transistor Overdrive build guide reviewed**
+- File in _INBOX: `Single+Transistor+Overdrive+Breadboard+Guide+2025.pdf`
+- Full BOM extracted: 5 resistors (560, 1K, 47K, 1M, 2.2M), 1×1N4001, 2×1N4148, 1×2N3904, 1×100µF elec, 4 film caps (47n, 0.1µF×2, 3.3n), 2×B100K pot
+- Circuit follows the same 6-step functional flow as our BreadboardGuide rewrite (power → input → gain → clipping → tone → output) — confirms our Phase B design
+
+### Commits this session
+- `c8d4f57` Fix iOS save/share bugs: rename modal + Upload icon confusion
+
+### Production state
+- 172 tests passing
+- Deployed: pedalpath.app
+- DB: 51 circuits / 967 components
+
+---
+
 # Session Log — 2026-03-05 (Session 9)
 
 ## Session 9 Close (2026-03-05)
