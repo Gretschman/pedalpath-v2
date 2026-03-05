@@ -100,6 +100,35 @@ vercel --prod --yes  # deploy
 
 ---
 
+## Session Startup Protocol (run at the start of EVERY session)
+
+1. Run `bash start_session.sh` — syncs issues + upload queue + git status
+2. Read `docs/generated/session_log.md`
+3. Generate a project status summary (accuracy results, open issues, priorities, Rob action items)
+4. Write summary to `_OUTPUT/pedalpath-status-YYYY-MM-DD.txt`
+5. Display the same summary in chat — Rob reviews and selects priorities before work begins
+
+## Break / End-of-Session Protocol (TRIGGER: Rob says "break", "take a break", "we need a break", or any similar phrase)
+
+Execute immediately, in order — speed matters:
+1. `git add` changed files + `git commit` with descriptive message + `Co-Authored-By` trailer
+2. `git push`
+3. `vercel --prod --yes` (only if app source code changed)
+4. Update `docs/generated/session_log.md` with what was done
+5. Write `docs/generated/session_N_continuation.md` — where we stopped, what's next, exact commands to resume
+6. Write project summary to `_OUTPUT/pedalpath-status-YYYY-MM-DD.txt`
+7. Display summary in chat
+8. Confirm: "Session saved. Safe to close."
+
+This same end-of-session sequence applies when a session ends normally, not just on break.
+
+## Folder Paths
+
+- **Inbox** (`_INBOX`): `/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX` — Rob drops files here from Windows
+- **Output** (`_OUTPUT` / outbox): `/mnt/c/Users/Rob/Dropbox/!PedalPath/_OUTPUT` — write files for Rob to read on PC
+- **Reference** (`_REFERENCE`): `/mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE` — permanent reference library
+- **Inbox hygiene**: when done with a file — delete if one-time use, move to `_REFERENCE` subfolder if ongoing resource
+
 ## Rules
 
 - Co-author all commits: `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
