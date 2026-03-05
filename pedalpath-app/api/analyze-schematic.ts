@@ -83,7 +83,15 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
    • 9+ controls  → 1590DD
 6. Power — ONLY include the "power" field if the schematic contains active components (Q, U, IC, op-amp). Passive circuits (R, C, L, D, pot, switch, jack only) need NO power supply — omit "power" entirely.
 7. Transistor material: for components with component_type "transistor", include "material":"Ge" when the part number is a known germanium device (AC128, OC71, OC76, AC127, OC44, OC45, OC72, AC125, AC126, 2N1308, 2SB75, NKT275, or any part explicitly labeled "Ge" or "Germanium"). Omit the field entirely for silicon transistors.
-8. Return ONLY valid JSON. No markdown, no commentary.
+8. Section — assign each component to its circuit role using exactly one of these values:
+   power: filter/bypass caps (≥47µF electrolytic, decoupling film caps), protection diodes (1N4001/1N5817)
+   input: input coupling cap, pulldown/bleed resistor (~1M), components at the circuit input node
+   active: transistors, ICs, op-amps and their bias/feedback/emitter resistors
+   clipping: signal diodes (1N4148/1N914/Ge/Si), output coupling cap after the active stage
+   tone: potentiometers for tone/treble/bass/EQ and their associated RC networks
+   output: volume/level potentiometer and final output stage components
+   When uncertain, use "active".
+9. Return ONLY valid JSON. No markdown, no commentary.
 
 Return this exact structure:
 
@@ -95,6 +103,7 @@ Return this exact structure:
       "quantity": 1,
       "reference_designators": ["R1"],
       "confidence": 95,
+      "section": "power" | "input" | "active" | "clipping" | "tone" | "output",
       "material": "Ge",
       "notes": "Optional: legibility issues or special observations"
     }
@@ -126,6 +135,7 @@ interface OffBoardComponent {
   quantity: number;
   reference_designators: string[];
   confidence: number;
+  section: string;
   notes: string;
 }
 
@@ -136,6 +146,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['J_IN'],
     confidence: 99,
+    section: 'input',
     notes: 'Off-board — required for all pedal builds; not shown in most schematics',
   },
   {
@@ -144,6 +155,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['J_OUT'],
     confidence: 99,
+    section: 'output',
     notes: 'Off-board — required for all pedal builds; not shown in most schematics',
   },
   {
@@ -152,6 +164,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['J_DC'],
     confidence: 99,
+    section: 'power',
     notes: 'Off-board — 9V center-negative DC power; required for all pedal builds',
   },
   {
@@ -160,6 +173,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['FS1'],
     confidence: 99,
+    section: 'output',
     notes: 'Off-board — true bypass footswitch; required for all pedal builds',
   },
 ];
@@ -172,6 +186,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['LED1'],
     confidence: 90,
+    section: 'output',
     notes: 'Off-board — status indicator; standard addition for all pedal builds',
   },
   {
@@ -180,6 +195,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
     quantity: 1,
     reference_designators: ['R_CLR'],
     confidence: 90,
+    section: 'output',
     notes: 'Off-board — LED current-limiting resistor (4.7kΩ typical for 9V supply)',
   },
 ];

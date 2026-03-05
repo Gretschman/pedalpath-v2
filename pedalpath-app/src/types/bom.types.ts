@@ -1,5 +1,7 @@
 // BOM (Bill of Materials) type definitions
 
+export type BomSection = 'power' | 'input' | 'active' | 'clipping' | 'tone' | 'output';
+
 export type ComponentType =
   | 'resistor'
   | 'capacitor'
@@ -26,6 +28,7 @@ export interface BOMComponent {
   supplier?: string;
   supplier_url?: string;
   confidence?: number; // 0-100, from AI parsing
+  section?: BomSection; // Circuit functional section
   notes?: string;
   verified?: boolean; // User confirmed accuracy
 }
