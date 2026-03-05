@@ -10,26 +10,25 @@ Guitar pedal schematic analyzer: upload schematic → Claude Vision → BOM + vi
 
 ## Current Status
 
-**Session 8 complete (2026-03-04). 172 tests passing. Live at pedalpath.app.**
+**Session 9 complete (2026-03-05). 172 tests passing. Live at pedalpath.app.**
+
+**Completed session 9:**
+- ✅ Breadboard guide full rewrite — 11 type-sorted steps → 6 circuit-functional sections (power→input→active→clipping→tone→output)
+- ✅ Each step has a WHY explanation of the circuit section's electrical purpose
+- ✅ Cumulative board view: components accumulate step by step; current step glows amber; future components hidden
+- ✅ `BomSection` type + Rule 8 in Claude prompt — components now classified by circuit function at analysis time
+- ✅ Component thumbnail orientation fixes: electrolytic/tantalum upright cylinder, film cap upright portrait box, resistor U-bent leads
+- ✅ Output wire color corrected: orange → blue (matches wire color scheme)
+- ✅ ResistorReference panel: IEC 60062 color band table + per-build resistor gallery (collapsible, data-driven)
+- ✅ CapMarkingExplainer panel: EIA 3-digit code + direct notation, with worked examples (collapsible)
+- ✅ Reviewed 2 new Coppersound guides (Treble Boost, MOSFET Boost) — all gaps now addressed
+- ✅ Session hygiene: ground-truth path updated (_INBOX→_REFERENCE), CLAUDE.md protocols added
 
 **Completed session 8:**
 - ✅ Analyzed `schematics and BOM_03.04.2026.docx` — 31 images, 12 circuits extracted and mapped
 - ✅ New tool `tools/analyze_docx_circuits.py` — uploads docx schematics to API, compares to reference BOMs, reports variances
-- ✅ Reference BOMs hand-transcribed for all 12 circuits; 2/12 now PASS (MSB DIY 98.3%, Color Booster 85.2%)
-- ✅ Root causes identified for failures: low-res schematics, 100nF/1M bias, LM308 misidentified, 500pF as resistor, 2N7000 missed
-- ✅ Prompt improvements: 500pF to cap list, LM308/2N7000/BC109/BC184C notes, resistor ref≠value rule, Ge/Si diode notes, extended component lists
-- ✅ Full accuracy test run: Bass OD 81→92.5% ✓, WattAmp SKIP→87.9% ✓, Three Time Champ SKIP→94.2% ✓; total 18/33 passing
-- ✅ Prompt regression fixed: restored original bias rule (too-aggressive "COMPLETELY ILLEGIBLE" caused Ratticus Turbo, Dart V2, Stratoblaster regressions)
-
-**Completed session 7:**
-- ✅ GT1–GT19 ground truth pipeline — 18 new JSON files, DB now 51 circuits / 967 components
-- ✅ Accuracy tested: 19/31 circuits ≥85% (8 new circuits pass immediately on first run)
-- ✅ Fixed page_number bug — ground truth JSON must use `"page_number"` not `"page"`
-- ✅ 1590A enclosure spec added to `enclosure-drill-templates.ts` — confirmed from FuzzDog build guide
-  - Face 35×78mm; footswitch Y=66mm; DC on north end Y=18mm; jacks east/west at 34mm & 45mm
-- ✅ build_guide_1590A.pdf studied (13 pages) — all measurements extracted + EAST_WEST_JACKS_1590A
-- ✅ HOLE_MM constants corrected from canonical drill guide: dc_barrel 8→12mm, led_5mm 7.9→5.1mm, led_3mm 6.35→3.2mm
-- ✅ Tayda SKUs indexed (memory/tayda_and_drill.md) — vetted pot/cap/resistor SKUs for BOM shopping
+- ✅ Prompt improvements: 500pF to cap list, LM308/2N7000/BC109/BC184C notes, resistor ref≠value rule, Ge/Si diode notes
+- ✅ Full accuracy test run: total 18/33 passing (Bass OD 92.5%, WattAmp 87.9%, Three Time Champ 94.2%)
 
 **⚠️ ACTION REQUIRED (Rob):** Ask your company engineer to rotate the Anthropic API key
 — it was exposed in a screenshot. Generate new key at console.anthropic.com → API Keys.
@@ -45,15 +44,12 @@ Webhook endpoint: `https://pedalpath.app/api/stripe-webhook`
 To re-enable quota at launch: uncomment 2 clearly marked lines in `src/pages/UploadPage.tsx`
 
 **Next session priority order:**
-1. **Accuracy failures — continue from session 8** (see `docs/generated/session8_continuation.md`):
-   - Full test run results: 18/33 passing. Improvements: Bass OD now 92.5%, WattAmp 87.9%, Three Time Champ 94.2%
-   - **Remaining failures to fix:** Aeon Drive 77.3% (was 61.5%), Buff N Blend 84.7% (was 64.7%, VERY CLOSE), Black Dog 79.3%, Dart V2 77.5%, SBB 75.3%, Ratticus Turbo 76.1%
-   - American Fuzz 82.2%, Sunburn 80.8% — close threshold cases
-   - Stage 3 Booster 2020/v1 ~68% — likely structural (multi-variant), lower priority
-   - **New docx circuits** (10/12 failing) — root cause is mostly low-res schematic images, not prompt issues
-2. **iOS Phase 8** — integrate `_INBOX/pedalpath-ios-web-shell-gh/` design tokens + native-feel UI
-3. **Phase 4 sidebar CollisionAlert** — `src/components/sidebar/CollisionAlert.tsx`
-4. **1590A EnclosureGuide** — wire up 1590A spec + east/west jacks in EnclosureGuide.tsx
+1. **Accuracy regressions** — Dart V2 77.5% (was ~90%), Ratticus Turbo 76.1% (was 92.4%), SBB 75.3% (was 85.3%)
+2. **Buff N Blend** 84.7% — 0.3% from threshold, quick win
+3. **American Fuzz** 82.2%, **Black Dog** 79.3%, **Sunburn** 80.8%
+4. **iOS Phase 8** — integrate `_INBOX/pedalpath-ios-web-shell-gh/` design tokens + native-feel UI
+5. **Phase 4 sidebar CollisionAlert** — `src/components/sidebar/CollisionAlert.tsx`
+6. **1590A EnclosureGuide** — wire up 1590A spec + east/west jacks in EnclosureGuide.tsx
 
 **Reference images**: /mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/
 

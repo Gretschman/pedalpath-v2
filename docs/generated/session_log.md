@@ -1,3 +1,66 @@
+# Session Log — 2026-03-05 (Session 9)
+
+## Session 9 Close (2026-03-05)
+
+### What was completed
+
+**Breadboard guide — complete structural rewrite (Phases A + B + C)**
+
+Driven by side-by-side analysis of 3 Coppersound CIR-KIT build guides using Claude Vision.
+All 8 identified gaps from the gap analysis are now resolved.
+
+**Phase A — Visual fixes:**
+- A1: Output wire color `#FF8800` (orange) → `#0044CC` (blue) — matches canonical wire scheme
+- A2: Electrolytic/tantalum capacitor thumbnails now render upright (tall cylinder, leads down)
+- A3: Film box capacitor thumbnails now render upright (portrait rect, face marking visible, leads down)
+- A4: Resistor thumbnails now show U-bent leads pointing down (real component orientation)
+  Files: `BomBreadboardView.tsx`, `ComponentGallery.tsx`, `BreadboardGuide.tsx`
+
+**Phase B — Structural rewrite:**
+- B1: `BreadboardGuide.tsx` — replaced 11 type-sorted static steps with 6 dynamic circuit-functional sections
+  (power → input → active → clipping → tone → output) computed from BOM `section` field + fallback inference
+  Each step has a WHY explanation of the section's electrical purpose
+- B2: `BomBreadboardView.tsx` — cumulative board view: `visibleSections` + `highlightSection` props;
+  current step components glow amber (currentStepGlow filter); previous steps at 40% opacity; future hidden
+- B3: `bom.types.ts` + `analyze-schematic.ts` — `BomSection` type added; Rule 8 in Claude prompt assigns
+  each component to its circuit section at analysis time; off-board components pre-assigned
+  Files: `BomBreadboardView.tsx`, `BreadboardGuide.tsx`, `bom.types.ts`, `analyze-schematic.ts`
+
+**Phase C — Reference content (original language, not derived from Coppersound):**
+- C1: `ResistorReference` component — collapsible IEC 60062 color band decoder table + per-build resistor
+  gallery with U-bent SVGs auto-generated from BOM; appears contextually on steps with resistors
+- C2: `CapMarkingExplainer` component — collapsible EIA notation explainer (3-digit code + direct notation)
+  with worked examples; appears on steps with film/ceramic capacitors
+  File: `BreadboardGuide.tsx`
+
+**Session hygiene:**
+- Moved `Treble+Boost+Breadboard+Guide+2025.pdf` + `Mosfet+Boost+Breadboard+Guide+2025.pdf`
+  from `_INBOX` to `_REFERENCE/build-guides/` after analysis
+- Updated `tools/populate_ground_truth.py` + `tools/populate_supplier_links.py` path: `_INBOX/ground-truth` → `_REFERENCE/ground-truth`
+- Added Session Startup and Break protocols to `CLAUDE.md`
+- CLAUDE.md updated with session 9 completion state
+
+### Commits this session
+- `e37c443` — Add session startup, break protocol, folder paths to CLAUDE.md
+- `c1138ae` — Session 9 hygiene: update ground-truth path from _INBOX to _REFERENCE
+- `e8dcf16` — Add functional section classification to BOM components (BomSection type + Rule 8 prompt)
+- `1b9dfa9` — Breadboard guide rewrite — functional build sequence + cumulative view (Phases A + B)
+- `be86c39` — Phase C — resistor reference, cap marking explainer, film cap orientation
+
+### Production state at session end
+- 172/172 tests passing
+- TypeScript: clean, Vite: clean
+- Deployed: pedalpath.app (commit be86c39)
+- DB: unchanged (51 circuits / 967 components)
+
+### Not completed — next session
+- Accuracy regressions: Dart V2 77.5% (was ~90%), Ratticus Turbo 76.1% (was 92.4%), SBB 75.3% (was 85.3%)
+- Buff N Blend 84.7% — 0.3% from passing threshold
+- American Fuzz 82.2%, Black Dog 79.3%, Sunburn 80.8%
+- iOS Phase 8, CollisionAlert, 1590A EnclosureGuide
+
+---
+
 # Session Log — 2026-03-04 (Session 8)
 
 ## Session 8 Close (2026-03-04)
