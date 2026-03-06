@@ -1,4 +1,44 @@
-# Session Log — 2026-03-05 (Session 10)
+# Session Log — 2026-03-05 (Session 10+)
+
+## Session 10 Continuation (2026-03-05) — Accuracy + Upright Caps
+
+### What was completed
+
+**Upright capacitor rendering (Phase 4 visual fix)**
+- `bom-layout.ts`: added `guessCapSubtype()` — electrolytic/film caps placed upright (b→c, same column), ceramics remain horizontal
+- `CapacitorSVG.tsx`: added `UprightCapBody` component — top-down view: electrolytic = circle with polarity stripe + gradient, film = compact rect
+- `bom-layout.test.ts`: updated film cap test for upright b→c placement; added new ceramic horizontal test — 173 tests passing
+
+**Accuracy pipeline fixes**
+- `VALUE_ALIASES` additions: `9v→dc jack`, `standard/red/green/yellow→led`
+- `stratoblaster.json` GT: added D1 LED component (was missing)
+- SBB: **75.3% → 90.0% PASS** ✅
+- Dart V2: **77.5% → 89.2% PASS** ✅ (recovered)
+- Buff N Blend: **84.7% → 86.0% PASS** ✅
+- American Fuzz: **81.2% → 86.9% PASS** ✅
+- Overall: **18/33 → 21/34 passing** (+3 net circuits)
+
+**accuracy_test.py improvements**
+- Added `--circuit NAME` flag (substring filter, case-insensitive) — run single circuit
+- Added `--detail` flag — prints per-component MISSING / WRONG / EXTRA breakdown
+- Added `--no-issues` flag — skip filing GitHub issues during investigation
+
+**UI improvements (earlier in session)**
+- `DashboardPage.tsx`: Share icon on build tiles; navigator.share guard fixed
+- `index.css`: iOS design tokens (safe area insets, system font stack)
+- `EnclosureGuide.tsx`: 1590A east/west jack layout wired in
+- `analyze-schematic.ts`: B5K/A5K/B1K/A1K added to potentiometer list
+
+**Bass OD investigation (81.1% — not yet fixed)**
+- Diagnosed via `--detail`: AI generates all resistors/caps individually (R4, R5 etc.) instead of grouping by value — GT groups R1+R4+R7=33k×3
+- Extra components: AI always adds J_IN/J_OUT/DC jack/footswitch that GT doesn't list
+- "Status LED" ≠ "Status" — needs alias
+- TR trimmer (10k) matched to A100k pot — wrong match
+- Fix plan: add `"status led": "led"` alias; consider whether to add jacks/footswitch to GT or filter from scoring
+
+---
+
+
 
 ## Session 10 Close (2026-03-05)
 
