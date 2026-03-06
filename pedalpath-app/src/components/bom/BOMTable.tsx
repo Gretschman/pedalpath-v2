@@ -122,6 +122,19 @@ const COMPONENT_TYPE_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
+// Sort reference designators numerically (C1, C2, C8, C12 not C1, C12, C2, C8)
+function sortRefs(refs: string[]): string[] {
+  return [...refs].sort((a, b) => {
+    const ma = a.match(/^([A-Za-z]+)(\d+)$/)
+    const mb = b.match(/^([A-Za-z]+)(\d+)$/)
+    if (ma && mb) {
+      if (ma[1] !== mb[1]) return ma[1].localeCompare(mb[1])
+      return parseInt(ma[2]) - parseInt(mb[2])
+    }
+    return a.localeCompare(b)
+  })
+}
+
 // Confidence level colors
 const getConfidenceColor = (confidence?: number): string => {
   if (!confidence) return 'bg-gray-200 text-gray-700';
@@ -357,7 +370,7 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
 
                   {/* References */}
                   <div className="flex flex-wrap gap-1">
-                    {component.reference_designators.map((ref) => (
+                    {sortRefs(component.reference_designators).map((ref) => (
                       <span
                         key={ref}
                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-gray-700 text-gray-100"
@@ -548,7 +561,7 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
 
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
-                          {component.reference_designators.map((ref) => (
+                          {sortRefs(component.reference_designators).map((ref) => (
                             <span
                               key={ref}
                               className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold bg-gray-700 text-gray-100"
