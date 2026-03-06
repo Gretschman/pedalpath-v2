@@ -48,6 +48,8 @@ VALUE_ALIASES: dict[str, str] = {
 COMPATIBLE_TYPE_GROUPS: dict[str, str] = {
     "ic": "active_ic",
     "op-amp": "active_ic",
+    "switch": "switch_group",
+    "footswitch": "switch_group",
 }
 
 # Scoring weights
@@ -87,6 +89,10 @@ def normalise(value: str) -> str:
     # Jack value normalisation: strip '1/4"' or '1/4 inch' prefix — all guitar pedal jacks are 1/4"
     # "1/4\" mono" → "mono", "1/4\" stereo" → "stereo", "1/4 inch mono" → "mono"
     v = re.sub(r'^1/4["\s]?\s*(inch\s+)?', '', v)
+    # Switch variant suffix: "3pdt-fs" → "3pdt", "dpdt-fs" → "dpdt"
+    v = re.sub(r'-fs$', '', v)
+    # LED name suffix: "status led" → "status", "power led" → "power"
+    v = re.sub(r'\s+led$', '', v)
     return v.strip()
 
 
@@ -241,16 +247,26 @@ def score_components(
                 )
 
     # Extra components in found but not in reference
+    # Offboard types (jacks, footswitch) are present on some schematics and absent on others.
+    # Don't penalise Claude for finding them when the reference simply omitted them — only
+    # penalise if the reference explicitly includes that type (so mismatches still count).
+    OFFBOARD_TYPES = {"input-jack", "output-jack", "dc-jack"}
+    ref_types_present = {c["component_type"] for c in reference}
+
     total_ref_qty = sum(c.get("quantity", 1) for c in reference)
     for i, found_comp in enumerate(found_pool):
         if i not in matched_found_indices:
+            comp_type = found_comp.get("component_type", "")
+            if comp_type in OFFBOARD_TYPES and comp_type not in ref_types_present:
+                # Offboard component not in reference — neutral, not penalised
+                continue
             total_score += SCORE_EXTRA
             discrepancies.append(
                 {
                     "discrepancy_type": "extra",
                     "expected_value": None,
                     "found_value": found_comp.get("value"),
-                    "component_type": found_comp.get("component_type"),
+                    "component_type": comp_type,
                     "reference_designator": ",".join(found_comp.get("reference_designators", [])),
                     "score_impact": SCORE_EXTRA,
                 }

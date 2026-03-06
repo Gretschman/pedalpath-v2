@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
-import { ArrowLeft, Plus, Save, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Check, FileImage, ChevronDown, ChevronUp } from 'lucide-react';
 import { getBOMData } from '../services/schematic-processor';
 import BOMTable from '../components/bom/BOMTable';
 import BOMExport from '../components/bom/BOMExport';
@@ -17,6 +17,7 @@ export default function ResultsPage() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [savedToast, setSavedToast] = useState(false);
+  const [showSchematic, setShowSchematic] = useState(false);
 
   const { data: bomData, isLoading, error } = useQuery({
     queryKey: ['schematic', schematicId],
@@ -32,16 +33,31 @@ export default function ResultsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('schematics')
-        .select('project_id')
+        .select('project_id, storage_path')
         .eq('id', schematicId!)
         .single()
       if (error) throw error
-      return data as { project_id: string }
+      return data as { project_id: string; storage_path: string | null }
     },
     enabled: !!schematicId,
   })
 
   const projectId = schematicRow?.project_id
+  const storagePath = schematicRow?.storage_path
+
+  // Signed URL for schematic image (1 hour expiry)
+  const { data: signedUrlData } = useQuery({
+    queryKey: ['schematic-signed-url', storagePath],
+    queryFn: async () => {
+      const { data, error } = await supabase.storage
+        .from('schematics')
+        .createSignedUrl(storagePath!, 3600)
+      if (error) throw error
+      return data.signedUrl
+    },
+    enabled: !!storagePath,
+    staleTime: 50 * 60 * 1000, // re-fetch after 50 min before expiry
+  })
 
   // Step 2: get the project status (separate query — avoids nested join RLS issues)
   const { data: projectRow } = useQuery({
@@ -163,6 +179,21 @@ export default function ResultsPage() {
                 </button>
                 {saveError && <p className="text-red-600 text-xs">{saveError}</p>}
               </div>
+              {signedUrlData && (
+                <button
+                  onClick={() => setShowSchematic((v) => !v)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    showSchematic
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  title={showSchematic ? 'Hide schematic' : 'View schematic'}
+                >
+                  <FileImage size={18} />
+                  <span className="text-sm font-medium hidden sm:inline">Schematic</span>
+                  {showSchematic ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+              )}
               <button
                 onClick={() => navigate('/upload')}
                 className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
@@ -251,6 +282,31 @@ export default function ResultsPage() {
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schematic viewer — collapsible, persists across tab switches */}
+      {showSchematic && signedUrlData && (
+        <div className="border-b border-gray-200 bg-gray-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-400">Uploaded Schematic</span>
+              <button
+                onClick={() => setShowSchematic(false)}
+                className="text-xs text-gray-500 hover:text-gray-300"
+              >
+                Hide
+              </button>
+            </div>
+            <div className="overflow-auto max-h-[60vh] rounded-lg border border-gray-700">
+              <img
+                src={signedUrlData}
+                alt="Uploaded schematic"
+                className="w-full object-contain bg-white"
+                style={{ maxHeight: '60vh' }}
+              />
             </div>
           </div>
         </div>
