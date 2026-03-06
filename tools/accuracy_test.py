@@ -250,7 +250,7 @@ def score_components(
     # Offboard types (jacks, footswitch) are present on some schematics and absent on others.
     # Don't penalise Claude for finding them when the reference simply omitted them — only
     # penalise if the reference explicitly includes that type (so mismatches still count).
-    OFFBOARD_TYPES = {"input-jack", "output-jack", "dc-jack"}
+    OFFBOARD_TYPES = {"input-jack", "output-jack", "dc-jack", "footswitch"}
     ref_types_present = {c["component_type"] for c in reference}
 
     total_ref_qty = sum(c.get("quantity", 1) for c in reference)

@@ -20,7 +20,8 @@ A component MUST have a recognisable schematic SYMBOL (zigzag=resistor, parallel
 ━━━ REFERENCE DESIGNATOR GUIDE ━━━
 R = resistor | C = capacitor | L = inductor | D = diode | LED = LED
 Q = transistor (BJT or JFET) | U, IC = integrated circuit / op-amp
-P, RV, VR, POT = potentiometer | SW = switch | J = jack | FS = footswitch
+P, RV, VR, POT, TR = potentiometer | SW = switch | J = jack | FS = footswitch
+  Note: TR (trimmer/trim pot) — value is a plain resistance (e.g. 10k, 50k). Type = potentiometer. NEVER classify a TR component as a resistor.
 
 ━━━ KNOWN COMPONENT VALUES — GUITAR PEDAL CIRCUITS ━━━
 These are the most frequently used components in guitar effects schematics, ranked by real-world occurrence across hundreds of pedal circuits. When a component type is identified but its value is ambiguous or partially legible, bias your reading toward these known values. If the schematic clearly shows a different value, use that value instead. IMPORTANT: this bias applies when a value is genuinely ambiguous — if you can read digits clearly, always use what you see.
