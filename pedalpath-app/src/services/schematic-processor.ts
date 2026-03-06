@@ -266,6 +266,9 @@ export interface ComponentCorrection {
   componentType: string;
   reportedValue: string;
   correctValue?: string;
+  correctedType?: string;
+  originalRef?: string;
+  circuitName?: string;
   issueType: 'wrong_value' | 'wrong_type' | 'missing' | 'extra' | 'other';
   description?: string;
 }
@@ -285,6 +288,9 @@ export async function submitComponentCorrections(
       component_type: c.componentType,
       reported_value: c.reportedValue,
       correct_value: c.correctValue || null,
+      corrected_type: c.correctedType || null,
+      original_ref: c.originalRef || null,
+      circuit_name: c.circuitName || null,
       issue_type: c.issueType,
       description: c.description || null,
     }));

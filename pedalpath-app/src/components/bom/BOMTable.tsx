@@ -136,7 +136,7 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
 
   // Flag state
   const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
-  const [flagNotes, setFlagNotes] = useState<Record<string, string>>({});
+  const [corrections, setCorrections] = useState<Record<string, { value: string; type: string; notes: string }>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -171,13 +171,25 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
   };
 
   const toggleFlag = (componentId: string) => {
+    const component = bomData.components.find((c) => c.id === componentId);
     setFlaggedIds((prev) => {
       const next = new Set(prev);
       if (next.has(componentId)) {
         next.delete(componentId);
-        setFlagNotes((n) => { const copy = { ...n }; delete copy[componentId]; return copy; });
+        setCorrections((c) => { const copy = { ...c }; delete copy[componentId]; return copy; });
       } else {
         next.add(componentId);
+        // Pre-populate with current values so user can edit in-place
+        if (component) {
+          setCorrections((c) => ({
+            ...c,
+            [componentId]: {
+              value: component.value,
+              type: component.component_type,
+              notes: '',
+            },
+          }));
+        }
       }
       return next;
     });
@@ -186,26 +198,36 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
   const handleSubmitCorrections = async () => {
     setSubmitting(true);
 
-    const corrections: ComponentCorrection[] = [];
+    const correctionPayload: ComponentCorrection[] = [];
     for (const id of flaggedIds) {
       const component = bomData.components.find((c) => c.id === id);
       if (!component) continue;
-      corrections.push({
+      const corr = corrections[id];
+      const correctedValue = corr?.value ?? component.value;
+      const correctedType = corr?.type ?? component.component_type;
+      const valueChanged = correctedValue !== component.value;
+      const typeChanged = correctedType !== component.component_type;
+      const issueType = typeChanged ? 'wrong_type' : valueChanged ? 'wrong_value' : 'other';
+      correctionPayload.push({
         componentId: id,
         schematicId,
         componentType: component.component_type,
         reportedValue: component.value,
-        issueType: 'wrong_value',
-        description: flagNotes[id] || undefined,
+        correctValue: correctedValue,
+        correctedType: typeChanged ? correctedType : undefined,
+        originalRef: component.reference_designators?.join(', ') || undefined,
+        circuitName: undefined,
+        issueType,
+        description: corr?.notes || undefined,
       });
     }
 
-    const ok = await submitComponentCorrections(corrections);
+    const ok = await submitComponentCorrections(correctionPayload);
     setSubmitting(false);
     if (ok) {
       setSubmitted(true);
       setFlaggedIds(new Set());
-      setFlagNotes({});
+      setCorrections({});
     } else {
       alert('Failed to submit corrections. Please try again.');
     }
@@ -365,15 +387,41 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                     )
                   )}
 
-                  {/* Flag note input */}
+                  {/* Correction form */}
                   {isFlagged && component.id && (
-                    <input
-                      type="text"
-                      value={flagNotes[component.id] || ''}
-                      onChange={(e) => setFlagNotes((n) => ({ ...n, [component.id!]: e.target.value }))}
-                      placeholder="What's wrong? (optional)"
-                      className="border border-orange-300 bg-orange-50 rounded px-2 py-1 text-sm w-full"
-                    />
+                    <div className="space-y-2 pt-1">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="block text-xs text-gray-500 mb-0.5">Correct value</label>
+                          <input
+                            type="text"
+                            value={corrections[component.id]?.value ?? component.value}
+                            onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], value: e.target.value } }))}
+                            className="w-full border border-orange-300 rounded px-2 py-1 text-sm bg-white text-gray-900"
+                            placeholder="e.g. 47k"
+                          />
+                        </div>
+                        <div className="w-36">
+                          <label className="block text-xs text-gray-500 mb-0.5">Correct type</label>
+                          <select
+                            value={corrections[component.id]?.type ?? component.component_type}
+                            onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], type: e.target.value } }))}
+                            className="w-full border border-orange-300 rounded px-2 py-1 text-sm bg-white text-gray-900"
+                          >
+                            {Object.entries(COMPONENT_TYPE_LABELS).map(([k, v]) => (
+                              <option key={k} value={k}>{v}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={corrections[component.id]?.notes ?? ''}
+                        onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], notes: e.target.value } }))}
+                        placeholder="Notes (optional)"
+                        className="w-full border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-500"
+                      />
+                    </div>
                   )}
 
                   {/* Actions */}

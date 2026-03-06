@@ -45,22 +45,94 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
 
-  /* Light theme colors (iOS system palette) */
-  --color-bg: #F2F2F7;
-  --color-surface: #FFFFFF;
-  --color-text: #111111;
-  --color-subtext: rgba(17,17,17,0.65);
-  --color-separator: rgba(60,60,67,0.29);
+  /* Dark theme colors by default (iOS system palette) */
+  color-scheme: dark;
+  --color-bg: #000000;
+  --color-surface: #1C1C1E;
+  --color-text: #FFFFFF;
+  --color-subtext: rgba(235,235,245,0.65);
+  --color-separator: rgba(84,84,88,0.60);
   --color-tint: #0A84FF;
-  --color-success-bg: rgba(52,199,89,0.16);
-  --color-success-text: #1F8B3A;
-  --color-info-bg: rgba(10,132,255,0.12);
-  --color-info-text: #0A84FF;
+  --color-success-bg: rgba(48,209,88,0.16);
+  --color-success-text: #30D158;
+  --color-info-bg: rgba(10,132,255,0.18);
+  --color-info-text: #5AC8FA;
+}
+
+/* Light theme — only when OS explicitly requests it */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --color-bg: #F2F2F7;
+    --color-surface: #FFFFFF;
+    --color-text: #111111;
+    --color-subtext: rgba(17,17,17,0.65);
+    --color-separator: rgba(60,60,67,0.29);
+    --color-tint: #0A84FF;
+    --color-success-bg: rgba(52,199,89,0.16);
+    --color-success-text: #1F8B3A;
+    --color-info-bg: rgba(10,132,255,0.12);
+    --color-info-text: #0A84FF;
+  }
+
+  body {
+    background-color: #f9fafb;
+    color: #111827;
+  }
+
+  /* ── Surfaces ── */
+  .bg-white          { background-color: #ffffff !important; }
+  .bg-gray-50        { background-color: #f9fafb !important; }
+  .bg-gray-100       { background-color: #f3f4f6 !important; }
+  .bg-gray-200       { background-color: #e5e7eb !important; }
+
+  /* ── Borders ── */
+  .border-gray-100   { border-color: #f3f4f6 !important; }
+  .border-gray-200   { border-color: #e5e7eb !important; }
+  .border-b          { border-color: #e5e7eb !important; }
+  .divide-gray-100 > * + * { border-color: #f3f4f6 !important; }
+
+  /* ── Text ── */
+  .text-gray-900     { color: #111827 !important; }
+  .text-gray-700     { color: #374151 !important; }
+  .text-gray-600     { color: #4b5563 !important; }
+  .text-gray-500     { color: #6b7280 !important; }
+  .text-gray-400     { color: #9ca3af !important; }
+
+  /* ── Nav & header ── */
+  nav                { background-color: #ffffff !important; border-color: #e5e7eb !important; }
+  header             { background-color: rgba(255,255,255,0.85) !important; border-color: #e5e7eb !important; }
+
+  /* ── Status badges ── */
+  .bg-green-100      { background-color: #dcfce7 !important; }
+  .text-green-700    { color: #15803d !important; }
+  .bg-blue-100       { background-color: #dbeafe !important; }
+  .text-blue-700     { color: #1d4ed8 !important; }
+
+  /* ── Error state ── */
+  .bg-red-50         { background-color: #fef2f2 !important; }
+  .border-red-200    { border-color: #fecaca !important; }
+
+  /* ── Flag / orange states ── */
+  .bg-orange-50      { background-color: #fff7ed !important; }
+  .bg-orange-100     { background-color: #ffedd5 !important; }
+  .text-orange-700   { color: #c2410c !important; }
+  .text-orange-500   { color: #f97316 !important; }
+  .border-orange-300 { border-color: #fdba74 !important; }
+
+  /* ── Hover states ── */
+  .hover\:bg-gray-50:hover  { background-color: #f9fafb !important; }
+  .hover\:bg-gray-100:hover { background-color: #f3f4f6 !important; }
+
+  /* ── Shadow ── */
+  .shadow, .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; }
 }
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply antialiased;
+    background-color: #0d1117;
+    color: #e6edf3;
     /* iOS momentum scrolling */
     -webkit-overflow-scrolling: touch;
   }
@@ -84,70 +156,55 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ── Dark mode ──────────────────────────────────────────────────────────────
+/* ── Dark theme Tailwind overrides (always-on — dark is the default) ────────
    Targets Tailwind utility classes used throughout the app.
-   Avoids touching individual components — covers 95% of surfaces globally.
+   Light-mode users get the inverse overrides inside @media (prefers-color-scheme: light) above.
    ────────────────────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
 
-    /* Dark theme color tokens (iOS system palette) */
-    --color-bg: #000000;
-    --color-surface: #1C1C1E;
-    --color-text: #FFFFFF;
-    --color-subtext: rgba(235,235,245,0.65);
-    --color-separator: rgba(84,84,88,0.60);
-    --color-tint: #0A84FF;
-    --color-success-bg: rgba(48,209,88,0.16);
-    --color-success-text: #30D158;
-    --color-info-bg: rgba(10,132,255,0.18);
-    --color-info-text: #5AC8FA;
-  }
+/* ── Surfaces ── */
+.bg-white          { background-color: #161b22 !important; }
+.bg-gray-50        { background-color: #0d1117 !important; }
+.bg-gray-100       { background-color: #21262d !important; }
+.bg-gray-200       { background-color: #21262d !important; } /* skeleton */
+.bg-gray-950       { background-color: #010409 !important; } /* footer */
 
-  body {
-    background-color: #0d1117;
-    color: #e6edf3;
-  }
+/* ── Borders ── */
+.border-gray-100   { border-color: #30363d !important; }
+.border-gray-200   { border-color: #30363d !important; }
+.border-b          { border-color: #30363d !important; }
+.divide-gray-100 > * + * { border-color: #30363d !important; }
 
-  /* ── Surfaces ── */
-  .bg-white          { background-color: #161b22 !important; }
-  .bg-gray-50        { background-color: #0d1117 !important; }
-  .bg-gray-100       { background-color: #21262d !important; }
-  .bg-gray-200       { background-color: #21262d !important; } /* skeleton */
-  .bg-gray-950       { background-color: #010409 !important; } /* footer */
+/* ── Text ── */
+.text-gray-900     { color: #e6edf3 !important; }
+.text-gray-700     { color: #c9d1d9 !important; }
+.text-gray-600     { color: #8b949e !important; }
+.text-gray-500     { color: #8b949e !important; }
+.text-gray-400     { color: #6e7681 !important; }
 
-  /* ── Borders ── */
-  .border-gray-100   { border-color: #30363d !important; }
-  .border-gray-200   { border-color: #30363d !important; }
-  .border-b          { border-color: #30363d !important; }
-  .divide-gray-100 > * + * { border-color: #30363d !important; }
+/* ── Nav & header ── */
+nav                { background-color: #161b22 !important; border-color: #30363d !important; }
+header             { background-color: rgba(22,27,34,0.85) !important; border-color: #30363d !important; }
 
-  /* ── Text ── */
-  .text-gray-900     { color: #e6edf3 !important; }
-  .text-gray-700     { color: #c9d1d9 !important; }
-  .text-gray-600     { color: #8b949e !important; }
-  .text-gray-500     { color: #8b949e !important; }
-  .text-gray-400     { color: #6e7681 !important; }
+/* ── Status badges ── */
+.bg-green-100      { background-color: rgba(46,160,67,0.15) !important; }
+.text-green-700    { color: #3fb950 !important; }
+.bg-blue-100       { background-color: rgba(56,139,253,0.15) !important; }
+.text-blue-700     { color: #58a6ff !important; }
 
-  /* ── Nav & header ── */
-  nav                { background-color: #161b22 !important; border-color: #30363d !important; }
-  header             { background-color: rgba(22,27,34,0.85) !important; border-color: #30363d !important; }
+/* ── Error state ── */
+.bg-red-50         { background-color: rgba(248,81,73,0.1) !important; }
+.border-red-200    { border-color: rgba(248,81,73,0.3) !important; }
 
-  /* ── Status badges ── */
-  .bg-green-100      { background-color: rgba(46,160,67,0.15) !important; }
-  .text-green-700    { color: #3fb950 !important; }
-  .bg-blue-100       { background-color: rgba(56,139,253,0.15) !important; }
-  .text-blue-700     { color: #58a6ff !important; }
+/* ── Flag / orange states ── */
+.bg-orange-50      { background-color: rgba(251,146,60,0.10) !important; }
+.bg-orange-100     { background-color: rgba(251,146,60,0.18) !important; }
+.text-orange-700   { color: #fb923c !important; }
+.text-orange-500   { color: #fb923c !important; }
+.border-orange-300 { border-color: rgba(251,146,60,0.50) !important; }
 
-  /* ── Error state ── */
-  .bg-red-50         { background-color: rgba(248,81,73,0.1) !important; }
-  .border-red-200    { border-color: rgba(248,81,73,0.3) !important; }
+/* ── Hover states ── */
+.hover\:bg-gray-50:hover  { background-color: #21262d !important; }
+.hover\:bg-gray-100:hover { background-color: #30363d !important; }
 
-  /* ── Hover states ── */
-  .hover\:bg-gray-50:hover  { background-color: #21262d !important; }
-  .hover\:bg-gray-100:hover { background-color: #30363d !important; }
-
-  /* ── Shadow softening ── */
-  .shadow, .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
-}
+/* ── Shadow softening ── */
+.shadow, .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }

@@ -91,6 +91,7 @@ vercel --prod --yes  # deploy
 - `tools/populate_supplier_links.py` — upserts supplier_links from _INBOX/ground-truth/supplier_links.json
 - `tools/analyze_docx_circuits.py` — uploads docx schematic images to API, compares generated vs reference BOMs, reports variances
 - `tools/accuracy_test.py` — runs BOM accuracy tests against reference circuits; files GitHub issues for <85% scores
+- `tools/corrections_report.py` — queries user-submitted component corrections, groups by error pattern, outputs prompt action items
 - `tools/verify_alignment.py` — MB-102 mechanical audit: verifies coordinate-to-grid mapping + Matrix-5 power rail positions
 - `start_session.sh` — runs all sync tools + git status before starting Claude Code
 
