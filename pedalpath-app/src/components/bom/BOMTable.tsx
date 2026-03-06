@@ -201,27 +201,20 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
 
   const toggleFlag = (componentId: string) => {
     const component = bomData.components.find((c) => c.id === componentId);
-    setFlaggedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(componentId)) {
-        next.delete(componentId);
-        setCorrections((c) => { const copy = { ...c }; delete copy[componentId]; return copy; });
-      } else {
-        next.add(componentId);
-        // Pre-populate with current values so user can edit in-place
-        if (component) {
-          setCorrections((c) => ({
-            ...c,
-            [componentId]: {
-              value: component.value,
-              type: component.component_type,
-              notes: '',
-            },
-          }));
-        }
+    const isCurrentlyFlagged = flaggedIds.has(componentId);
+
+    if (isCurrentlyFlagged) {
+      setFlaggedIds((prev) => { const next = new Set(prev); next.delete(componentId); return next; });
+      setCorrections((c) => { const copy = { ...c }; delete copy[componentId]; return copy; });
+    } else {
+      setFlaggedIds((prev) => { const next = new Set(prev); next.add(componentId); return next; });
+      if (component) {
+        setCorrections((c) => ({
+          ...c,
+          [componentId]: { value: component.value, type: component.component_type, notes: '' },
+        }));
       }
-      return next;
-    });
+    }
   };
 
   const handleSubmitCorrections = async () => {
