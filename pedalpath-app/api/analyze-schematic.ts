@@ -35,18 +35,18 @@ Transistors (most→least common):
     AC128 · OC71 · OC76 · AC127 · OC44 · OC45 · OC72 · AC125 · AC126 · 2N1308 · 2SB75 · NKT275 · PNP Ge (any label ending in "Ge" or "Germanium")
 
 Diodes:
-  1N4148 · 1N5817 · 1N914 · 1N34A · 1N4001 · BAT41 · BAT46 · BAT42 · 1N270 · 1N4007 · MA856 · 1N4739 · 1N4004
-  Note: 1N914 = 1N4148 (identical function); 1N34A and 1N270 are germanium (soft clipping)
+  1N4148 · 1N5817 · 1N914 · 1N34A · 1N4001 · BAT41 · BAT46 · BAT42 · 1N270 · 1N4007 · MA856 · MA150 · 1N4739 · 1N4004
+  Note: 1N914 = 1N4148 = MA150 (identical function; MA150 used in original TS808); 1N34A and 1N270 are germanium (soft clipping)
   Note: A diode symbol labeled only "Ge" or "Germanium" (no part number) should have value "Ge". A diode labeled "Si" or "Silicon" should have value "Si". These are valid values.
 
 ICs / Op-amps:
-  TL072 · JRC4558 · TC1044 · TL074 · LM833 · RC4558 · NE5532 · OPA2134 · LM308 · PT2399 · LM386 · LT1054 · TL071 · LM741 · CD4049UBE · MAX1044 · LF351 · LF353
-  Note: JRC4558 = NJM4558 = RC4558 (same chip, used in Tube Screamer); TC1044 = MAX1044 = ICL7660
+  TL072 · JRC4558 · TC1044 · TL074 · LM833 · RC4558 · NE5532 · OPA2134 · LM308 · PT2399 · LM386 · LT1054 · TL071 · LM741 · CD4049UBE · MAX1044 · LF351 · LF353 · RC4559 · LM358
+  Note: JRC4558 = NJM4558 = RC4558 = RC4559 (same chip family, all used in Tube Screamer variants); TC1044 = MAX1044 = ICL7660
   Note: LM308 / LM308N is a precision single op-amp in an 8-pin DIP, used in classic distortion pedals (ProCo Rat, etc.). It looks similar to TL072 but is NOT TL072. Read the label carefully — LM308 and TL072 are completely different chips.
   Note: LM386 is a power amplifier IC (8-pin DIP), used in small amplifier circuits. Its schematic symbol is a triangle with pins labeled 1–8.
 
 Resistors (most common values in pedal circuits):
-  10K · 4.7K · 1M · 1K · 100K · 22K · 470K · 47K · 2.2K · 15K · 33K · 220K · 100R · 3.3K · 470R · 2.2M · 12K · 1.5K · 68K · 220R · 27K · 56K · 560R · 8.2K · 39K · 390K · 82K
+  10K · 4.7K · 1M · 1K · 100K · 22K · 470K · 47K · 2.2K · 15K · 33K · 220K · 100R · 3.3K · 470R · 2.2M · 12K · 1.5K · 68K · 220R · 27K · 56K · 560R · 8.2K · 39K · 390K · 82K · 51K · 510K
 
 Capacitors (most common values):
   100nF · 1µF · 10µF · 100µF · 22nF · 10nF · 47nF · 47µF · 1nF · 220nF · 100pF · 2.2nF · 470pF · 4.7µF · 22µF · 4.7nF · 470nF · 500pF · 30pF · 3.3nF · 2.7nF · 12nF · 2.2µF · 4µF

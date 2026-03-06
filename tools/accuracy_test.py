@@ -4,11 +4,13 @@
 
 import argparse
 import base64
+import hashlib
 import io
 import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import psycopg2
@@ -25,6 +27,8 @@ if not DB_URL:
 API_URL = "https://pedalpath.app/api/analyze-schematic"
 INBOX_DIR = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX")
 REFERENCE_DIR = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/circuit-library")
+CACHE_FILE = Path("/home/rob/pedalpath-v2/docs/generated/accuracy_cache.json")
+PROMPT_FILE = Path("/home/rob/pedalpath-v2/pedalpath-app/api/analyze-schematic.ts")
 
 # Value aliases: keys normalise to their canonical alias target
 VALUE_ALIASES: dict[str, str] = {
@@ -33,6 +37,8 @@ VALUE_ALIASES: dict[str, str] = {
     "jrc4558": "rc4558",
     "njm4558": "rc4558",
     "4558": "rc4558",
+    "rc4559": "rc4558",   # Tube Screamer variant — functionally equivalent
+    "ma150": "1n4148",   # MA150 silicon diode used in original TS808
     "tc1044": "icl7660",
     "tc1044s": "icl7660",
     # DC jack: AI sometimes reads battery label "9V" as the dc-jack value
@@ -328,12 +334,48 @@ def file_github_issue(circuit_name: str, score: float, expected: int, found: int
         return False
 
 
+def get_prompt_hash() -> str:
+    """SHA-256 of the Claude prompt file — changes when prompt is edited."""
+    content = PROMPT_FILE.read_bytes() if PROMPT_FILE.exists() else b""
+    return hashlib.sha256(content).hexdigest()[:16]
+
+
+def load_cache() -> tuple[str, dict]:
+    """Load cache file. Returns (prompt_hash, results_dict)."""
+    if not CACHE_FILE.exists():
+        return "", {}
+    try:
+        data = json.loads(CACHE_FILE.read_text())
+        return data.get("prompt_hash", ""), data.get("results", {})
+    except Exception:
+        return "", {}
+
+
+def save_cache(prompt_hash: str, results: dict) -> None:
+    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CACHE_FILE.write_text(json.dumps({"prompt_hash": prompt_hash, "results": results}, indent=2))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="BOM accuracy test against reference circuits")
     parser.add_argument("--circuit", metavar="NAME", help="Filter to circuit name (substring match, case-insensitive)")
     parser.add_argument("--detail", action="store_true", help="Print per-component match details")
     parser.add_argument("--no-issues", action="store_true", help="Skip filing GitHub issues for failures")
+    parser.add_argument("--force", action="store_true", help="Ignore cache and re-run all circuits via API")
     args = parser.parse_args()
+
+    prompt_hash = get_prompt_hash()
+    cached_hash, cache = load_cache()
+    # Invalidate entire cache if prompt changed
+    if cached_hash != prompt_hash:
+        if cached_hash:
+            print(f"[cache] Prompt changed — invalidating all cached results ({cached_hash[:8]} → {prompt_hash[:8]})\n")
+        cache = {}
+    elif args.force:
+        print("[cache] --force: ignoring cache\n")
+        cache = {}
+    # Always bypass cache when targeting a specific circuit
+    use_cache = not args.force and not args.circuit
 
     conn = psycopg2.connect(DB_URL)
     conn.autocommit = True
@@ -405,6 +447,34 @@ def main() -> None:
                     "status": f"SKIP ({e})",
                 }
             )
+            continue
+
+        # ── Cache check ───────────────────────────────────────────
+        if use_cache and circuit_name in cache:
+            cached = cache[circuit_name]
+            score = cached["score"]
+            total_ref_qty = cached["total_ref_qty"]
+            total_found_qty = cached["total_found_qty"]
+            discrepancies = cached["discrepancies"]
+            status_str = cached["status_str"]
+            print(f"  [cached {cached.get('cached_at','')[:10]}] Score: {score:.1f}%")
+            if args.detail:
+                for d in sorted(discrepancies, key=lambda x: x["discrepancy_type"]):
+                    dtype = d["discrepancy_type"]
+                    ctype = d.get("component_type", "?")
+                    ref = d.get("reference_designator") or ""
+                    exp = d.get("expected_value") or "—"
+                    got = d.get("found_value") or "—"
+                    if dtype == "missing":
+                        print(f"    ✗ MISSING  {ctype} {ref}: expected {exp}")
+                    elif dtype == "wrong_value":
+                        print(f"    ~ WRONG    {ctype} {ref}: expected {exp}, got {got}")
+                    elif dtype == "extra":
+                        print(f"    + EXTRA    {ctype} {ref}: {got}")
+            if score < PASS_THRESHOLD:
+                print(f"  {status_str}")
+            results.append({"name": circuit_name, "expected": total_ref_qty, "found": total_found_qty,
+                             "score": score, "status": status_str})
             continue
 
         print(f"  Image: {img_path.name} ({len(img_b64) // 1024}KB)")
@@ -522,6 +592,18 @@ def main() -> None:
                     d.get("score_impact"),
                 ),
             )
+
+        # ── Save to cache ─────────────────────────────────────────
+        status_str = "PASS" if score >= PASS_THRESHOLD else "FAIL"
+        cache[circuit_name] = {
+            "score": score,
+            "total_ref_qty": total_ref_qty,
+            "total_found_qty": total_found_qty,
+            "discrepancies": discrepancies,
+            "status_str": status_str,
+            "cached_at": datetime.now(timezone.utc).isoformat(),
+        }
+        save_cache(prompt_hash, cache)
 
         # File issue if below threshold
         status_str = "PASS"
