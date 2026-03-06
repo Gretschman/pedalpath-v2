@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
-import { ArrowLeft, Plus, Save, Check, FileImage, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Check, FileImage, ChevronDown, ChevronUp, Printer } from 'lucide-react';
 import { getBOMData } from '../services/schematic-processor';
 import BOMTable from '../components/bom/BOMTable';
 import BOMExport from '../components/bom/BOMExport';
@@ -180,19 +180,29 @@ export default function ResultsPage() {
                 {saveError && <p className="text-red-600 text-xs">{saveError}</p>}
               </div>
               {signedUrlData && (
-                <button
-                  onClick={() => setShowSchematic((v) => !v)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    showSchematic
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title={showSchematic ? 'Hide schematic' : 'View schematic'}
-                >
-                  <FileImage size={18} />
-                  <span className="text-sm font-medium hidden sm:inline">Schematic</span>
-                  {showSchematic ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowSchematic((v) => !v)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      showSchematic
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    title={showSchematic ? 'Hide schematic' : 'View schematic'}
+                  >
+                    <FileImage size={18} />
+                    <span className="text-sm font-medium hidden sm:inline">Schematic</span>
+                    {showSchematic ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                    title="Print schematic"
+                  >
+                    <Printer size={18} />
+                    <span className="text-sm font-medium hidden sm:inline">Print</span>
+                  </button>
+                </>
               )}
               <button
                 onClick={() => navigate('/upload')}
@@ -287,9 +297,9 @@ export default function ResultsPage() {
         </div>
       )}
 
-      {/* Schematic viewer — collapsible, persists across tab switches */}
-      {showSchematic && signedUrlData && (
-        <div className="border-b border-gray-200 bg-gray-950">
+      {/* Schematic viewer — collapsible, persists across tab switches; always rendered for print */}
+      {signedUrlData && (
+        <div className={`border-b border-gray-200 bg-gray-950 ${showSchematic ? '' : 'hidden print:block'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-gray-400">Uploaded Schematic</span>

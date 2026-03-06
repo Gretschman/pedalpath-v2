@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import type { BOMComponent, BOMData } from '../../types/bom.types';
 import { updateBOMComponent, submitComponentCorrections } from '../../services/schematic-processor';
 import type { ComponentCorrection } from '../../services/schematic-processor';
@@ -169,12 +169,28 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
   };
 
   const saveEditing = async (componentId: string) => {
+    const component = bomData.components.find((c) => c.id === componentId);
+    const originalValue = component?.value;
+
     const success = await updateBOMComponent(componentId, {
       ...editForm,
       verified: true,
     });
 
     if (success) {
+      // Auto-log a correction record so the original AI-read value is never lost
+      if (component && editForm.value !== undefined && editForm.value !== originalValue) {
+        await submitComponentCorrections([{
+          componentId,
+          schematicId,
+          componentType: component.component_type,
+          reportedValue: originalValue || '',
+          correctValue: editForm.value,
+          originalRef: component.reference_designators?.join(', ') || undefined,
+          issueType: 'wrong_value',
+          description: 'Corrected via pencil edit',
+        }]);
+      }
       setEditingId(null);
       setEditForm({});
       onUpdate?.();
@@ -532,7 +548,8 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                   const isFlagged = component.id ? flaggedIds.has(component.id) : false;
 
                   return (
-                    <tr key={component.id} className={isFlagged ? 'bg-orange-50' : component.verified ? 'bg-green-50' : ''}>
+                    <Fragment key={component.id}>
+                    <tr className={isFlagged ? 'bg-orange-50' : component.verified ? 'bg-green-50' : ''}>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {isEditing ? (
                           <input
@@ -649,6 +666,47 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                         )}
                       </td>
                     </tr>
+                    {isFlagged && component.id && (
+                      <tr className="bg-orange-50 border-t border-orange-200">
+                        <td colSpan={7} className="px-4 py-3">
+                          <div className="flex gap-3 items-end flex-wrap">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-0.5">Correct value</label>
+                              <input
+                                type="text"
+                                value={corrections[component.id]?.value ?? component.value}
+                                onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], value: e.target.value } }))}
+                                className="border border-orange-300 rounded px-2 py-1 text-sm bg-white text-gray-900 w-32"
+                                placeholder="e.g. 47k"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-0.5">Correct type</label>
+                              <select
+                                value={corrections[component.id]?.type ?? component.component_type}
+                                onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], type: e.target.value } }))}
+                                className="border border-orange-300 rounded px-2 py-1 text-sm bg-white text-gray-900"
+                              >
+                                {Object.entries(COMPONENT_TYPE_LABELS).map(([k, v]) => (
+                                  <option key={k} value={k}>{v}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="flex-1 min-w-40">
+                              <label className="block text-xs text-gray-500 mb-0.5">Notes (optional)</label>
+                              <input
+                                type="text"
+                                value={corrections[component.id]?.notes ?? ''}
+                                onChange={(e) => setCorrections((c) => ({ ...c, [component.id!]: { ...c[component.id!], notes: e.target.value } }))}
+                                placeholder="What's wrong?"
+                                className="w-full border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-500"
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })}
               </tbody>

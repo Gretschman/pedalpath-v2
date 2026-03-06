@@ -208,3 +208,33 @@ header             { background-color: rgba(22,27,34,0.85) !important; border-co
 
 /* ── Shadow softening ── */
 .shadow, .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Print styles — clean schematic + BOM sheet, no chrome
+   ───────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything except the schematic image and the BOM content area */
+  body { background: white !important; color: black !important; }
+
+  /* Hide nav, header, tabs, buttons, export panel, guide tabs */
+  header,
+  nav,
+  .sticky,
+  button,
+  a[href],
+  [data-print-hide] { display: none !important; }
+
+  /* Show the schematic image at full width */
+  [data-print-show] { display: block !important; }
+
+  /* Full-width layout */
+  .max-w-7xl { max-width: 100% !important; padding: 0 !important; }
+
+  /* BOM table: ensure it prints legibly */
+  table { font-size: 10pt; border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; }
+  thead { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+
+  /* Page break hints */
+  .bg-white.border { page-break-inside: avoid; margin-bottom: 12px; }
+}
