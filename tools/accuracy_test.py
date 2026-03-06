@@ -1,7 +1,8 @@
 # accuracy_test.py
 # Automated BOM accuracy testing against reference circuits
-# Usage: python3 tools/accuracy_test.py
+# Usage: python3 tools/accuracy_test.py [--circuit NAME] [--detail] [--no-issues]
 
+import argparse
 import base64
 import io
 import json
@@ -23,6 +24,7 @@ if not DB_URL:
 
 API_URL = "https://pedalpath.app/api/analyze-schematic"
 INBOX_DIR = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_INBOX")
+REFERENCE_DIR = Path("/mnt/c/Users/Rob/Dropbox/!PedalPath/_REFERENCE/circuit-library")
 
 # Value aliases: keys normalise to their canonical alias target
 VALUE_ALIASES: dict[str, str] = {
@@ -33,6 +35,13 @@ VALUE_ALIASES: dict[str, str] = {
     "4558": "rc4558",
     "tc1044": "icl7660",
     "tc1044s": "icl7660",
+    # DC jack: AI sometimes reads battery label "9V" as the dc-jack value
+    "9v": "dc jack",
+    # LED: AI sometimes emits "standard" or bare "led" as the value
+    "standard": "led",
+    "red": "led",
+    "green": "led",
+    "yellow": "led",
 }
 
 # Component types that are interchangeable for matching purposes
@@ -131,11 +140,14 @@ def image_to_base64(path: Path, page_number: int | None = None) -> tuple[str, st
 
 
 def find_image(source_file: str) -> Path | None:
-    """Search INBOX_DIR for a file matching source_file (case-insensitive stem)."""
+    """Search INBOX_DIR then REFERENCE_DIR for a file matching source_file (case-insensitive)."""
     target = Path(source_file).name.lower()
-    for candidate in INBOX_DIR.iterdir():
-        if candidate.name.lower() == target:
-            return candidate
+    for search_dir in (INBOX_DIR, REFERENCE_DIR):
+        if not search_dir.exists():
+            continue
+        for candidate in search_dir.iterdir():
+            if candidate.name.lower() == target:
+                return candidate
     return None
 
 
@@ -301,6 +313,12 @@ def file_github_issue(circuit_name: str, score: float, expected: int, found: int
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="BOM accuracy test against reference circuits")
+    parser.add_argument("--circuit", metavar="NAME", help="Filter to circuit name (substring match, case-insensitive)")
+    parser.add_argument("--detail", action="store_true", help="Print per-component match details")
+    parser.add_argument("--no-issues", action="store_true", help="Skip filing GitHub issues for failures")
+    args = parser.parse_args()
+
     conn = psycopg2.connect(DB_URL)
     conn.autocommit = True
     cur = conn.cursor()
@@ -313,6 +331,12 @@ def main() -> None:
         print("No reference circuits found in database.")
         print("Run tools/populate_ground_truth.py first.")
         sys.exit(0)
+
+    if args.circuit:
+        circuits = [c for c in circuits if args.circuit.lower() in c[1].lower()]
+        if not circuits:
+            print(f"No circuits matching '{args.circuit}'")
+            sys.exit(1)
 
     print(f"Testing {len(circuits)} circuits against {API_URL}\n")
 
@@ -437,6 +461,20 @@ def main() -> None:
         score, _, discrepancies = score_components(reference_components, found_components)
         print(f"  Score:     {score:.1f}%")
 
+        if args.detail:
+            for d in sorted(discrepancies, key=lambda x: x["discrepancy_type"]):
+                dtype = d["discrepancy_type"]
+                ctype = d.get("component_type", "?")
+                ref = d.get("reference_designator") or ""
+                exp = d.get("expected_value") or "—"
+                got = d.get("found_value") or "—"
+                if dtype == "missing":
+                    print(f"    ✗ MISSING  {ctype} {ref}: expected {exp}")
+                elif dtype == "wrong_value":
+                    print(f"    ~ WRONG    {ctype} {ref}: expected {exp}, got {got}")
+                elif dtype == "extra":
+                    print(f"    + EXTRA    {ctype} {ref}: {got}")
+
         # Record test run
         cur.execute(
             """
@@ -472,9 +510,13 @@ def main() -> None:
         # File issue if below threshold
         status_str = "PASS"
         if score < PASS_THRESHOLD:
-            print(f"  FAIL — filing GitHub issue...")
-            filed = file_github_issue(circuit_name, score, total_ref_qty, total_found_qty, discrepancies)
-            status_str = "FAIL — issue filed" if filed else "FAIL"
+            if args.no_issues:
+                print(f"  FAIL")
+                status_str = "FAIL"
+            else:
+                print(f"  FAIL — filing GitHub issue...")
+                filed = file_github_issue(circuit_name, score, total_ref_qty, total_found_qty, discrepancies)
+                status_str = "FAIL — issue filed" if filed else "FAIL"
 
         results.append(
             {

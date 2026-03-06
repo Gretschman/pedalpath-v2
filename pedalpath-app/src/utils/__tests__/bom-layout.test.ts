@@ -49,7 +49,7 @@ describe('generateBreadboardLayout', () => {
     }
   });
 
-  test('places a single capacitor in row c', () => {
+  test('places a film/electrolytic capacitor upright (rows b→c, same column)', () => {
     const bom = makeBOM({
       components: [{
         component_type: 'capacitor',
@@ -61,7 +61,30 @@ describe('generateBreadboardLayout', () => {
     const [placement] = generateBreadboardLayout(bom);
     expect(placement.type).toBe('capacitor');
     if (placement.type === 'capacitor') {
+      // Film caps are upright: startHole in row b (positive), endHole in row c (negative)
+      expect(placement.startHole).toMatch(/^b\d+$/);
+      expect(placement.endHole).toMatch(/^c\d+$/);
+      // Both holes must share the same column number
+      const startCol = parseInt(placement.startHole.slice(1));
+      const endCol = parseInt(placement.endHole.slice(1));
+      expect(startCol).toBe(endCol);
+    }
+  });
+
+  test('places a ceramic capacitor horizontally in row c', () => {
+    const bom = makeBOM({
+      components: [{
+        component_type: 'capacitor',
+        value: '100pF',
+        quantity: 1,
+        reference_designators: ['C1'],
+      }],
+    });
+    const [placement] = generateBreadboardLayout(bom);
+    expect(placement.type).toBe('capacitor');
+    if (placement.type === 'capacitor') {
       expect(placement.startHole).toMatch(/^c\d+$/);
+      expect(placement.endHole).toMatch(/^c\d+$/);
     }
   });
 

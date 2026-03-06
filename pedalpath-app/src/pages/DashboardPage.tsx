@@ -1,11 +1,25 @@
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight, RefreshCw } from 'lucide-react'
+import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight, RefreshCw, Share2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { useProjects } from '../hooks/useProjects'
 
 function haptic() {
   navigator.vibrate?.(10)
+}
+
+async function shareResult(title: string, schematicId: string) {
+  haptic()
+  const url = `${window.location.origin}/results/${schematicId}`
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `PedalPath: ${title}`, text: 'Check out my guitar pedal build guide', url })
+    } catch {
+      // user dismissed — ignore
+    }
+  } else {
+    await navigator.clipboard.writeText(url)
+  }
 }
 
 export default function DashboardPage() {
@@ -171,31 +185,44 @@ export default function DashboardPage() {
                           <p className="text-sm text-gray-400">Processing...</p>
                         )}
 
-                        {confirmDeleteId === project.id ? (
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5">
+                          {/* Share — only shown for completed results */}
+                          {resultUrl && schematic && (
                             <button
-                              onClick={() => { deleteProject(project.id); setConfirmDeleteId(null) }}
-                              disabled={isDeleting}
-                              className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded transition-colors disabled:opacity-50"
+                              onClick={() => shareResult(project.title, schematic.id)}
+                              className="p-2 text-gray-300 hover:text-primary-500 transition-colors"
+                              title={'share' in navigator ? 'Share build guide' : 'Copy link'}
                             >
-                              Confirm
+                              <Share2 className="w-4 h-4" />
                             </button>
+                          )}
+
+                          {confirmDeleteId === project.id ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => { deleteProject(project.id); setConfirmDeleteId(null) }}
+                                disabled={isDeleting}
+                                className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded transition-colors disabled:opacity-50"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1.5"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors px-2 py-1.5"
+                              onClick={() => { haptic(); setConfirmDeleteId(project.id) }}
+                              className="p-2 -mr-1 text-gray-300 hover:text-red-500 transition-colors"
+                              title="Delete project"
                             >
-                              Cancel
+                              <Trash2 className="w-4 h-4" />
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => { haptic(); setConfirmDeleteId(project.id) }}
-                            className="p-2 -mr-1 text-gray-300 hover:text-red-500 transition-colors"
-                            title="Delete project"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -192,21 +192,39 @@ export function generateBreadboardLayout(bomData: BOMData): ComponentPlacement[]
     }
   }
 
-  // --- Capacitors (row c) ---
+  // --- Capacitors ---
+  // Electrolytic and film caps are radial components — they stand upright on the board.
+  // Placement: same column, adjacent rows (b→c), so the SVG renders a top-down view.
+  // Ceramic caps are small axial discs — placed horizontally in row c as before.
   let cCol = firstFreeCol;
   const caps = bomData.components.filter(c => c.component_type === 'capacitor');
   for (const cap of caps) {
     for (let q = 0; q < Math.min(cap.quantity, 5); q++) {
       if (cCol > MAX_COL) break;
-      const span = guessCapSpan(cap.value);
-      placements.push({
-        type: 'capacitor',
-        value: cap.value,
-        label: cap.reference_designators[q] ?? cap.reference_designators[0] ?? cap.value,
-        startHole: `c${cCol}`,
-        endHole: `c${cCol + span}`,
-      });
-      cCol += span + 4;
+      const subtype = guessCapSubtype(cap.value);
+      const isUpright = subtype === 'electrolytic' || subtype === 'film';
+      if (isUpright) {
+        // Upright: startHole = positive lead (upper row b), endHole = negative (lower row c)
+        placements.push({
+          type: 'capacitor',
+          value: cap.value,
+          label: cap.reference_designators[q] ?? cap.reference_designators[0] ?? cap.value,
+          startHole: `b${cCol}`,
+          endHole: `c${cCol}`,
+        });
+        cCol += 3; // 1 column used + 2-hole gap
+      } else {
+        // Ceramic: horizontal disc in row c
+        const span = guessCapSpan(cap.value);
+        placements.push({
+          type: 'capacitor',
+          value: cap.value,
+          label: cap.reference_designators[q] ?? cap.reference_designators[0] ?? cap.value,
+          startHole: `c${cCol}`,
+          endHole: `c${cCol + span}`,
+        });
+        cCol += span + 4;
+      }
     }
   }
 
@@ -319,6 +337,22 @@ function generateJumperWires(
   }
 
   return [];
+}
+
+/**
+ * Classify a capacitor as electrolytic, film, or ceramic based on its value string.
+ * Electrolytics (≥1µF) and film caps (nF / sub-µF) are radial and stand upright.
+ * Ceramics (pF) are small axial discs placed horizontally.
+ */
+function guessCapSubtype(value: string): 'electrolytic' | 'film' | 'ceramic' {
+  const v = value.toLowerCase().replace(/\s/g, '');
+  if (v.includes('uf') || v.includes('µf')) {
+    const num = parseFloat(v);
+    if (!isNaN(num) && num >= 1) return 'electrolytic';
+    return 'film'; // sub-µF like 0.1µF, 0.22µF
+  }
+  if (v.includes('nf') || (v.includes('n') && !v.includes('pf'))) return 'film';
+  return 'ceramic'; // pF range
 }
 
 /**

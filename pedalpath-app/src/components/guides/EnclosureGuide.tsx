@@ -5,6 +5,8 @@ import {
   ENCLOSURE_SPECS,
   FACE_LAYOUTS_125B,
   FACE_LAYOUTS_1590B,
+  FACE_LAYOUTS_1590A,
+  EAST_WEST_JACKS_1590A,
   NORTH_SIDE_JACKS,
   autoSelectLayout,
   holeDiameter,
@@ -46,7 +48,7 @@ interface EnclosureDimensions {
 // 125B and 1590B use confirmed portrait dimensions from Pedal Parts Plus templates.
 // (see src/utils/enclosure-drill-templates.ts for full source notes)
 const ENCLOSURE_SIZES: Record<string, EnclosureDimensions> = {
-  '1590A':  { name: '1590A (Mini)',     width: 92,    height: 38,    depth: 31,   firstDrillY: 12 },
+  '1590A':  { name: '1590A (Mini)',     width: 35,    height: 78,    depth: 27,   firstDrillY: 12 },
   '1590B':  { name: '1590B (Standard)', width: 60.7,  height: 112.3, depth: 26.7, firstDrillY: 20 },
   '125B':   { name: '125B (Tall)',       width: 66.0,  height: 121.2, depth: 35.6, firstDrillY: 28 },
   '1590N1': { name: '1590N1 (Tall)',     width: 57.5,  height: 111,   depth: 31,   firstDrillY: 30 },
@@ -65,9 +67,9 @@ interface ForbiddenZone {
 }
 
 const FORBIDDEN_ZONES: Record<string, ForbiddenZone[]> = {
-  // 1590A: tiny, footswitch dominates bottom ~35%
+  // 1590A: portrait 35×78mm face; footswitch at Y=66mm (12mm from bottom)
   '1590A':  [
-    { label: 'FOOTSWITCH ZONE', yMin: 24,  yMax: 38,    color: '#ef4444' },
+    { label: 'FOOTSWITCH ZONE', yMin: 54,  yMax: 78,    color: '#ef4444' },
   ],
   // 1590B portrait (60.7×112.3): jacks on sides, footswitch at bottom 28mm
   '1590B':  [
@@ -113,12 +115,13 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   // Available layout presets for current enclosure
   const availableLayouts: FaceLayout[] =
     enclosureSize === '125B' ? FACE_LAYOUTS_125B :
-    enclosureSize === '1590B' ? FACE_LAYOUTS_1590B : [];
+    enclosureSize === '1590B' ? FACE_LAYOUTS_1590B :
+    enclosureSize === '1590A' ? FACE_LAYOUTS_1590A : [];
 
   // Auto-select best layout from BOM, or use user override
   const autoLayout =
-    (enclosureSize === '125B' || enclosureSize === '1590B')
-      ? autoSelectLayout(enclosureSize as '125B' | '1590B', potCount, hasToggle)
+    (enclosureSize === '125B' || enclosureSize === '1590B' || enclosureSize === '1590A')
+      ? autoSelectLayout(enclosureSize as '125B' | '1590B' | '1590A', potCount, hasToggle)
       : null;
 
   const activeLayout: FaceLayout | null =
@@ -166,6 +169,10 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
   const northJacks = NORTH_SIDE_JACKS[enclosureSize] ?? [];
   const northSpec = ENCLOSURE_SPECS[enclosureSize];
 
+  // 1590A: audio jacks are on east/west long sides (not north face)
+  const is1590A = enclosureSize === '1590A';
+  const ewJacks1590A = is1590A ? EAST_WEST_JACKS_1590A : null;
+
   // Legacy side panel holes for non-125B/1590B enclosures
   const hasInputJack  = !!bomData.components.find(c => c.component_type === 'input-jack');
   const hasOutputJack = !!bomData.components.find(c => c.component_type === 'output-jack');
@@ -178,9 +185,10 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
 
   const allDrillHoles = [
     ...faceHoles,
-    ...(northJacks.length === 0 && hasInputJack  ? [inputSideHole]  : []),
-    ...(northJacks.length === 0 && hasOutputJack ? [outputSideHole] : []),
-    ...(northJacks.length === 0 && hasDCJack     ? [dcEndHole]      : []),
+    ...(northJacks.length === 0 && !is1590A && hasInputJack  ? [inputSideHole]  : []),
+    ...(northJacks.length === 0 && !is1590A && hasOutputJack ? [outputSideHole] : []),
+    ...(northJacks.length === 0 && !is1590A && hasDCJack     ? [dcEndHole]      : []),
+    ...(ewJacks1590A ? [drillPointToHole(ewJacks1590A.input, 100), drillPointToHole(ewJacks1590A.output, 101)] : []),
   ];
 
   // Hardware Collision Detection — flag face holes landing in forbidden zones
@@ -957,8 +965,38 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </div>
             )}
 
+            {/* EAST/WEST SIDE PANELS — 1590A only (audio jacks on long sides, confirmed FuzzDog guide) */}
+            {is1590A && ewJacks1590A && northSpec && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                  <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                    West Side — Input Jack ({northSpec.eastWest.width.toFixed(1)}×{northSpec.eastWest.height.toFixed(1)}mm)
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-2 text-center">{ewJacks1590A.input.notes}</p>
+                  {renderDrillTemplate(
+                    [drillPointToHole(ewJacks1590A.input, 0)],
+                    northSpec.eastWest.width,
+                    northSpec.eastWest.height,
+                    'West Side'
+                  )}
+                </div>
+                <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+                  <h4 className="font-semibold text-gray-800 mb-3 text-center">
+                    East Side — Output Jack ({northSpec.eastWest.width.toFixed(1)}×{northSpec.eastWest.height.toFixed(1)}mm)
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-2 text-center">{ewJacks1590A.output.notes}</p>
+                  {renderDrillTemplate(
+                    [drillPointToHole(ewJacks1590A.output, 0)],
+                    northSpec.eastWest.width,
+                    northSpec.eastWest.height,
+                    'East Side'
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* SIDE PANELS (non-top-mount enclosures only) */}
-            {northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
+            {!is1590A && northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {hasInputJack && (
                   <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
@@ -979,8 +1017,8 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </div>
             )}
 
-            {/* END PANEL for DC (non-top-mount enclosures only) */}
-            {northJacks.length === 0 && hasDCJack && (
+            {/* END PANEL for DC (non-top-mount enclosures only, not 1590A which uses NORTH_SIDE_JACKS) */}
+            {!is1590A && northJacks.length === 0 && hasDCJack && (
               <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
                 <h4 className="font-semibold text-gray-800 mb-3 text-center">
                   Top End Panel — DC Power Jack ({dimensions.width}×{dimensions.depth}mm)
@@ -1057,7 +1095,42 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </>
             )}
 
-            {northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
+            {/* East/West jack drill list — 1590A only */}
+            {is1590A && ewJacks1590A && (
+              <>
+                <p className="text-sm font-medium text-gray-700 mt-2">East/West Side Panels (Audio Jacks)</p>
+                {[
+                  { side: 'W', label: 'West Side', jack: ewJacks1590A.input },
+                  { side: 'E', label: 'East Side', jack: ewJacks1590A.output },
+                ].map(({ side, label, jack }, idx) => {
+                  const hole = drillPointToHole(jack, idx);
+                  return (
+                    <div key={side} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-green-100 text-green-800 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm">{side}</div>
+                            <div>
+                              <h5 className="font-semibold text-gray-900">{hole.component} — {label}</h5>
+                              <div className="text-sm text-gray-600 mt-1">
+                                Diameter: <span className="font-medium">{hole.diameter}</span> |
+                                Position: <span className="font-medium">{hole.x}mm from top of long side</span>
+                              </div>
+                              {hole.notes && (
+                                <div className="text-sm text-gray-700 mt-2 italic">{hole.notes}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Circle className="w-6 h-6 text-gray-300" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {!is1590A && northJacks.length === 0 && (hasInputJack || hasOutputJack) && (
               <>
                 <p className="text-sm font-medium text-gray-700 mt-2">Side Panels</p>
                 {hasInputJack && (
@@ -1107,7 +1180,7 @@ export default function EnclosureGuide({ bomData, projectName: _projectName = 'Y
               </>
             )}
 
-            {northJacks.length === 0 && hasDCJack && (
+            {!is1590A && northJacks.length === 0 && hasDCJack && (
               <>
                 <p className="text-sm font-medium text-gray-700 mt-2">End Panel</p>
                 <div key="power" className="border border-gray-200 rounded-lg p-4">

@@ -52,7 +52,7 @@ Capacitors (most common values):
   CRITICAL: 500pF is a CAPACITOR (value = 500p or 500pF). It is NOT a resistor. A component labeled "500p" next to a capacitor symbol is a 500pF capacitor.
 
 Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
-  B100K · A100K · B50K · B10K · B25K · A50K · A1M · A10K · A500K · A250K · B250K · B500K · B1M
+  B100K · A100K · B50K · B10K · B25K · A50K · A1M · A10K · A500K · A250K · B250K · B500K · B1M · B5K · A5K · B1K · A1K
 
 ━━━ RULES ━━━
 0. POTENTIOMETER CLASSIFICATION (OVERRIDE): Any component whose value begins with a taper prefix — A (audio/log), B (linear), or C (reverse-log) — followed by a resistance (e.g. A100K, B50K, C10K, A500K, B250K, A1M) MUST be classified as component_type "potentiometer". This overrides any other classification. These values are NEVER resistors.
