@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SchematicUpload from '../components/schematic/SchematicUpload'
-import { processSchematic } from '../services/schematic-processor'
+import { prepareSchematic, analyzeSchematic } from '../services/schematic-processor'
 import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import { supabase } from '../services/supabase'
@@ -70,20 +70,20 @@ export default function UploadPage() {
 
       console.log('Project created:', project.id)
 
-      // STEP 2: Process schematic (now project exists in DB)
-      const result = await processSchematic(project.id, file, userId)
+      // STEP 2: Phase 1 — upload + create DB record (fast, ~2-3s)
+      const prepared = await prepareSchematic(project.id, file, userId)
 
-      console.log('Process schematic result:', result)
+      console.log('Schematic prepared, navigating immediately:', prepared.schematicId)
 
-      if (result.success && result.schematicId) {
-        // STEP 3: Usage tracking disabled until product launch
-        // incrementUsage(result.schematicId)
-        navigate(`/results/${result.schematicId}`)
-      } else {
-        const errorMsg = result.error || 'Analysis failed'
-        console.error('Upload failed:', errorMsg)
-        setError(errorMsg)
-      }
+      // STEP 3: Usage tracking disabled until product launch
+      // incrementUsage(prepared.schematicId)
+
+      // Navigate immediately — analysis runs in background
+      navigate(`/results/${prepared.schematicId}?status=processing`)
+
+      // Phase 2 — fire-and-forget: AI analysis runs after navigation
+      analyzeSchematic(prepared.schematicId, prepared.imageBase64, prepared.imageType, userId)
+        .catch(err => console.error('Background analysis failed:', err))
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error'
       console.error('Upload error:', err)
@@ -115,8 +115,8 @@ export default function UploadPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-            <p className="text-gray-600 text-lg font-medium">Analyzing schematic with AI...</p>
-            <p className="text-gray-500 text-sm mt-2">This usually takes 5-10 seconds</p>
+            <p className="text-gray-600 text-lg font-medium">Uploading schematic...</p>
+            <p className="text-gray-500 text-sm mt-2">You'll be redirected when upload is ready</p>
           </div>
         ) : (
           <SchematicUpload onUploadComplete={handleUploadComplete} />

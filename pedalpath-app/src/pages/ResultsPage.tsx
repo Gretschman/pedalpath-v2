@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSchematicStatus } from '../hooks/useSchematicStatus';
 import { supabase } from '../services/supabase';
 import { ArrowLeft, Plus, Save, Check, FileImage, ChevronDown, ChevronUp, Printer } from 'lucide-react';
 import { getBOMData } from '../services/schematic-processor';
@@ -13,16 +14,23 @@ import EnclosureGuide from '../components/guides/EnclosureGuide';
 export default function ResultsPage() {
   const { schematicId } = useParams<{ schematicId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAsyncUpload = searchParams.get('status') === 'processing';
+  const { status: schematicStatus } = useSchematicStatus(isAsyncUpload ? (schematicId ?? null) : null);
   const [activeTab, setActiveTab] = useState<'bom' | 'breadboard' | 'stripboard' | 'enclosure'>('bom');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [savedToast, setSavedToast] = useState(false);
   const [showSchematic, setShowSchematic] = useState(false);
 
+  // When arriving via async upload (?status=processing), wait for Realtime 'completed' signal
+  // before fetching BOM data.
+  const analysisReady = !isAsyncUpload || schematicStatus === 'completed';
+
   const { data: bomData, isLoading, error } = useQuery({
-    queryKey: ['schematic', schematicId],
+    queryKey: ['schematic', schematicId, analysisReady],
     queryFn: () => getBOMData(schematicId!),
-    enabled: !!schematicId,
+    enabled: !!schematicId && analysisReady,
   });
 
   const queryClient = useQueryClient()
@@ -109,6 +117,39 @@ export default function ResultsPage() {
   const saveError = saveMutation.isError
     ? (saveMutation.error instanceof Error ? saveMutation.error.message : 'Save failed — please try again')
     : null
+
+  // Show processing spinner while async analysis is in flight
+  if (isAsyncUpload && schematicStatus !== 'completed' && schematicStatus !== 'failed') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-sm mx-auto px-4">
+          <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-2 border-green-600 mb-6"></div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Analyzing your schematic</h2>
+          <p className="text-gray-600 text-sm mb-1">Claude Vision AI is reading your schematic.</p>
+          <p className="text-gray-500 text-xs">This usually takes 30–60 seconds. This page will update automatically.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAsyncUpload && schematicStatus === 'failed') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-red-900 mb-2">Analysis Failed</h2>
+            <p className="text-red-700 mb-4">The AI was unable to analyze your schematic. Please try again with a clearer image.</p>
+            <button
+              onClick={() => navigate('/upload')}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Upload Another Schematic
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

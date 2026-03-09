@@ -88,8 +88,8 @@ function selectSpriteId(component: BOMComponent): SpriteId {
       return 'resistor-axial';
 
     case 'capacitor': {
-      // notes field may carry package hint (e.g. "electrolytic")
-      const packageHint = notes;
+      // package field takes priority; fall back to notes field for legacy data
+      const packageHint = component.package ?? notes;
       const spriteId = getCapacitorSpriteId(packageHint, component.value);
       return spriteId;
     }
@@ -101,12 +101,14 @@ function selectSpriteId(component: BOMComponent): SpriteId {
       return 'diode-signal';
 
     case 'led':
-      if (value.includes('3mm') || notes.includes('3mm')) return 'led-3mm';
+      if (component.package === 'led-3mm' || value.includes('3mm') || notes.includes('3mm')) return 'led-3mm';
       return 'led-5mm';
 
     case 'transistor': {
       // Germanium transistors use TO-18 metal can
-      const isGe = value.match(/^ac\d|^oc\d|^ge|^ad\d|^af\d/i) !== null
+      const isGe = component.package === 'to18'
+        || component.material === 'Ge'
+        || value.match(/^ac\d|^oc\d|^ge|^ad\d|^af\d/i) !== null
         || notes.includes('ge')
         || notes.includes('germanium')
         || notes.includes('to-18')

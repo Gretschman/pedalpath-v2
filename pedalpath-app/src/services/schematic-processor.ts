@@ -11,6 +11,210 @@ interface ProcessSchematicResult {
   error?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Phase 1: Upload + create DB records (fast, ~2-3s)
+// ---------------------------------------------------------------------------
+
+export interface PrepareSchematicResult {
+  schematicId: string;
+  storagePath: string;
+  imageBase64: string;
+  imageType: string;
+  projectId: string;
+}
+
+/**
+ * Phase 1 of the async upload flow.
+ * Uploads the file to storage and creates the schematic DB record.
+ * Returns immediately after record creation — does NOT run AI analysis.
+ */
+export async function prepareSchematic(
+  projectId: string,
+  file: File,
+  userId: string,
+): Promise<PrepareSchematicResult> {
+  // Step 0: Detect actual file type from content (don't trust file extension)
+  const actualMimeType = await detectImageType(file);
+  console.log(`File: ${file.name}, Declared type: ${file.type}, Actual type: ${actualMimeType}`);
+
+  let fileToUpload = file;
+  if (actualMimeType !== file.type) {
+    console.log(`Correcting mime type from ${file.type} to ${actualMimeType}`);
+    fileToUpload = new File([file], file.name, { type: actualMimeType });
+  }
+
+  // Step 1: Upload file to storage
+  const uploadResult = await uploadSchematic(userId, fileToUpload, projectId);
+  if (!uploadResult) {
+    throw new Error('Failed to upload schematic file');
+  }
+
+  // Step 2: Create schematic record in database with status 'processing'
+  const { data: schematic, error: schematicError } = await supabase
+    .from('schematics')
+    .insert({
+      project_id: projectId,
+      storage_path: uploadResult.path,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: actualMimeType,
+      processing_status: 'processing',
+    })
+    .select()
+    .single();
+
+  if (schematicError || !schematic) {
+    console.error('Error creating schematic record:', schematicError);
+    throw new Error('Failed to create schematic record');
+  }
+
+  // Read file as base64 for AI analysis
+  const imageBase64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data URL prefix (e.g. "data:image/jpeg;base64,")
+      const base64 = result.split(',')[1] ?? result;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(fileToUpload);
+  });
+
+  return {
+    schematicId: schematic.id,
+    storagePath: uploadResult.path,
+    imageBase64,
+    imageType: actualMimeType,
+    projectId,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2: AI analysis + write BOM to DB (slow, ~45s)
+// Called fire-and-forget from UploadPage AFTER navigation
+// ---------------------------------------------------------------------------
+
+/**
+ * Phase 2 of the async upload flow.
+ * Runs AI analysis on an already-uploaded schematic and writes the BOM to DB.
+ * Safe to call fire-and-forget — updates processing_status on completion or failure.
+ */
+export async function analyzeSchematic(
+  schematicId: string,
+  imageBase64: string,
+  imageType: string,
+  userId: string,
+): Promise<void> {
+  // Build a synthetic File-like object for analyzeSchematicFile
+  // analyzeSchematicFile accepts a File; we reconstruct from base64
+  const binary = atob(imageBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: imageType });
+  const syntheticFile = new File([blob], 'schematic', { type: imageType });
+
+  // Fetch schematic record to get project_id
+  const { data: schematicRow } = await supabase
+    .from('schematics')
+    .select('project_id')
+    .eq('id', schematicId)
+    .single();
+
+  const projectId = schematicRow?.project_id ?? userId; // fallback; project_id should always exist
+
+  const analysisResult = await analyzeSchematicFile(syntheticFile);
+
+  if (!analysisResult.success || !analysisResult.bom_data) {
+    await supabase
+      .from('schematics')
+      .update({
+        processing_status: 'failed',
+        processing_error: analysisResult.error || 'Analysis failed',
+      })
+      .eq('id', schematicId);
+    throw new Error(analysisResult.error || 'Failed to analyze schematic');
+  }
+
+  const bomData = analysisResult.bom_data;
+
+  // Save BOM items
+  if (bomData.components && bomData.components.length > 0) {
+    const bomItems = bomData.components.map((component: BOMComponent) => ({
+      schematic_id: schematicId,
+      component_type: component.component_type,
+      value: component.value,
+      quantity: component.quantity,
+      reference_designators: component.reference_designators || [],
+      part_number: component.part_number || null,
+      supplier: component.supplier || null,
+      supplier_url: component.supplier_url || null,
+      confidence: component.confidence || null,
+      verified: component.verified || false,
+      notes: component.notes || null,
+      package: (component as BOMComponent & { package?: string }).package || null,
+      material: (component as BOMComponent & { material?: string }).material || null,
+    }));
+
+    const { error: bomError } = await supabase.from('bom_items').insert(bomItems);
+    if (bomError) {
+      console.error('Error saving BOM items:', bomError);
+    }
+  }
+
+  // Save enclosure recommendation
+  if (bomData.enclosure) {
+    const { error: enclosureError } = await supabase
+      .from('enclosure_recommendations')
+      .insert({
+        schematic_id: schematicId,
+        size: bomData.enclosure.size,
+        drill_count: bomData.enclosure.drill_count || null,
+        notes: bomData.enclosure.notes || null,
+      });
+    if (enclosureError) {
+      console.error('Error saving enclosure recommendation:', enclosureError);
+    }
+  }
+
+  // Save power requirements
+  if (bomData.power) {
+    const { error: powerError } = await supabase
+      .from('power_requirements')
+      .insert({
+        schematic_id: schematicId,
+        voltage: bomData.power.voltage,
+        current: bomData.power.current || null,
+        polarity: bomData.power.polarity,
+      });
+    if (powerError) {
+      console.error('Error saving power requirements:', powerError);
+    }
+  }
+
+  // Mark schematic complete
+  await supabase
+    .from('schematics')
+    .update({
+      processing_status: 'completed',
+      ai_confidence_score: Math.round(bomData.confidence_score),
+    })
+    .eq('id', schematicId);
+
+  // Update project status
+  const { error: projectUpdateError } = await supabase
+    .from('projects')
+    .update({ status: 'in_progress' })
+    .eq('id', projectId);
+  if (projectUpdateError) {
+    console.error('Warning: project status update failed:', projectUpdateError);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// processSchematic — kept for backward compatibility; calls phase 1 + phase 2
+// ---------------------------------------------------------------------------
+
 /**
  * Process a schematic file end-to-end:
  * 1. Upload to storage
@@ -25,156 +229,16 @@ export async function processSchematic(
   userId: string
 ): Promise<ProcessSchematicResult> {
   try {
-    // Step 0: Detect actual file type from content (don't trust file extension)
-    // This handles cases where files are misnamed (e.g., JPEG with .gif extension)
-    const actualMimeType = await detectImageType(file);
-    console.log(`File: ${file.name}, Declared type: ${file.type}, Actual type: ${actualMimeType}`);
+    const prepared = await prepareSchematic(projectId, file, userId);
+    await analyzeSchematic(prepared.schematicId, prepared.imageBase64, prepared.imageType, userId);
 
-    // Create a new File object with the correct mime type if it differs
-    let fileToUpload = file;
-    if (actualMimeType !== file.type) {
-      console.log(`Correcting mime type from ${file.type} to ${actualMimeType}`);
-      fileToUpload = new File([file], file.name, { type: actualMimeType });
-    }
-
-    // Step 1: Upload file to storage
-    const uploadResult = await uploadSchematic(userId, fileToUpload, projectId);
-    if (!uploadResult) {
-      return {
-        success: false,
-        error: 'Failed to upload schematic file',
-      };
-    }
-
-    // Step 2: Create schematic record in database
-    const { data: schematic, error: schematicError } = await supabase
-      .from('schematics')
-      .insert({
-        project_id: projectId,
-        storage_path: uploadResult.path,
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: actualMimeType, // Use detected mime type, not declared
-        processing_status: 'processing',
-      })
-      .select()
-      .single();
-
-    if (schematicError || !schematic) {
-      console.error('Error creating schematic record:', schematicError);
-      return {
-        success: false,
-        error: 'Failed to create schematic record',
-      };
-    }
-
-    // Step 3: Analyze schematic with Claude Vision (use corrected file)
-    const analysisResult = await analyzeSchematicFile(fileToUpload);
-
-    if (!analysisResult.success || !analysisResult.bom_data) {
-      // Update schematic status to failed
-      await supabase
-        .from('schematics')
-        .update({
-          processing_status: 'failed',
-          processing_error: analysisResult.error || 'Analysis failed',
-        })
-        .eq('id', schematic.id);
-
-      return {
-        success: false,
-        error: analysisResult.error || 'Failed to analyze schematic',
-        schematicId: schematic.id,
-      };
-    }
-
-    const bomData = analysisResult.bom_data;
-
-    // Step 4: Save BOM data to database
-
-    // 4a. Save BOM items
-    if (bomData.components && bomData.components.length > 0) {
-      const bomItems = bomData.components.map((component: BOMComponent) => ({
-        schematic_id: schematic.id,
-        component_type: component.component_type,
-        value: component.value,
-        quantity: component.quantity,
-        reference_designators: component.reference_designators || [],
-        part_number: component.part_number || null,
-        supplier: component.supplier || null,
-        supplier_url: component.supplier_url || null,
-        confidence: component.confidence || null,
-        verified: component.verified || false,
-        notes: component.notes || null,
-      }));
-
-      const { error: bomError } = await supabase
-        .from('bom_items')
-        .insert(bomItems);
-
-      if (bomError) {
-        console.error('Error saving BOM items:', bomError);
-        // Continue anyway - we can still use the data
-      }
-    }
-
-    // 4b. Save enclosure recommendation
-    if (bomData.enclosure) {
-      const { error: enclosureError } = await supabase
-        .from('enclosure_recommendations')
-        .insert({
-          schematic_id: schematic.id,
-          size: bomData.enclosure.size,
-          drill_count: bomData.enclosure.drill_count || null,
-          notes: bomData.enclosure.notes || null,
-        });
-
-      if (enclosureError) {
-        console.error('Error saving enclosure recommendation:', enclosureError);
-      }
-    }
-
-    // 4c. Save power requirements
-    if (bomData.power) {
-      const { error: powerError } = await supabase
-        .from('power_requirements')
-        .insert({
-          schematic_id: schematic.id,
-          voltage: bomData.power.voltage,
-          current: bomData.power.current || null,
-          polarity: bomData.power.polarity,
-        });
-
-      if (powerError) {
-        console.error('Error saving power requirements:', powerError);
-      }
-    }
-
-    // Step 5: Update schematic status to completed
-    await supabase
-      .from('schematics')
-      .update({
-        processing_status: 'completed',
-        ai_confidence_score: Math.round(bomData.confidence_score),
-      })
-      .eq('id', schematic.id);
-
-    // Step 6: Update project status to in_progress
-    const { error: projectUpdateError } = await supabase
-      .from('projects')
-      .update({ status: 'in_progress' })
-      .eq('id', projectId);
-    if (projectUpdateError) {
-      console.error('Warning: project status update failed:', projectUpdateError)
-      // Non-fatal — return success anyway since BOM data is saved
-    }
-
+    // Re-fetch BOM data for the return value
+    const bomData = await getBOMData(prepared.schematicId);
     return {
       success: true,
-      schematicId: schematic.id,
-      bomData,
+      schematicId: prepared.schematicId,
+      bomData: bomData ?? undefined,
     };
-
   } catch (error) {
     console.error('Error processing schematic:', error);
     return {
