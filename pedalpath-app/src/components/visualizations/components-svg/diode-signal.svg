@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 24">
+  <!-- Leads -->
+  <line x1="0" y1="12" x2="18" y2="12" stroke="#888" stroke-width="1.5"/>
+  <line x1="62" y1="12" x2="80" y2="12" stroke="#888" stroke-width="1.5"/>
+  <!-- Glass body -->
+  <rect x="18" y="5" width="44" height="14" rx="7" fill="#e8f0e8" stroke="#aabcaa" stroke-width="0.8"/>
+  <!-- Glass highlight -->
+  <ellipse cx="28" cy="8" rx="7" ry="2.5" fill="rgba(255,255,255,0.6)"/>
+  <!-- Cathode band -->
+  <rect x="55" y="5" width="7" height="14" rx="1" fill="#222" id="cathode-band"/>
+  <!-- Anode mark faint -->
+  <line x1="24" y1="7" x2="24" y2="17" stroke="rgba(180,200,180,0.5)" stroke-width="0.5"/>
+</svg>

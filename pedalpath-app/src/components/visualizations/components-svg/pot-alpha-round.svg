@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70">
+  <!-- Outer body circle -->
+  <circle cx="35" cy="32" r="28" fill="#3a3a3a"/>
+  <!-- Outer ring -->
+  <circle cx="35" cy="32" r="28" fill="none" stroke="#222" stroke-width="2"/>
+  <!-- Inner bushing -->
+  <circle cx="35" cy="32" r="10" fill="#555"/>
+  <!-- Shaft hole -->
+  <circle cx="35" cy="32" r="5" fill="#222"/>
+  <!-- Highlight -->
+  <ellipse cx="27" cy="22" rx="9" ry="6" fill="rgba(255,255,255,0.12)"/>
+  <!-- Lug 1 CCW (left) -->
+  <rect x="4" y="28" width="10" height="8" rx="1" fill="#aaa"/>
+  <!-- Lug 2 wiper (bottom center) -->
+  <rect x="30" y="56" width="10" height="10" rx="1" fill="#aaa"/>
+  <!-- Lug 3 CW (right) -->
+  <rect x="56" y="28" width="10" height="8" rx="1" fill="#aaa"/>
+  <!-- Lug labels -->
+  <text x="7" y="35" font-size="6" fill="#555" font-family="sans-serif">1</text>
+  <text x="33" y="63" font-size="6" fill="#555" font-family="sans-serif">2</text>
+  <text x="60" y="35" font-size="6" fill="#555" font-family="sans-serif">3</text>
+</svg>

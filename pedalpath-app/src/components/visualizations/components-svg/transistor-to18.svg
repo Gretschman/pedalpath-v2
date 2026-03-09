@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 65">
+  <!-- Leads -->
+  <line x1="13" y1="44" x2="13" y2="65" stroke="#888" stroke-width="1.5"/>
+  <line x1="25" y1="44" x2="25" y2="65" stroke="#888" stroke-width="1.5"/>
+  <line x1="37" y1="44" x2="37" y2="65" stroke="#888" stroke-width="1.5"/>
+  <!-- Can body -->
+  <circle cx="25" cy="24" r="20" fill="#b8b8c0"/>
+  <!-- Can highlight -->
+  <ellipse cx="18" cy="16" rx="8" ry="5" fill="rgba(255,255,255,0.4)"/>
+  <!-- Can border -->
+  <circle cx="25" cy="24" r="20" fill="none" stroke="#888" stroke-width="1"/>
+  <!-- Tab indicator (notch for pin 1) -->
+  <path d="M5,24 L1,20 L1,28 Z" fill="#888"/>
+  <!-- Ge label -->
+  <text x="17" y="28" font-size="8" fill="rgba(0,0,0,0.4)" font-family="sans-serif" font-style="italic">Ge</text>
+</svg>

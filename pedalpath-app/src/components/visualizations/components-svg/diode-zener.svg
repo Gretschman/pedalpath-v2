@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 24">
+  <!-- Leads -->
+  <line x1="0" y1="12" x2="18" y2="12" stroke="#888" stroke-width="1.5"/>
+  <line x1="62" y1="12" x2="80" y2="12" stroke="#888" stroke-width="1.5"/>
+  <!-- Glass body -->
+  <rect x="18" y="5" width="44" height="14" rx="7" fill="#e8f0e8" stroke="#aabcaa" stroke-width="0.8"/>
+  <!-- Glass highlight -->
+  <ellipse cx="28" cy="8" rx="7" ry="2.5" fill="rgba(255,255,255,0.6)"/>
+  <!-- Cathode band -->
+  <rect x="55" y="5" width="7" height="14" fill="#222"/>
+  <!-- Zener indicator lines -->
+  <line x1="55" y1="5" x2="52" y2="9" stroke="#666" stroke-width="1.2"/>
+  <line x1="62" y1="19" x2="65" y2="15" stroke="#666" stroke-width="1.2"/>
+  <!-- Z label -->
+  <text x="33" y="16" font-size="7" fill="#666" font-family="monospace">Z</text>
+</svg>

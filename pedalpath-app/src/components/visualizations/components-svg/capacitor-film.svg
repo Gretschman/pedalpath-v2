@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 55">
+  <!-- Leads -->
+  <line x1="13" y1="42" x2="13" y2="55" stroke="#888" stroke-width="1.5"/>
+  <line x1="27" y1="42" x2="27" y2="55" stroke="#888" stroke-width="1.5"/>
+  <!-- Body -->
+  <rect x="4" y="8" width="32" height="34" rx="2" fill="#d4a017"/>
+  <!-- Top highlight -->
+  <rect x="4" y="8" width="32" height="6" rx="2" fill="rgba(255,255,255,0.3)"/>
+  <!-- Body border -->
+  <rect x="4" y="8" width="32" height="34" rx="2" fill="none" stroke="#a07810" stroke-width="0.8"/>
+</svg>

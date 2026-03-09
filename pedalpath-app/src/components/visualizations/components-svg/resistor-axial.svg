@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 30">
+  <!-- Lead wires -->
+  <line x1="0" y1="15" x2="15" y2="15" stroke="#888" stroke-width="1.5"/>
+  <line x1="65" y1="15" x2="80" y2="15" stroke="#888" stroke-width="1.5"/>
+  <!-- Body -->
+  <rect x="15" y="6" width="50" height="18" rx="3" fill="#c8a882"/>
+  <!-- 3D highlight sheen -->
+  <rect x="15" y="7" width="50" height="4" fill="rgba(255,255,255,0.35)"/>
+  <!-- Band 1 -->
+  <rect x="22" y="6" width="6" height="18" fill="var(--pp-band1, #8B7355)" id="band1"/>
+  <!-- Band 2 -->
+  <rect x="31" y="6" width="6" height="18" fill="var(--pp-band2, #8B7355)" id="band2"/>
+  <!-- Band 3 -->
+  <rect x="40" y="6" width="6" height="18" fill="var(--pp-band3, #8B7355)" id="band3"/>
+  <!-- Band 4 tolerance -->
+  <rect x="53" y="6" width="6" height="18" fill="var(--pp-band4, #D4A017)" id="band4"/>
+  <!-- Body border -->
+  <rect x="15" y="6" width="50" height="18" rx="3" fill="none" stroke="#a08060" stroke-width="0.5"/>
+</svg>

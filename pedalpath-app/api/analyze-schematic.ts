@@ -8,7 +8,11 @@ const SYSTEM_PROMPT = `You are an expert electronics engineer specialising in gu
 const USER_PROMPT = `Analyze the guitar effects pedal schematic image and extract every electronic component that is shown.
 
 ━━━ WHAT COUNTS AS A COMPONENT ━━━
-A component MUST have a recognisable schematic SYMBOL (zigzag=resistor, parallel lines=capacitor, triangle=op-amp, etc.) AND a reference designator (R1, C1, Q1, U1, P1, SW1, J1, D1, LED1…).
+A component MUST have BOTH:
+  1. A recognisable schematic SYMBOL (zigzag=resistor, parallel lines=capacitor, triangle=op-amp, etc.)
+  2. A reference designator EXPLICITLY VISIBLE IN THE IMAGE (R1, C1, Q1, U1, P1, SW1, J1, D1, LED1…)
+
+If you cannot see a reference designator label next to the symbol in the image, DO NOT report that component. No exceptions.
 
 ━━━ WHAT IS NOT A COMPONENT — DO NOT REPORT THESE ━━━
 • Board/product names (e.g. "Defizzerator", "Tube Screamer", "Big Muff")
@@ -56,8 +60,10 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
   B100K · A100K · B50K · B10K · B25K · A50K · A1M · A10K · A500K · A250K · B250K · B500K · B1M · B5K · A5K · B1K · A1K
 
 ━━━ RULES ━━━
+STRICT COUNT RULE (read this first): Your output list length MUST equal the number of components you can see labeled with reference designators in the image. Do NOT add components because they are "implied" by the circuit, "typically present", "required for the circuit to work", or "usually found in pedals". Do NOT add components you cannot directly see labeled. Do NOT duplicate a component because it appears in two places. Count what is in front of you — nothing more.
+
 0. POTENTIOMETER CLASSIFICATION (OVERRIDE): Any component whose value begins with a taper prefix — A (audio/log), B (linear), or C (reverse-log) — followed by a resistance (e.g. A100K, B50K, C10K, A500K, B250K, A1M) MUST be classified as component_type "potentiometer". This overrides any other classification. These values are NEVER resistors.
-1. Report ONLY components with a clear schematic symbol + reference designator. If a value is illegible, estimate it with low confidence rather than skipping — never skip a component just because its value is hard to read. Never set value to "unspecified" — always give a best estimate.
+1. Report ONLY components with a clear schematic symbol + reference designator VISIBLE IN THE IMAGE. If a value is illegible, estimate it with low confidence rather than skipping. Never set value to "unspecified" — always give a best estimate. But if there is no reference designator label visible, do not report the component at all.
 2. Grouping: ONLY group components into quantity > 1 when their values are CLEARLY and UNAMBIGUOUSLY identical — meaning you can read every digit of both labels and they match exactly. ANY doubt = separate entries. NEVER group two adjacent components just because they look similar or share a reference prefix (e.g. R9 and R10 might be different values even though they are neighbours). Read each label individually before deciding to group.
 3. Value accuracy — watch for common misreads:
    • 1k vs 1M (one-k vs one-meg) — check for the Ω or k/M suffix carefully. In most pedal circuits the majority of resistors are 1k–470k; a circuit with many "1M" resistors is unusual. If you read multiple 1M values where they seem unexpected, re-examine each label.
@@ -92,7 +98,22 @@ Potentiometers (taper prefix: B=linear, A=audio/log, C=reverse-log):
    tone: potentiometers for tone/treble/bass/EQ and their associated RC networks
    output: volume/level potentiometer and final output stage components
    When uncertain, use "active".
-9. Return ONLY valid JSON. No markdown, no commentary.
+9. Package — set "package" using exactly one of these values based on component type and physical form:
+   resistor → "axial"
+   capacitor → "electrolytic" (cylindrical can, polarized, ≥1µF), "ceramic-disc" (small disc, ≤100nF typical), "film" (rectangular brick, polyester/polypropylene), or "tantalum" (teardrop body, polarized)
+     • Rule: electrolytic if the symbol shows a curved plate (polarized) AND value ≥ 1µF; ceramic-disc if value ≤ 100nF and no polarity marking; film if value is in nF/µF range and symbol is non-polarized rectangular; tantalum if explicitly labeled "tant" or "tantalum"
+   transistor → "to92" for standard silicon BJT/JFET/MOSFET; "to18" for germanium (AC128, OC71, NKT275, etc.)
+   ic or op-amp → "dip8" (8-pin, e.g. TL072/JRC4558/LM308/LM386), "dip14" (14-pin, e.g. TL074), "dip16" (16-pin, e.g. CD4049)
+   diode → "axial" (glass or epoxy body)
+   led → "led-5mm" (standard indicator LED), "led-3mm" (smaller LED — use only if labeled 3mm)
+   input-jack or output-jack → "ts"
+   dc-jack → "barrel"
+   potentiometer → "alpha-round"
+   footswitch → "stomp"
+   switch → "stomp"
+   inductor → "axial"
+   other → "axial"
+10. Return ONLY valid JSON. No markdown, no commentary.
 
 Return this exact structure:
 
@@ -101,6 +122,7 @@ Return this exact structure:
     {
       "component_type": "resistor" | "capacitor" | "inductor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
       "value": "<value as written on schematic, e.g. 10k, 100nF, 2N3904>",
+      "package": "axial" | "electrolytic" | "ceramic-disc" | "film" | "tantalum" | "to92" | "to18" | "dip8" | "dip14" | "dip16" | "ts" | "barrel" | "alpha-round" | "stomp" | "led-5mm" | "led-3mm",
       "quantity": 1,
       "reference_designators": ["R1"],
       "confidence": 95,
@@ -133,6 +155,7 @@ Return this exact structure:
 interface OffBoardComponent {
   component_type: string;
   value: string;
+  package: string;
   quantity: number;
   reference_designators: string[];
   confidence: number;
@@ -144,6 +167,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
   {
     component_type: 'input-jack',
     value: '1/4" Mono Jack',
+    package: 'ts',
     quantity: 1,
     reference_designators: ['J_IN'],
     confidence: 99,
@@ -153,6 +177,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
   {
     component_type: 'output-jack',
     value: '1/4" Mono Jack',
+    package: 'ts',
     quantity: 1,
     reference_designators: ['J_OUT'],
     confidence: 99,
@@ -162,6 +187,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
   {
     component_type: 'dc-jack',
     value: '2.1mm Barrel Jack (center-negative)',
+    package: 'barrel',
     quantity: 1,
     reference_designators: ['J_DC'],
     confidence: 99,
@@ -171,6 +197,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
   {
     component_type: 'footswitch',
     value: '3PDT',
+    package: 'stomp',
     quantity: 1,
     reference_designators: ['FS1'],
     confidence: 99,
@@ -184,6 +211,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
   {
     component_type: 'led',
     value: '5mm Red LED',
+    package: 'led-5mm',
     quantity: 1,
     reference_designators: ['LED1'],
     confidence: 90,
@@ -193,6 +221,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
   {
     component_type: 'resistor',
     value: '4.7k',
+    package: 'axial',
     quantity: 1,
     reference_designators: ['R_CLR'],
     confidence: 90,

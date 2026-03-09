@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 55">
+  <!-- Leads -->
+  <line x1="14" y1="28" x2="14" y2="55" stroke="#888" stroke-width="1.5"/>
+  <line x1="26" y1="28" x2="26" y2="55" stroke="#888" stroke-width="1.5"/>
+  <!-- Disc body -->
+  <circle cx="20" cy="18" r="15" fill="#d4740a"/>
+  <!-- Disc highlight -->
+  <circle cx="16" cy="13" r="5" fill="rgba(255,255,255,0.2)"/>
+  <!-- Disc border -->
+  <circle cx="20" cy="18" r="15" fill="none" stroke="#b05e08" stroke-width="0.8"/>
+  <!-- Lead entry line -->
+  <line x1="5" y1="28" x2="35" y2="28" stroke="#b05e08" stroke-width="0.5"/>
+</svg>

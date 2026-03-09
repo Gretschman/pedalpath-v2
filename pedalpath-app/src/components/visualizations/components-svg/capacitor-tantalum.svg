@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 55">
+  <!-- Leads -->
+  <line x1="13" y1="44" x2="13" y2="55" stroke="#888" stroke-width="1.5"/>
+  <line x1="27" y1="44" x2="27" y2="55" stroke="#888" stroke-width="1.5"/>
+  <!-- Teardrop body -->
+  <path d="M20,4 C32,4 36,16 36,28 C36,40 28,44 20,44 C12,44 4,40 4,28 C4,16 8,4 20,4 Z" fill="#c8a800"/>
+  <!-- Polarity stripe overlay -->
+  <rect x="4" y="4" width="8" height="40" rx="2" fill="rgba(255,255,255,0.18)"/>
+  <!-- Highlight -->
+  <ellipse cx="15" cy="14" rx="5" ry="4" fill="rgba(255,255,255,0.25)"/>
+  <!-- Plus symbol -->
+  <text x="28" y="20" font-size="9" font-weight="bold" fill="rgba(100,80,0,0.7)" font-family="sans-serif">+</text>
+  <!-- Body border -->
+  <path d="M20,4 C32,4 36,16 36,28 C36,40 28,44 20,44 C12,44 4,40 4,28 C4,16 8,4 20,4 Z" fill="none" stroke="#9a7e00" stroke-width="0.8"/>
+</svg>

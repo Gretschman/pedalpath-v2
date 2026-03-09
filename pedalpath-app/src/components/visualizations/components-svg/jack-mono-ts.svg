@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40">
+  <!-- Barrel body -->
+  <rect x="5" y="10" width="55" height="20" rx="3" fill="#707070"/>
+  <!-- Nut/thread area -->
+  <rect x="4" y="9" width="8" height="22" rx="1" fill="#888"/>
+  <!-- Tip section -->
+  <rect x="60" y="14" width="15" height="12" rx="2" fill="#b0b0b0"/>
+  <!-- Tip ring separator -->
+  <line x1="68" y1="14" x2="68" y2="26" stroke="#444" stroke-width="1.5"/>
+  <!-- Highlight -->
+  <rect x="5" y="10" width="55" height="5" rx="2" fill="rgba(255,255,255,0.2)"/>
+  <!-- TS label -->
+  <text x="22" y="24" font-size="8" fill="rgba(255,255,255,0.6)" font-family="sans-serif">TS</text>
+  <!-- Mounting threads -->
+  <line x1="4" y1="14" x2="12" y2="14" stroke="#666" stroke-width="0.7"/>
+  <line x1="4" y1="18" x2="12" y2="18" stroke="#666" stroke-width="0.7"/>
+  <line x1="4" y1="22" x2="12" y2="22" stroke="#666" stroke-width="0.7"/>
+</svg>

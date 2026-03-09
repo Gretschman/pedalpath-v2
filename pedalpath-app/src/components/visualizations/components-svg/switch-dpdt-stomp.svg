@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 75">
+  <!-- Body circle -->
+  <circle cx="30" cy="28" r="25" fill="#2a2a2a"/>
+  <!-- Outer ring -->
+  <circle cx="30" cy="28" r="25" fill="none" stroke="#444" stroke-width="2"/>
+  <!-- Center actuator -->
+  <circle cx="30" cy="28" r="8" fill="#666"/>
+  <!-- Actuator highlight -->
+  <circle cx="27" cy="25" r="3" fill="rgba(255,255,255,0.2)"/>
+  <!-- 3PDT label -->
+  <text x="16" y="34" font-size="7" fill="rgba(255,255,255,0.4)" font-family="sans-serif">3PDT</text>
+  <!-- 9 pin holes in 3x3 grid (rows at y=56, 62, 68) -->
+  <circle cx="16" cy="56" r="2.5" fill="#888"/>
+  <circle cx="30" cy="56" r="2.5" fill="#888"/>
+  <circle cx="44" cy="56" r="2.5" fill="#888"/>
+  <circle cx="16" cy="62" r="2.5" fill="#888"/>
+  <circle cx="30" cy="62" r="2.5" fill="#888"/>
+  <circle cx="44" cy="62" r="2.5" fill="#888"/>
+  <circle cx="16" cy="68" r="2.5" fill="#888"/>
+  <circle cx="30" cy="68" r="2.5" fill="#888"/>
+  <circle cx="44" cy="68" r="2.5" fill="#888"/>
+</svg>

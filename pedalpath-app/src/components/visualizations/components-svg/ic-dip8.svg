@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 38">
+  <!-- Body -->
+  <rect x="10" y="4" width="50" height="30" rx="2" fill="#1e1e1e"/>
+  <!-- Pin 1 notch (semicircle indent at left end) -->
+  <path d="M10,14 A8,6 0 0,1 10,24" fill="#111"/>
+  <!-- Left pins 1-4 -->
+  <rect x="2" y="7" width="8" height="3" fill="#aaa"/>
+  <rect x="2" y="13" width="8" height="3" fill="#aaa"/>
+  <rect x="2" y="19" width="8" height="3" fill="#aaa"/>
+  <rect x="2" y="25" width="8" height="3" fill="#aaa"/>
+  <!-- Right pins 5-8 -->
+  <rect x="60" y="25" width="8" height="3" fill="#aaa"/>
+  <rect x="60" y="19" width="8" height="3" fill="#aaa"/>
+  <rect x="60" y="13" width="8" height="3" fill="#aaa"/>
+  <rect x="60" y="7" width="8" height="3" fill="#aaa"/>
+  <!-- Pin 1 dot -->
+  <circle cx="16" cy="12" r="2" fill="rgba(255,255,255,0.3)"/>
+  <!-- Highlight -->
+  <rect x="10" y="4" width="50" height="5" rx="1" fill="rgba(255,255,255,0.08)"/>
+  <!-- Body border -->
+  <rect x="10" y="4" width="50" height="30" rx="2" fill="none" stroke="#444" stroke-width="0.5"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 40">
+  <!-- Outer body -->
+  <rect x="5" y="8" width="45" height="24" rx="4" fill="#606060"/>
+  <!-- Center pin -->
+  <rect x="50" y="16" width="15" height="8" rx="2" fill="#c0a040"/>
+  <!-- Outer sleeve -->
+  <rect x="50" y="10" width="12" height="20" rx="2" fill="#888" fill-opacity="0.5"/>
+  <!-- Highlight -->
+  <rect x="5" y="8" width="45" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+  <!-- Center polarity label -->
+  <text x="54" y="22" font-size="8" font-weight="bold" fill="#c0a040" font-family="sans-serif">+</text>
+  <!-- Body label -->
+  <text x="18" y="24" font-size="8" fill="rgba(255,255,255,0.6)" font-family="sans-serif">DC</text>
+  <!-- Mounting nut -->
+  <rect x="4" y="7" width="8" height="26" rx="1" fill="#777"/>
+</svg>
