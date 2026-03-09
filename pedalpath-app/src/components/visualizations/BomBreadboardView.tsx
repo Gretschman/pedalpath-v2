@@ -350,6 +350,12 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, visibl
                     if (!spec) return null;
                     const start = holeToCoordinates(placement.startHole, LAYOUT_830);
                     const end   = holeToCoordinates(placement.endHole,   LAYOUT_830);
+                    // Parse column numbers from hole IDs (e.g. "a5" → 5, "a10" → 10)
+                    const startCol = parseInt(placement.startHole.substring(1));
+                    const endCol   = parseInt(placement.endHole.substring(1));
+                    // Body width = (endCol - startCol - 1) * holeSpacing
+                    // Leaves one hole-pitch of lead wire on each side of the body
+                    const bodyLengthOverride = (endCol - startCol - 1) * LAYOUT_830.holeSpacing;
                     return (
                       <g key={idx} opacity={opacity} filter={filterAttr}>
                         <ResistorSVG
@@ -357,6 +363,7 @@ export default function BomBreadboardView({ bomData, focusComponentTypes, visibl
                           endX={end.x}     endY={end.y}
                           spec={spec}
                           label={placement.label}
+                          bodyLengthOverride={bodyLengthOverride}
                         />
                       </g>
                     );

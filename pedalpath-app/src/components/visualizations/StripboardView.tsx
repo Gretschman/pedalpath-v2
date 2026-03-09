@@ -278,9 +278,18 @@ function BoardSVG({ copperSide, cutSet, componentPlacements = [] }: BoardSVGProp
         </text>
       ))}
 
-      {/* Component overlays — component side only */}
-      {!copperSide && componentPlacements.length > 0 && (
-        <ComponentOverlay components={componentPlacements} />
+      {/* Component overlays — component side only.
+          When viewing the copper side the board is flipped horizontally (mirror).
+          The component layer must be mirrored to match the copper-side perspective. */}
+      {componentPlacements.length > 0 && (
+        copperSide ? (
+          // Copper side: horizontal mirror so component positions match the flipped board view
+          <g transform={`scale(-1, 1) translate(-${TOTAL_W}, 0)`}>
+            <ComponentOverlay components={componentPlacements} />
+          </g>
+        ) : (
+          <ComponentOverlay components={componentPlacements} />
+        )
       )}
     </svg>
   );

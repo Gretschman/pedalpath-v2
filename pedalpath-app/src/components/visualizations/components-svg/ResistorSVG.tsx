@@ -52,6 +52,12 @@ export interface ResistorSVGProps {
   visible?: boolean;
   /** Click handler */
   onClick?: () => void;
+  /**
+   * Override body length in pixels.
+   * When provided, computed from lead spacing: (endCol - startCol - 1) * holeSpacing.
+   * Falls back to proportional calculation if omitted.
+   */
+  bodyLengthOverride?: number;
 }
 
 // ===========================================================================
@@ -86,6 +92,7 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
   bodyColor,
   visible = true,
   onClick,
+  bodyLengthOverride,
 }) => {
   if (!visible) return null;
 
@@ -107,7 +114,8 @@ const ResistorSVG: React.FC<ResistorSVGProps> = ({
   // Resistor body dimensions (in pixels)
   // Scale: 24px = 2.54mm → 9.45px/mm
   // 1/4W resistor body: ~6.5mm long × 2.3mm dia → 61px × 22px
-  const bodyLength = Math.min(totalLength * 0.65, 62);
+  // bodyLengthOverride = (endCol - startCol - 1) * holeSpacing — computed from lead spacing
+  const bodyLength = bodyLengthOverride ?? Math.min(totalLength * 0.65, 62);
   const bodyWidth = 20; // 2.3mm dia @ 9.45px/mm ≈ 22px (20 keeps clear of adjacent rows)
 
   // Band positioning (5-band vs 4-band layouts)
