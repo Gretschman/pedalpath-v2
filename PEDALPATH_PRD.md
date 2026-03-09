@@ -1,415 +1,154 @@
-# PedalPath - Product Requirements Document (PRD)
+# PedalPath v2 — Product Requirements Document
 
-**Version:** 1.0
-**Date:** January 27, 2026
-**Timeline:** 7 weeks (MVP Launch: March 17, 2026)
-**Target Market:** DIY Guitar Pedal Builders
+**Version**: 2.1 (March 2026 strategic review)
+**Status**: Active development — Session 9 complete, 172 tests passing
 
 ---
 
-## Executive Summary
+## Product Vision
 
-PedalPath is an AI-assisted SaaS platform that transforms guitar pedal schematics into "Lego-simple" build instructions. Users upload or photograph a schematic, and the system generates a complete Bill of Materials (BOM), component layout, and step-by-step assembly guide for building the pedal on stripboard or breadboard.
+PedalPath is a SaaS tool for DIY guitar pedal builders. A user uploads a schematic image; PedalPath returns a complete bill of materials with accurate visual component illustrations and a step-by-step breadboard build guide. The experience should feel like having a knowledgeable builder friend who can read any schematic and hand you a laminated instruction sheet.
 
-**Mission:** Make DIY pedal building so simple that anyone can build professional-quality guitar effects pedals.
+**Target user**: The hobbyist builder who can solder but struggles to read schematics, identify components from value strings, or translate a circuit diagram into a physical layout.
 
-**Vision:** The "IKEA instructions" for guitar pedal building - visual, simple, foolproof.
-
----
-
-## Problem Statement
-
-### Current Pain Points
-1. **Complexity Barrier**: Reading schematics requires electrical engineering knowledge
-2. **Layout Challenges**: Converting schematics to physical layouts is difficult and error-prone
-3. **Parts Sourcing**: Identifying and sourcing correct components is time-consuming
-4. **Build Errors**: High failure rate for first-time builders due to unclear instructions
-5. **Fragmented Resources**: Information scattered across forums, PDFs, and YouTube videos
-
-### Target Users
-- **Primary**: Beginner DIY pedal builders (ages 18-45)
-- **Secondary**: Intermediate builders looking for faster prototyping
-- **Tertiary**: Music educators and workshop instructors
+**Commercial target**: 50,000 users, subscription model. Stripe integration is the next monetization milestone.
 
 ---
 
-## Product Overview
+## Platform Priority
 
-### Core Value Proposition
-**"Upload a schematic. Get Lego-simple build instructions in minutes."**
+**Primary target**: Desktop web browser — Windows (Chrome/Edge) and macOS (Safari/Chrome), equally supported.
 
-### Key Features
+**Rationale**: Desktop users have larger screens for schematic viewing, more comfortable file upload workflows, and the target audience (DIY builders at a workbench) is overwhelmingly desktop-first. Desktop also provides more rendering resources for the SVG-heavy breadboard and component visualization features.
 
-#### Phase 1: MVP (Weeks 1-7)
+**Mobile / iOS**: Backlog. Do not work on mobile-specific UI, PWA features, safe area insets, viewport meta optimization, or iOS web shell integration until Stripe is live and the core desktop experience is complete. The `pedalpath-ios-web-shell-gh` folder in `_INBOX` is archived — do not pull it into active work.
 
-**1. Schematic Upload & Processing**
-- **Mobile**: Take photo with camera OR select from photo roll
-- **Desktop**: Upload image file (PNG, JPG) or PDF document
-- Cross-platform: Works on iOS, iPadOS, Android, Mac, Windows
-- AI extracts circuit components and connections
-- Validates schematic completeness
-
-**2. Bill of Materials (BOM) Generation**
-- Complete parts list with specifications
-- Quantity calculations
-- Direct links to parts suppliers (Mouser, Tayda, etc.)
-- Cost estimation
-- Alternative component suggestions
-- Enclosure recommendations
-
-**3. Stripboard Layout Generation**
-- Visual stripboard layout (top and bottom view)
-- Component placement diagram
-- Track cuts marked clearly
-- Wire connections shown
-- Color-coded by component type
-
-**4. Breadboard Layout Generation**
-- Breadboard layout for testing
-- Component placement
-- Jumper wire connections
-- Power rail connections
-- Matches standard breadboard dimensions
-
-**5. Lego-Style Build Instructions**
-- Step-by-step visual assembly guide
-- Numbered steps with illustrations
-- "What you need" for each step
-- Component identification with photos
-- Clear wiring diagrams
-- Offboard wiring (I/O jacks, power, footswitch)
-- Final assembly into enclosure
-
-**6. User Account & Project Management**
-- Save projects
-- Track build progress
-- Multiple projects per user
-- Share builds with community (optional)
-
-#### Phase 2: Enhanced Features (Weeks 8-12, Post-MVP)
-- Interactive 3D component placement
-- Video tutorials auto-generated
-- Community library of verified builds
-- Shopping cart integration with parts suppliers
-- Build difficulty rating
-- Tone stack calculator integration
-- PCB layout generation (premium feature)
+**Minimum desktop standard**:
+- Layout designed for 1280px minimum viewport width
+- Schematic upload via drag-and-drop and file picker (both work on desktop)
+- BOM cards and breadboard view optimized for mouse + keyboard interaction
+- No hamburger menus, bottom nav bars, or touch-target sizing constraints
 
 ---
 
-## Technical Requirements
+## Core User Flow
 
-### Functional Requirements
-
-**FR1: Schematic Upload**
-- Support JPG, PNG, PDF formats (max 10MB)
-- **Three upload methods**:
-  1. **Camera**: Take photo directly (iOS Camera API, Android Camera API)
-  2. **Photo Roll**: Select existing image from device gallery/photos
-  3. **File Upload**: Browse and upload from Mac/Windows file system
-- Image preprocessing (rotation, brightness correction, auto-crop)
-- OCR for component values and labels
-
-**FR2: AI Schematic Analysis**
-- Component recognition (resistors, capacitors, ICs, transistors, etc.)
-- Connection topology extraction
-- Node identification
-- Schematic validation (power rails, ground, etc.)
-
-**FR3: BOM Generation**
-- Part number identification
-- Specs extraction (resistance, capacitance, voltage rating, etc.)
-- Quantity calculation
-- Cost estimation from supplier APIs
-- Alternative parts suggestions (e.g., 1N4148 vs 1N914)
-
-**FR4: Layout Generation**
-- Stripboard: automatic routing algorithm
-- Breadboard: automatic routing algorithm
-- Minimize track cuts
-- Optimize for smallest board size
-- Clear visual output (SVG/PNG)
-
-**FR5: Build Instructions**
-- Step-by-step text + images
-- Component identification photos
-- Wiring color codes
-- Assembly order optimization
-- PDF export functionality
-
-**FR6: User Management**
-- Email/password authentication
-- OAuth (Google, GitHub)
-- Project dashboard
-- Save/load projects
-- Build history
-
-### Non-Functional Requirements
-
-**NFR1: Performance**
-- Schematic processing: < 30 seconds
-- BOM generation: < 10 seconds
-- Layout generation: < 60 seconds
-- Page load time: < 2 seconds
-
-**NFR2: Usability**
-- Mobile-first responsive design
-- iOS/iPadOS native feel
-- Maximum 3 clicks to start a build
-- Inline help and tooltips
-- Works offline for saved projects
-
-**NFR3: Reliability**
-- 99.5% uptime
-- Automatic retry for failed uploads
-- Data backup every 24 hours
-- Graceful degradation if AI service fails
-
-**NFR4: Security**
-- HTTPS only
-- Secure file upload (virus scanning)
-- Rate limiting on uploads
-- User data encryption at rest
-- GDPR compliant
-
-**NFR5: Scalability**
-- Support 1,000 concurrent users
-- Handle 10,000 schematics processed/month
-- Auto-scaling infrastructure
+1. User uploads schematic image (JPG, PNG, PDF)
+2. System analyzes schematic via tiered pipeline (see Architecture)
+3. User sees BOM cards — one per component, with accurate visual illustration
+4. User steps through breadboard guide — circuit-functional sections (power → input → active → clipping → tone → output), each with a WHY explanation
+5. Cumulative board view: components accumulate step by step; current step glows amber
 
 ---
 
-## User Stories
+## Visual Fidelity Standard
 
-### Epic 1: Schematic to BOM
-**US1.1**: As a beginner builder, I want to upload a schematic photo from my phone so that I don't need to scan it on a computer.
+**This is the most critical product requirement.**
 
-**US1.2**: As a user, I want the system to tell me if my schematic is incomplete so that I don't waste time on invalid builds.
+A builder must be able to hold any component from a standard pedal BOM, look at its card on a mobile screen, and immediately confirm they are holding the correct part. This means:
 
-**US1.3**: As a builder, I want a complete BOM with direct purchase links so that I can order all parts in one session.
+- Resistors render with correct IEC 60062 color bands computed from value string
+- Electrolytic capacitors render as dark cylindrical cans with white polarity stripe and radial leads
+- Ceramic disc capacitors render as small orange discs — NOT cylinders
+- Film capacitors render as yellow/orange rectangular bricks
+- Tantalum capacitors render as teardrop-shaped yellow bodies with polarity marking
+- TO-92 transistors render as D-shaped black epoxy packages with labeled E/B/C leads — NOT schematic symbols
+- DIP ICs render as black DIP packages with correct pin count and notch at pin 1
+- LEDs render with correct lens color matching the color value from AI analysis
+- Mono jacks render as 6.35mm TS jack side profiles
+- Barrel jacks render as 5.5/2.1mm connectors with center polarity marked
+- DPDT/3PDT switches render as stomp switch top-down view footprints
 
-**US1.4**: As a budget-conscious builder, I want to see alternative cheaper components so that I can reduce costs.
-
-### Epic 2: Build Instructions
-**US2.1**: As a beginner, I want visual step-by-step instructions like IKEA furniture so that I can build without prior electronics knowledge.
-
-**US2.2**: As a builder, I want to see both stripboard and breadboard layouts so that I can test before soldering.
-
-**US2.3**: As a visual learner, I want color-coded wiring diagrams so that I don't make wiring mistakes.
-
-**US2.4**: As a builder, I want offboard wiring instructions so that I know how to connect jacks and switches.
-
-### Epic 3: Project Management
-**US3.1**: As a user, I want to save my projects so that I can return to them later.
-
-**US3.2**: As a builder, I want to mark build steps as complete so that I can track my progress.
-
-**US3.3**: As a user, I want to export instructions to PDF so that I can print them for my workbench.
+**Architecture that achieves this**: Static SVG sprite library + dynamic decorator engine. One sprite per distinct physical appearance. Decorator engine applies value-based properties (color bands, lens color, body selector) deterministically. This replaces the former parameterized-template approach which conflated component type with package and could not represent distinct physical appearances.
 
 ---
 
-## Technical Architecture Overview
+## AI Output Contract
 
-### Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **Hosting**: Vercel (CDN + Serverless)
-- **Database**: Supabase (PostgreSQL + Auth + Storage)
-- **AI/ML**:
-  - OpenAI GPT-4 Vision API (schematic analysis)
-  - Claude API (fallback/cost optimization)
-  - Google Gemini (free tier for testing)
-- **Image Processing**: Sharp.js, Canvas API
-- **Layout Generation**: Custom algorithm + D3.js/SVG
-- **File Storage**: Supabase Storage (schematics, generated images)
+Every component returned by the schematic analysis pipeline must conform to this interface:
 
-### System Components
-1. **Web Frontend**: React SPA
-2. **API Layer**: Vercel Serverless Functions
-3. **AI Service**: OpenAI Vision API + Claude
-4. **Database**: Supabase PostgreSQL
-5. **File Storage**: Supabase Storage
-6. **Authentication**: Supabase Auth
+```typescript
+interface AnalyzedComponent {
+  ref: string;           // "R1", "C3", "Q1"
+  type: ComponentType;   // "resistor" | "capacitor" | "transistor" | "ic" | "diode" | "led" | "pot" | "jack" | "switch"
+  value: string;         // "3k9", "470uF", "2N3904"
+  package: string;       // "axial" | "electrolytic" | "ceramic-disc" | "film" | "tantalum" | "to92" | "to18" | "dip8" | "dip14" | "dip16" | "ts" | "trs" | "barrel" | "stomp"
+  polarized: boolean;
+  quantity: number;
+  notes: string;
+  confidence: number;    // 0–1
+}
+```
+
+The `package` field is required. Without it, the visual system cannot select the correct sprite. Any prompt change that removes `package` from the AI output schema breaks the visual system.
 
 ---
 
-## Success Metrics (KPIs)
+## BOM Section Classification
 
-### Launch Metrics (Week 7)
-- 50 beta users signed up
-- 100 schematics processed
-- < 30 second average processing time
-- 90% successful BOM generation
-- 80% successful layout generation
+Components are classified into circuit-functional sections at analysis time via Rule 8 in the Claude prompt:
 
-### Month 3 Metrics
-- 500 active users
-- 1,000 schematics processed
-- 75% user retention (month-over-month)
-- 4.5+ star rating from users
-- < 5% error rate on builds
+- `power` — voltage regulators, power filter caps, clipping diodes on power rail
+- `input` — input coupling caps, input resistors, input buffer stage
+- `active` — op-amps, transistors, ICs — the core gain stage
+- `clipping` — clipping diodes, hard/soft clipping networks
+- `tone` — tone stack components, EQ caps and resistors
+- `output` — output coupling caps, output resistors, volume pot
 
-### Business Metrics
-- Freemium model: 3 free builds/month
-- Paid tier: $9/month unlimited builds
-- Target: 100 paid users by Month 6
-- Break-even: Month 8
+Build guide steps follow this section order exactly. Each section has a WHY explanation of its electrical purpose.
 
 ---
 
-## Pricing Model
+## Accuracy Standard
 
-### Free Tier
-- 3 schematics per month
-- Basic BOM generation
-- Standard layouts
-- Watermarked PDFs
-- Community support
+BOM accuracy is measured as: (correctly identified components / total reference components) × 100.
 
-### Pro Tier ($9/month)
-- Unlimited schematics
-- Advanced BOM (alternative parts, supplier comparison)
-- Priority processing
-- High-res exports (no watermarks)
-- 3D visualization
-- Email support
-- PCB layout generation (coming soon)
+**Threshold**: 85% accuracy required before a circuit is considered supported.
 
-### Enterprise Tier ($49/month)
-- Everything in Pro
-- API access
-- White-label option
-- Custom component libraries
-- Dedicated support
+`tools/accuracy_test.py` runs automated accuracy tests against reference circuits in Supabase and files GitHub issues for any circuit scoring below 85%. Run after every prompt change.
+
+**Current known regressions** (as of session 9): see `docs/generated/session_log.md` for current accuracy scores. Do not hardcode percentages here — they change every session.
 
 ---
 
-## Risks & Mitigation
+## Breadboard Layout Standard
 
-### Technical Risks
-**Risk**: AI fails to accurately recognize components
-**Mitigation**: Manual correction UI, community verification, training data improvement
+See `PEDALPATH_ARCHITECTURE.md` for full BB830/GS-400 specifications and the 6-stage validation pipeline.
 
-**Risk**: Layout generation produces invalid circuits
-**Mitigation**: Circuit validation algorithm, human review queue for edge cases
-
-**Risk**: High AI API costs
-**Mitigation**: Use ChatGPT-4o-mini for simple tasks, cache results, use Gemini for free tier
-
-### Business Risks
-**Risk**: Low user adoption
-**Mitigation**: Beta launch with DIY communities (Reddit, forums), YouTube tutorials
-
-**Risk**: Competitors emerge
-**Mitigation**: Focus on simplicity and UX, build community, iterate fast
-
-### Legal Risks
-**Risk**: Schematic copyright issues
-**Mitigation**: Terms of service, user responsibility, DMCA compliance
+Key requirements:
+- Component bodies sized proportionally to actual lead spacing — not fixed pixel widths
+- BB830 center channel gap (7.62mm) must be visible
+- BB830 bus strips are split at midpoint — two independent 25-hole segments per rail
+- All component placements pass 6-stage validation before rendering
+- Stripboard copper-side view is horizontally mirrored
+- Wires render as Bézier curves with color coding (red=VCC, black=GND, green=signal in, blue=signal out)
 
 ---
 
-## Timeline: 7-Week Sprint
+## Monetization
 
-### Week 1: Foundation
-- Project setup (React, Supabase, Vercel)
-- Database schema design
-- Authentication implementation
-- Basic UI scaffolding
+**Stripe integration is the next major milestone after visual system and breadboard rendering are correct.**
 
-### Week 2: Schematic Upload
-- Image upload functionality
-- Camera integration (mobile)
-- Image preprocessing
-- File storage setup
+See `docs/stripe-launch-checklist.md` for the complete pre-launch env var setup sequence. Do not begin Stripe work until component visualization and breadboard rendering meet the standards above.
 
-### Week 3: AI Integration
-- OpenAI Vision API integration
-- Component recognition prototype
-- Connection extraction
-- Schematic validation
-
-### Week 4: BOM Generation
-- Parts database setup
-- BOM generation algorithm
-- Supplier API integration
-- Cost calculation
-
-### Week 5: Layout Generation
-- Stripboard routing algorithm
-- Breadboard routing algorithm
-- SVG/PNG export
-- Layout optimization
-
-### Week 6: Build Instructions
-- Step-by-step instruction generator
-- Visual asset creation
-- Wiring diagram generation
-- PDF export
-
-### Week 7: Polish & Launch
-- UI/UX refinement
-- Mobile optimization
-- Testing & bug fixes
-- Beta launch
-- Documentation
+**Pricing model**: Free tier (limited uploads/month) + Pro subscription. Quota enforcement is implemented in `src/pages/UploadPage.tsx` with two commented-out lines clearly marked — uncomment at launch.
 
 ---
 
-## Out of Scope (Phase 1)
+## Out of Scope (current phase)
 
+- **Mobile / iOS UI** — backlog until after Stripe launches. This includes PWA manifest, safe area insets, viewport meta optimization, bottom navigation, touch targets, and the `pedalpath-ios-web-shell-gh` integration.
+
+- Batch schematic uploads (may be a Pro feature later)
+- Multi-model LLM routing (GPT-4o-mini, Gemini routing) — use Claude for all analysis for consistency
 - PCB layout generation
-- Audio simulation/testing
-- Video tutorials
-- Community forums
-- Shopping cart integration
-- Tone stack calculator
-- Component inventory management
-- Build time estimation
-- Multi-language support
+- Export to KiCad / EasyEDA formats
 
 ---
 
-## Assumptions
+## Reference Material
 
-1. Users have basic understanding of electronics (know what a resistor is)
-2. Uploaded schematics are reasonably clear and readable
-3. Standard guitar pedal circuits (9V, common components)
-4. Users have access to soldering equipment
-5. Initial focus on overdrive/distortion/fuzz pedals (simpler circuits)
-
----
-
-## Glossary
-
-- **BOM**: Bill of Materials - complete parts list
-- **Stripboard**: Perforated board with parallel copper strips for prototyping
-- **Breadboard**: Solderless prototyping board
-- **Offboard**: Components outside the main circuit board (jacks, switches)
-- **Schematic**: Circuit diagram showing electrical connections
-- **Layout**: Physical arrangement of components
-
----
-
-## Appendix
-
-### Competitor Analysis
-1. **DIY Layout Creator**: Desktop app, manual layout, outdated UI
-2. **Fritzing**: General electronics, not pedal-specific, steep learning curve
-3. **PedalPCB**: Sells PCBs but no custom schematic support
-4. **DIYRE**: Kits only, not custom builds
-
-**PedalPath Advantage**: AI-powered, mobile-first, Lego-simple, custom schematics
-
-### Reference Materials
-- Beavis Audio breadboard guides
-- DIYLC (DIY Layout Creator)
-- Electrosmash circuit analysis
-- R.G. Keen's articles (GEO)
-- DIYStompboxes forum
-
----
-
-**Document Owner**: Rob Frankel
-**Reviewers**: [To be assigned]
-**Approval Date**: [Pending]
+- `PEDALPATH_ARCHITECTURE.md` — technical architecture, component pipeline, breadboard spec
+- `docs/stripe-launch-checklist.md` — Stripe launch steps
+- `docs/generated/session_log.md` — current status, accuracy scores, priorities
+- `_REFERENCE/technical-specs/` — strategic review documents (breadboard audit, pipeline cost analysis, component visualization epic)
