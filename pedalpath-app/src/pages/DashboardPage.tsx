@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight, RefreshCw, Share2 } from 'lucide-react'
+import { Upload, Clock, CheckCircle, AlertCircle, Trash2, ChevronRight, RefreshCw, Share2, Zap } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { useProjects } from '../hooks/useProjects'
+import { useCreditStatus } from '../hooks/useCreditStatus'
+import { useAuth } from '../contexts/AuthContext'
 
 function haptic() {
   navigator.vibrate?.(10)
@@ -25,6 +27,8 @@ async function shareResult(title: string, schematicId: string) {
 export default function DashboardPage() {
   const { projects, isLoading, error, refetch, deleteProject, isDeleting } = useProjects()
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const { user } = useAuth()
+  const credits = useCreditStatus(user?.id)
   const [refreshing, setRefreshing] = useState(false)
   const touchStartY = useRef(-1)
   const navigate = useNavigate()
@@ -80,6 +84,30 @@ export default function DashboardPage() {
             New Upload
           </Link>
         </div>
+
+        {/* Credit / upgrade indicator */}
+        {credits && credits.plan !== 'studio' && (
+          <Link
+            to="/pricing"
+            className={`flex items-center justify-between mb-4 px-4 py-3 rounded-xl border text-sm font-medium transition ${
+              (credits.effective_credits ?? 0) === 0
+                ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                : (credits.effective_credits ?? 0) <= 3
+                ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                : 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              {credits.plan === 'free'
+                ? (credits.effective_credits ?? 0) > 0
+                  ? '1 free analysis remaining'
+                  : 'Free credit used — upgrade to continue'
+                : `${credits.effective_credits ?? 0} credit${(credits.effective_credits ?? 0) === 1 ? '' : 's'} remaining · ${credits.plan}`}
+            </span>
+            <span className="text-xs opacity-70">View plans →</span>
+          </Link>
+        )}
 
         {/* Stats — iOS grouped inline row */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">

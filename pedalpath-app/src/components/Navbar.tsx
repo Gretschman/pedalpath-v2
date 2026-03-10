@@ -1,12 +1,26 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Guitar, LogOut, Home, Menu, X } from 'lucide-react'
+import { Guitar, LogOut, Home, Menu, X, Zap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useCreditStatus } from '../hooks/useCreditStatus'
 
 export default function Navbar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const credits = useCreditStatus(user?.id)
+
+  const creditLabel =
+    !credits ? null
+    : credits.plan === 'studio' ? '∞'
+    : credits.effective_credits === null ? '∞'
+    : `${credits.effective_credits}`
+
+  const creditColor =
+    !credits || credits.plan === 'studio' ? 'text-green-600'
+    : (credits.effective_credits ?? 0) > 3 ? 'text-green-600'
+    : (credits.effective_credits ?? 0) > 0 ? 'text-amber-500'
+    : 'text-red-500'
 
   const handleSignOut = async () => {
     try {
@@ -38,7 +52,25 @@ export default function Navbar() {
                 Dashboard
               </Link>
 
+              <Link
+                to="/pricing"
+                className="text-sm text-gray-600 hover:text-gray-900 transition"
+              >
+                Pricing
+              </Link>
+
               <div className="h-6 w-px bg-gray-300"></div>
+
+              {creditLabel !== null && (
+                <Link
+                  to="/pricing"
+                  className={`flex items-center gap-1 text-sm font-medium ${creditColor} hover:opacity-80 transition`}
+                  title="Credits remaining"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  {creditLabel}
+                </Link>
+              )}
 
               <span className="text-sm text-gray-600 max-w-[200px] truncate">
                 {user.email}
@@ -78,6 +110,14 @@ export default function Navbar() {
           >
             <Home className="w-4 h-4" />
             Dashboard
+          </Link>
+          <Link
+            to="/pricing"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-3 px-2 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
+          >
+            <Zap className="w-4 h-4" />
+            Pricing
           </Link>
           <button
             onClick={() => { setMenuOpen(false); handleSignOut(); }}

@@ -50,7 +50,9 @@ vercel --prod --yes    # deploy
 - `tools/corrections_report.py` — queries user-submitted corrections, groups by error pattern, outputs prompt action items
 - `tools/verify_alignment.py` — MB-102 mechanical audit: verifies coordinate-to-grid mapping + Matrix-5 power rail positions
 - `tools/inbox_hygiene.py` — auto-archives/deletes stale _INBOX files; runs at every session start
-- `start_session.sh` — runs ALL sync tools + inbox hygiene + git status before starting work
+- `tools/update_session_state.py` — auto-refreshes Production State block in SESSION_STATE.md; call at session end
+- `pedalpath-app/api/consume-credit.ts` — serverless endpoint: POST {userId} → checks + deducts 1 credit via creditGate
+- `start_session.sh` — runs ALL sync tools + inbox hygiene + git status before starting work; prints SESSION_STATE.md first
 
 ---
 

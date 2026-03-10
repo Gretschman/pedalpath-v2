@@ -46,9 +46,13 @@ function parseOhmsForThumbnail(value: string): number {
 }
 
 /** Identification hint used in ComponentThumbnail cards. */
-function componentHint(type: string): string {
+function componentHint(type: string, pkg?: string): string {
   if (type === 'resistor') return 'Color bands on beige body';
-  if (type === 'capacitor') return 'Check polarity on electrolytic';
+  if (type === 'capacitor') {
+    const p = (pkg ?? '').toLowerCase();
+    if (p === 'electrolytic' || p === 'tantalum') return 'Check polarity — negative stripe';
+    return ''; // film and ceramic caps are non-polarized
+  }
   if (type === 'diode') return 'Stripe = cathode (–)';
   if (type === 'led') return 'Flat side = cathode (–)';
   if (type === 'transistor') return 'Flat face toward you';
@@ -682,9 +686,9 @@ export default function BreadboardGuide({ bomData, projectName: _projectName = '
                     <span className="text-xs text-gray-500 text-center leading-tight">
                       {component.reference_designators.slice(0, 3).join(', ')}
                     </span>
-                    {componentHint(component.component_type) && (
+                    {componentHint(component.component_type, component.package) && (
                       <span className="text-xs text-gray-400 text-center leading-tight italic">
-                        {componentHint(component.component_type)}
+                        {componentHint(component.component_type, component.package)}
                       </span>
                     )}
                   </div>

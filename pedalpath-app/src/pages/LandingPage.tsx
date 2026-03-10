@@ -17,6 +17,12 @@ export default function LandingPage() {
 
           <nav className="flex items-center gap-2">
             <Link
+              to="/pricing"
+              className="hidden sm:flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
               to="/signin"
               className="hidden sm:flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
@@ -76,7 +82,12 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="mt-5 text-white/40 text-sm">Free to try · No credit card required</p>
+          <p className="mt-5 text-white/40 text-sm">
+            Free to try · No credit card required ·{' '}
+            <Link to="/pricing" className="text-white/60 hover:text-white underline underline-offset-2 transition-colors">
+              See plans &amp; pricing
+            </Link>
+          </p>
         </div>
       </section>
 

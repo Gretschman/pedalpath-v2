@@ -12,6 +12,16 @@ echo "║     PedalPath v2 — Session Startup            ║"
 echo "╚══════════════════════════════════════════════╝"
 echo ""
 
+# ── 0. Session state (last sprint, pending items) ───
+SESSION_STATE="$REPO/SESSION_STATE.md"
+if [ -f "$SESSION_STATE" ]; then
+    echo "▶ SESSION STATE (last sprint + pending):"
+    echo "──────────────────────────────────────────────"
+    cat "$SESSION_STATE"
+    echo "──────────────────────────────────────────────"
+    echo ""
+fi
+
 # ── 1. Git status ───────────────────────────────────
 echo "▶ Git status"
 cd "$REPO"

@@ -10,7 +10,7 @@ interface PricingModalProps {
 }
 
 export function PricingModal({ isOpen, onClose, onSelectPlan, reason = 'limit_reached' }: PricingModalProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('pro');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('builder');
 
   if (!isOpen) return null;
 
@@ -76,7 +76,7 @@ export function PricingModal({ isOpen, onClose, onSelectPlan, reason = 'limit_re
                   {/* Plan name */}
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-500">{plan.description}</p>
+                    <p className="text-sm text-gray-500">{plan.tagline}</p>
                   </div>
 
                   {/* Price */}
@@ -109,12 +109,14 @@ export function PricingModal({ isOpen, onClose, onSelectPlan, reason = 'limit_re
                         onSelectPlan(plan);
                       }}
                       className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
-                        plan.recommended
+                        plan.isCoffee
+                          ? 'bg-amber-400 text-gray-900 hover:bg-amber-300'
+                          : plan.recommended
                           ? 'bg-blue-500 text-white hover:bg-blue-600'
                           : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                       }`}
                     >
-                      {plan.interval === 'month' ? 'Start Free Trial' : 'Pay Once'}
+                      {plan.isCoffee ? 'Buy Credits' : 'Get Started'}
                     </button>
                   )}
 

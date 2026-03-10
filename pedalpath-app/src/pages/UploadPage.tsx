@@ -31,8 +31,18 @@ export default function UploadPage() {
     try {
       const userId = user.id // NO FALLBACK - must be authenticated
 
-      // STEP 0: Upload quota check — disabled until product launch
-      // Re-enable by restoring: const usage = await checkUsage(); if (!usage.allowed) { ... }
+      // STEP 0: Credit gate — check balance and deduct 1 credit
+      const creditRes = await fetch('/api/consume-credit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+      const creditData = await creditRes.json()
+      if (!creditRes.ok || !creditData.allowed) {
+        setShowUpgrade(true)
+        setLoading(false)
+        return
+      }
 
       console.log('Starting upload process:', {
         fileName: file.name,
@@ -75,8 +85,7 @@ export default function UploadPage() {
 
       console.log('Schematic prepared, navigating immediately:', prepared.schematicId)
 
-      // STEP 3: Usage tracking disabled until product launch
-      // incrementUsage(prepared.schematicId)
+      // STEP 3: Credit was already deducted at STEP 0 (consume-credit API)
 
       // Navigate immediately — analysis runs in background
       navigate(`/results/${prepared.schematicId}?status=processing`)

@@ -2,78 +2,85 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2026-02-25.clover'
 });
 
+type Plan = 'coffee' | 'starter' | 'builder' | 'studio';
+
+const PRICE_IDS: Record<Plan, string> = {
+  coffee:  process.env.STRIPE_PRICE_COFFEE!,
+  starter: process.env.STRIPE_PRICE_STARTER!,
+  builder: process.env.STRIPE_PRICE_BUILDER!,
+  studio:  process.env.STRIPE_PRICE_STUDIO!,
+};
+
+const APP_URL = process.env.VITE_APP_URL || 'http://localhost:5173';
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { priceId, userId, userEmail, planType } = req.body;
+    const { plan, userId, userEmail } = req.body as {
+      plan: Plan;
+      userId: string;
+      userEmail: string;
+    };
 
-    if (!priceId || !userId || !userEmail) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!plan || !userId || !userEmail) {
+      return res.status(400).json({ error: 'Missing required fields: plan, userId, userEmail' });
     }
 
-    // Create or retrieve Stripe customer
-    let customer: Stripe.Customer;
+    if (!PRICE_IDS[plan]) {
+      return res.status(400).json({ error: `Unknown plan: ${plan}` });
+    }
 
-    // Try to find existing customer by email
-    const existingCustomers = await stripe.customers.list({
-      email: userEmail,
-      limit: 1
-    });
+    const priceId = PRICE_IDS[plan];
+
+    // Create or retrieve Stripe customer by email
+    let customer: Stripe.Customer;
+    const existingCustomers = await stripe.customers.list({ email: userEmail, limit: 1 });
 
     if (existingCustomers.data.length > 0) {
       customer = existingCustomers.data[0];
     } else {
-      // Create new customer
       customer = await stripe.customers.create({
         email: userEmail,
-        metadata: {
-          supabase_user_id: userId
-        }
+        metadata: { supabase_user_id: userId }
       });
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Coffee = one-time payment; everything else = recurring subscription
+    const isOneTime = plan === 'coffee';
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customer.id,
-      mode: planType === 'one-time' ? 'payment' : 'subscription',
+      mode: isOneTime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1
-        }
-      ],
-      success_url: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/pricing`,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${APP_URL}/dashboard?upgraded=true&plan=${plan}`,
+      cancel_url:  `${APP_URL}/pricing`,
       metadata: {
         supabase_user_id: userId,
-        plan_type: planType
+        plan
       },
-      subscription_data: planType === 'subscription' ? {
-        metadata: {
-          supabase_user_id: userId
-        },
-        trial_period_days: 7 // 7-day free trial
-      } : undefined,
-      allow_promotion_codes: true
-    });
+      allow_promotion_codes: true,
+    };
 
-    return res.status(200).json({
-      sessionId: session.id,
-      url: session.url
-    });
+    // Subscription plans get metadata on the subscription object for webhook access
+    if (!isOneTime) {
+      sessionParams.subscription_data = {
+        metadata: { supabase_user_id: userId, plan }
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    return res.status(200).json({ sessionId: session.id, url: session.url });
 
   } catch (error: any) {
     console.error('Stripe checkout error:', error);
-    return res.status(500).json({
-      error: error.message || 'Failed to create checkout session'
-    });
+    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
   }
 }

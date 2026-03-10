@@ -215,8 +215,9 @@ function identHint(component: BOMComponent): string {
   const t = component.component_type;
   if (t === 'resistor') return 'Color bands on beige/tan body';
   if (t === 'capacitor') {
-    const v = component.value.toLowerCase();
-    if (v.includes('µf') || v.includes('uf') || v.includes('mf') || parseFloat(v) >= 1) {
+    const pkg = (component.package ?? '').toLowerCase();
+    // Gate polarity hint on explicit package field or tantalum keyword in value
+    if (pkg === 'electrolytic' || pkg === 'tantalum' || component.value.toLowerCase().includes('tant')) {
       return 'Cylindrical can — check polarity stripe';
     }
     return 'Small yellow or brown disc/box';

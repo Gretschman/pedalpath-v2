@@ -15,6 +15,7 @@ import DiodeDemo from './pages/DiodeDemo'
 import WireDemo from './pages/WireDemo'
 import StripboardDemo from './pages/StripboardDemo'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import PricingPage from './pages/PricingPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <Route path="/signin" element={<SignInPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/demo" element={<DemoPage />} />
       <Route path="/breadboard-demo" element={<BreadboardDemo />} />
       <Route path="/stripboard-demo" element={<StripboardDemo />} />

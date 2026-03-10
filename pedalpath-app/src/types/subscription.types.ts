@@ -1,6 +1,9 @@
-// Subscription and payment types
+// Subscription and payment types — 5-tier credit model
 
-export type SubscriptionPlan = 'free' | 'pro' | 'one-time';
+export type Plan = 'free' | 'coffee' | 'starter' | 'builder' | 'studio';
+
+// Legacy alias
+export type SubscriptionPlan = Plan;
 
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'expired';
 
@@ -10,21 +13,13 @@ export interface Subscription {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
-  plan: SubscriptionPlan;
+  plan: Plan;
   status: SubscriptionStatus;
-  schematics_used_this_month: number;
-  schematics_limit: number;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
-}
-
-export interface UsageCheck {
-  allowed: boolean;
-  reason: string;
-  schematics_remaining: number;
 }
 
 export interface PaymentTransaction {
@@ -36,67 +31,97 @@ export interface PaymentTransaction {
   amount_cents: number;
   currency: string;
   status: 'pending' | 'succeeded' | 'failed' | 'refunded';
-  payment_type: 'subscription' | 'one-time';
+  payment_type: 'subscription' | 'one_time';
   description: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
 export interface PricingPlan {
-  id: string;
+  id: Plan;
   name: string;
-  description: string;
+  tagline: string;
   price: number;
   interval: 'month' | 'one-time';
+  credits: string;       // human-readable e.g. "15 credits/month"
   features: string[];
   recommended?: boolean;
-  stripePriceId: string;
+  isCoffee?: boolean;    // Coffee tier: distinct one-time CTA style
 }
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Try it out',
+    tagline: 'Try it out',
     price: 0,
     interval: 'month',
+    credits: '1 lifetime upload',
     features: [
-      '1 schematic per month',
-      'Basic BOM generation',
-      'View build guides',
-      'Community support'
+      '1 lifetime schematic analysis',
+      'Full BOM generation',
+      'Step-by-step build guide',
+      'Breadboard layout',
     ],
-    stripePriceId: '' // No Stripe ID for free
   },
   {
-    id: 'pro',
-    name: 'Pro',
-    description: 'For serious builders',
+    id: 'coffee',
+    name: 'Coffee',
+    tagline: 'Buy me a coffee',
+    price: 5,
+    interval: 'one-time',
+    credits: '10 credits · 90 days',
+    isCoffee: true,
+    features: [
+      '10 schematic analyses',
+      'Valid for 90 days',
+      'Full BOM + build guides',
+      'No subscription needed',
+    ],
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    tagline: 'Regular builders',
+    price: 9,
+    interval: 'month',
+    credits: '15 credits/month',
+    features: [
+      '15 analyses per month',
+      'Up to 15 credits roll over',
+      'Full BOM + build guides',
+      'Save unlimited projects',
+    ],
+  },
+  {
+    id: 'builder',
+    name: 'Builder',
+    tagline: 'Serious hobbyists',
     price: 19,
     interval: 'month',
-    features: [
-      'Unlimited schematics',
-      'Full BOM with editing',
-      'PDF exports (no watermark)',
-      'Save unlimited projects',
-      'Priority support',
-      'Early access to new features'
-    ],
+    credits: '40 credits/month',
     recommended: true,
-    stripePriceId: import.meta.env.VITE_STRIPE_PRO_PRICE_ID || 'price_xxx' // Set in env
+    features: [
+      '40 analyses per month',
+      'Up to 40 credits roll over',
+      'Full BOM + build guides',
+      'Save unlimited projects',
+      'Priority processing',
+    ],
   },
   {
-    id: 'one-time',
-    name: 'Pay As You Go',
-    description: 'No commitment',
-    price: 9,
-    interval: 'one-time',
+    id: 'studio',
+    name: 'Studio',
+    tagline: 'Designers & shops',
+    price: 39,
+    interval: 'month',
+    credits: 'Unlimited',
     features: [
-      'Single schematic analysis',
-      'Full BOM generation',
-      'All build guides',
-      '30-day access'
+      'Unlimited analyses',
+      'Shareable result links',
+      'Generate demo passwords',
+      'Priority processing',
+      'Early access to new features',
     ],
-    stripePriceId: import.meta.env.VITE_STRIPE_ONETIME_PRICE_ID || 'price_yyy' // Set in env
-  }
+  },
 ];
