@@ -7,7 +7,7 @@
 
 ## Product Vision
 
-PedalPath is a SaaS tool for DIY guitar pedal builders. A user uploads a schematic image; PedalPath returns a complete bill of materials with accurate visual component illustrations and a step-by-step breadboard build guide. The experience should feel like having a knowledgeable builder friend who can read any schematic and hand you a laminated instruction sheet.
+PedalPath is a SaaS tool for DIY guitar pedal builders. A user uploads a schematic image; PedalPath returns a complete bill of materials displayed as a single visual reference sheet — component pictures/renderings, quantities, and values on one page, print-friendly, styled like a LEGO instruction manual. The experience should feel like having a knowledgeable builder friend who can read any schematic and hand you a laminated parts list.
 
 **Target user**: The hobbyist builder who can solder but struggles to read schematics, identify components from value strings, or translate a circuit diagram into a physical layout.
 
@@ -35,9 +35,7 @@ PedalPath is a SaaS tool for DIY guitar pedal builders. A user uploads a schemat
 
 1. User uploads schematic image (JPG, PNG, PDF)
 2. System analyzes schematic via tiered pipeline (see Architecture)
-3. User sees BOM cards — one per component, with accurate visual illustration
-4. User steps through breadboard guide — circuit-functional sections (power → input → active → clipping → tone → output), each with a WHY explanation
-5. Cumulative board view: components accumulate step by step; current step glows amber
+3. User sees BOM reference sheet — one card per component with accurate visual illustration, value, and quantity. Single page, print-friendly.
 
 ---
 
@@ -127,9 +125,9 @@ Key requirements:
 
 ## Monetization
 
-**Stripe integration is the next major milestone after visual system and breadboard rendering are correct.**
+**Stripe integration is the immediate next milestone.**
 
-See `docs/stripe-launch-checklist.md` for the complete pre-launch env var setup sequence. Do not begin Stripe work until component visualization and breadboard rendering meet the standards above.
+See `docs/stripe-launch-checklist.md` for the complete pre-launch env var setup sequence. Priority order: (1) apply DB migrations 008+009, (2) set 8 Stripe env vars on both Vercel deployments, (3) register Stripe webhook at /api/stripe-webhook, (4) wire credit gate into UploadPage.
 
 **Pricing model**: Free tier (limited uploads/month) + Pro subscription. Quota enforcement is implemented in `src/pages/UploadPage.tsx` with two commented-out lines clearly marked — uncomment at launch.
 
@@ -137,8 +135,11 @@ See `docs/stripe-launch-checklist.md` for the complete pre-launch env var setup 
 
 ## Out of Scope (current phase)
 
+- **Breadboard build guides** — deferred post-revenue. Do not build or maintain.
+- **Step-by-step visual layout / placement guides** — deferred post-revenue.
+- **Stripboard layouts** — deferred post-revenue.
+- **IC/Diode decoder stubs** — deferred post-revenue.
 - **Mobile / iOS UI** — backlog until after Stripe launches. This includes PWA manifest, safe area insets, viewport meta optimization, bottom navigation, touch targets, and the `pedalpath-ios-web-shell-gh` integration.
-
 - Batch schematic uploads (may be a Pro feature later)
 - Multi-model LLM routing (GPT-4o-mini, Gemini routing) — use Claude for all analysis for consistency
 - PCB layout generation

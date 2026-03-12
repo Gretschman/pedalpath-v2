@@ -1,3 +1,88 @@
+# Session Log — 2026-03-12 (Session 13)
+
+## Session 13 Close (2026-03-12)
+
+### What Was Done
+
+**MVP Reframe — documentation only, no app code changed**
+
+- Created `docs/mvp-reframe.md` — Rob's written definition of new MVP scope
+- Surgical edits to 3 core spec docs:
+  - `PEDALPATH_PRD.md`: Vision → LEGO reference sheet framing; Core User Flow → 3 steps (breadboard removed); Monetization → Stripe immediate (gate removed); Out of Scope → breadboard/stripboard/layout/IC-diode stubs added as deferred
+  - `PEDALPATH_ARCHITECTURE.md`: Phased Rollout → MVP scope note added (BOM only, breadboard deferred post-revenue)
+  - `CLAUDE.md`: Added "Next Session Priority Queue" (6 items); replaced conflicting Stripe gate rule
+
+### Production State
+- 172/172 tests passing (unchanged)
+- No app code changed — no deploy needed
+- DB: 51 circuits / 967 components (unchanged)
+- Migrations 008+009: committed, NOT YET APPLIED (Rob action required)
+
+### Next Session Priority Queue
+1. Apply DB migrations 008 + 009 in Supabase SQL editor
+2. Set 8 Stripe env vars on both Vercel deployments
+3. Register Stripe webhook at /api/stripe-webhook
+4. Wire credit gate into UploadPage (uncomment 2 lines)
+5. Delete BreadboardGrid.tsx
+6. Fix 658KB bundle split
+
+### Rob Action Items
+- Apply migrations 008+009 via Supabase SQL editor
+- Set 8 Stripe env vars in both Vercel deployments (pedalpath-v2 + pedalpath-app)
+- Register Stripe webhook: https://pedalpath.app/api/stripe-webhook (4 events)
+
+---
+
+# Session Log — 2026-03-10 (Session 12)
+
+## Session 12 Close (2026-03-10)
+
+### What was completed
+
+**Sprint 5 — 5-tier credit system (full billing stack)**
+
+- `supabase/migrations/008_credits_system.sql` — schema: user_credits, credit_transactions,
+  promo_codes, promo_code_uses, user_credit_status view, handle_new_user_credits() bootstrap trigger
+- `supabase/migrations/009_seed_user_credits.sql` — seeds free-tier rows for all pre-existing users
+- `api/lib/creditGate.ts` — server-side: checkAndConsumeCredit() (atomic debit) + redeemPromoCode()
+- `src/lib/creditGate.ts` — client-side: getCreditStatus() + generatePromoCode()
+- `src/hooks/useCreditStatus.ts` — React hook wrapping getCreditStatus
+- `api/consume-credit.ts` — new serverless endpoint: POST {userId} → checks + deducts 1 credit
+- `api/create-checkout-session.ts` — updated: 4-plan PRICE_IDS map; Coffee = one-time payment
+- `api/stripe-webhook.ts` — updated: full credit grant on checkout.session.completed;
+  rollover logic on invoice renewal; downgrade-to-free on subscription.deleted
+- `src/types/subscription.types.ts` — 5-tier PRICING_PLANS array (Free/Coffee/Starter/Builder/Studio)
+- `src/pages/PricingPage.tsx` — new: pricing page, Coffee CTA + 4 plan cards, calls checkout session API
+- `src/pages/UploadPage.tsx` — credit gate wired at STEP 0 via /api/consume-credit
+- `src/App.tsx` — /pricing route added
+
+**Session continuity automation**
+- `SESSION_STATE.md` (repo root) — persistent state: last sprint, pending items, accuracy, priorities
+- `tools/update_session_state.py` — auto-refreshes Production State block from git + session_log
+- `start_session.sh` — now prints SESSION_STATE.md at top of startup output
+
+**Rob's task list written to _OUTPUT:**
+- `stripe-test-steps-2026-03-10.txt` — 6-step plain-English guide to apply migrations,
+  configure Stripe, set Vercel env vars, run test checkout with card 4242, verify credit deduction
+
+### Commits this session
+- `dd48394` Sprint 5: 5-tier credit system + session continuity automation
+
+### Production state
+- 172/172 tests passing
+- TypeScript: clean, Vite: clean
+- Deployed: pedalpath.app (commit dd48394)
+- DB: 51 circuits / 967 components
+- Migrations 008+009: written and committed — **NOT YET APPLIED** (Rob must run via Supabase SQL editor)
+
+### Blocked on Rob (must do before next session)
+1. Apply migrations 008+009 via Supabase SQL editor
+2. Set 8 env vars in Vercel (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, 4×STRIPE_PRICE_*, VITE_APP_URL, SUPABASE_SERVICE_ROLE_KEY)
+3. Register Stripe webhook: https://pedalpath.app/api/stripe-webhook (4 events)
+4. Run test checkout with card 4242 4242 4242 4242 → verify credits_remaining = 10 in Supabase
+
+---
+
 # Session Log — 2026-03-05 (Session 10+)
 
 ## Session 10 Continuation (2026-03-05) — Accuracy + Upright Caps

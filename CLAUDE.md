@@ -92,6 +92,17 @@ vercel --prod --yes    # deploy
 
 ---
 
+## Next Session Priority Queue
+
+1. Apply DB migrations 008 + 009 in Supabase
+2. Set 8 Stripe env vars on both Vercel deployments
+3. Register Stripe webhook at /api/stripe-webhook
+4. Wire credit gate into UploadPage (uncomment 2 lines)
+5. Delete BreadboardGrid.tsx
+6. Fix 658KB bundle split
+
+---
+
 ## Rules
 
 - Co-author all commits: `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
@@ -100,5 +111,5 @@ vercel --prod --yes    # deploy
 - Tool output: `docs/generated/` (not committed to git)
 - Never commit `.env.local` or `.pedalpath_env`
 - Inbox auto-hygiene runs via `start_session.sh` — never leave processed files in _INBOX
-- Do not begin Stripe integration until component visualization and breadboard rendering are complete
+- **Stripe is the immediate next priority** — see Next Session Priority Queue above. Breadboard/build guides are deferred post-revenue.
 - **Platform: desktop-first** — Windows (Chrome/Edge) + macOS (Safari/Chrome) equally. No mobile/PWA/iOS work until Stripe is live. `pedalpath-ios-web-shell-gh` is archived backlog — do not activate it.

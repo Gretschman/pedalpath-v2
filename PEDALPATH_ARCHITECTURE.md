@@ -67,6 +67,8 @@ Hand-drawn schematics, degraded images, unusual layouts. Result always cached af
 
 ### Phased Rollout
 
+**Current MVP scope**: BOM visual reference sheet only (schematic in → component cards out, print-friendly). Breadboard rendering, build guides, and stripboard layouts are deferred post-revenue — do not build or maintain them until Stripe is live and generating revenue.
+
 - **Phase 1 (0–10K users)**: 100% Claude Sonnet + pHash cache only. No new infrastructure.
 - **Phase 2 (10–30K users)**: Add Gemini Tier 2 + confidence router.
 - **Phase 3 (30K+ users)**: Full Python layer on Modal.
