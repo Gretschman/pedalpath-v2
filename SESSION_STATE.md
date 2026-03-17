@@ -39,7 +39,7 @@ _Read automatically by `start_session.sh` on startup._
 - **TypeScript**: clean
 - **Deploy**: https://pedalpath.app (live)
 - **Git branch**: main
-- **Last commit**: fb15551 Sprint 4: package field + Supabase Realtime async upload
+- **Last commit**: dd48394 Sprint 5: 5-tier credit system + session continuity automation
 - **DB migrations applied**: 001–007 confirmed; **008+009 PENDING**
 - **DB**: 51 circuits / 967 components
 

@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS public.user_credits (
     updated_at              TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-CREATE INDEX idx_user_credits_user_id ON public.user_credits (user_id);
-CREATE INDEX idx_user_credits_plan    ON public.user_credits (plan);
+CREATE INDEX IF NOT EXISTS idx_user_credits_user_id ON public.user_credits (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_credits_plan    ON public.user_credits (plan);
 
 -- RLS
 ALTER TABLE public.user_credits ENABLE ROW LEVEL SECURITY;
@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS public.credit_transactions (
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-CREATE INDEX idx_credit_tx_user_id    ON public.credit_transactions (user_id);
-CREATE INDEX idx_credit_tx_type       ON public.credit_transactions (tx_type);
-CREATE INDEX idx_credit_tx_created_at ON public.credit_transactions (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_credit_tx_user_id    ON public.credit_transactions (user_id);
+CREATE INDEX IF NOT EXISTS idx_credit_tx_type       ON public.credit_transactions (tx_type);
+CREATE INDEX IF NOT EXISTS idx_credit_tx_created_at ON public.credit_transactions (created_at DESC);
 
 -- RLS
 ALTER TABLE public.credit_transactions ENABLE ROW LEVEL SECURITY;
@@ -134,8 +134,8 @@ CREATE TABLE IF NOT EXISTS public.promo_codes (
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-CREATE INDEX idx_promo_codes_code       ON public.promo_codes (code);
-CREATE INDEX idx_promo_codes_created_by ON public.promo_codes (created_by);
+CREATE INDEX IF NOT EXISTS idx_promo_codes_code       ON public.promo_codes (code);
+CREATE INDEX IF NOT EXISTS idx_promo_codes_created_by ON public.promo_codes (created_by);
 
 -- RLS: only authenticated users can read active codes (to validate at upload time)
 ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
@@ -174,8 +174,8 @@ CREATE TABLE IF NOT EXISTS public.promo_code_uses (
     UNIQUE (promo_code_id, user_id)
 );
 
-CREATE INDEX idx_promo_uses_code    ON public.promo_code_uses (promo_code_id);
-CREATE INDEX idx_promo_uses_user_id ON public.promo_code_uses (user_id);
+CREATE INDEX IF NOT EXISTS idx_promo_uses_code    ON public.promo_code_uses (promo_code_id);
+CREATE INDEX IF NOT EXISTS idx_promo_uses_user_id ON public.promo_code_uses (user_id);
 
 -- RLS
 ALTER TABLE public.promo_code_uses ENABLE ROW LEVEL SECURITY;
