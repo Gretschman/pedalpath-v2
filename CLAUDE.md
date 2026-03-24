@@ -52,6 +52,9 @@ vercel --prod --yes    # deploy
 - `tools/inbox_hygiene.py` — auto-archives/deletes stale _INBOX files; runs at every session start
 - `tools/update_session_state.py` — auto-refreshes Production State block in SESSION_STATE.md; call at session end
 - `pedalpath-app/api/consume-credit.ts` — serverless endpoint: POST {userId} → checks + deducts 1 credit via creditGate
+- `tools/rasterize_taxonomy_images.py` — converts component SVGs → 30×200px PNGs for component_taxonomy; --upload pushes to Supabase Storage
+- `tools/generate_report_diagrams.py` — generates Phase Roadmap + Architecture Before/After PNGs → _OUTPUT
+- `tools/assemble_launch_report.py` — assembles Launch Roadmap DOCX with embedded diagrams → _OUTPUT
 - `start_session.sh` — runs ALL sync tools + inbox hygiene + git status before starting work; prints SESSION_STATE.md first
 
 ---
