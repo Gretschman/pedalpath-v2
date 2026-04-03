@@ -116,3 +116,4 @@ vercel --prod --yes    # deploy
 - Inbox auto-hygiene runs via `start_session.sh` — never leave processed files in _INBOX
 - **Stripe is the immediate next priority** — see Next Session Priority Queue above. Breadboard/build guides are deferred post-revenue.
 - **Platform: desktop-first** — Windows (Chrome/Edge) + macOS (Safari/Chrome) equally. No mobile/PWA/iOS work until Stripe is live. `pedalpath-ios-web-shell-gh` is archived backlog — do not activate it.
+- **Bug log:** `BUGLOG.md` in project root. Search before diagnosing: `/buglog error text` or `python3 ~/.claude/buglog.py search "error text"`
