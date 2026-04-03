@@ -182,7 +182,7 @@ export default function DashboardPage() {
                   <div key={project.id} className="bg-white rounded-xl shadow flex flex-col gap-3 overflow-hidden">
                     <div className="p-5 flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-gray-900 leading-snug">{project.title}</h3>
+                        <h3 className="font-semibold text-gray-900 leading-snug min-w-0 break-words">{project.title}</h3>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
                           project.status === 'completed'
                             ? 'bg-green-100 text-green-700'
