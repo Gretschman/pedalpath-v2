@@ -1,25 +1,35 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover'
-});
+// Strip whitespace/newlines — Vercel occasionally injects \n into secret values
+const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || '').replace(/\s+/g, '');
 
 type Plan = 'coffee' | 'starter' | 'builder' | 'studio';
 
-const PRICE_IDS: Record<Plan, string> = {
-  coffee:  process.env.STRIPE_PRICE_COFFEE!,
-  starter: process.env.STRIPE_PRICE_STARTER!,
-  builder: process.env.STRIPE_PRICE_BUILDER!,
-  studio:  process.env.STRIPE_PRICE_STUDIO!,
-};
-
-const APP_URL = process.env.VITE_APP_URL || 'http://localhost:5173';
+// Use APP_URL first, fall back to VITE_APP_URL, then production URL
+const APP_URL = (
+  process.env.APP_URL ||
+  process.env.VITE_APP_URL ||
+  'https://pedalpath-v2.vercel.app'
+).replace(/\s+/g, '');
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  if (!STRIPE_SECRET) {
+    return res.status(500).json({ error: 'Stripe is not configured' });
+  }
+
+  const stripe = new Stripe(STRIPE_SECRET, { apiVersion: '2025-02-24.acacia' });
+
+  const PRICE_IDS: Record<Plan, string> = {
+    coffee:  (process.env.STRIPE_PRICE_COFFEE  || '').replace(/\s+/g, ''),
+    starter: (process.env.STRIPE_PRICE_STARTER || '').replace(/\s+/g, ''),
+    builder: (process.env.STRIPE_PRICE_BUILDER || '').replace(/\s+/g, ''),
+    studio:  (process.env.STRIPE_PRICE_STUDIO  || '').replace(/\s+/g, ''),
+  };
 
   try {
     const { plan, userId, userEmail } = req.body as {
