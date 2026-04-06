@@ -4,6 +4,7 @@ import { updateBOMComponent, submitComponentCorrections } from '../../services/s
 import type { ComponentCorrection } from '../../services/schematic-processor';
 import { Edit2, Check, X, ExternalLink, Flag, AlertTriangle, Send } from 'lucide-react';
 import { ComponentGallery } from './ComponentGallery';
+import { ResistorBands } from './ResistorBands';
 
 // ─── Supplier link types + fetcher ────────────────────────────────
 
@@ -357,7 +358,12 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                           className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
                         />
                       ) : (
-                        <div className="font-medium text-gray-900">{component.value}</div>
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          {component.value}
+                          {component.component_type === 'resistor' && (
+                            <ResistorBands value={component.value} />
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -552,7 +558,12 @@ export default function BOMTable({ bomData, schematicId, onUpdate }: BOMTablePro
                             className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
                           />
                         ) : (
-                          <div className="font-medium text-gray-900">{component.value}</div>
+                          <div className="font-medium text-gray-900 flex items-center gap-2">
+                            {component.value}
+                            {component.component_type === 'resistor' && (
+                              <ResistorBands value={component.value} />
+                            )}
+                          </div>
                         )}
                       </td>
 

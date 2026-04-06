@@ -73,3 +73,6 @@ echo "════════════════════════�
 echo "  Startup complete. Review above, then tell"
 echo "  Rob what priorities you see before starting."
 echo "═══════════════════════════════════════════════"
+
+python3 /mnt/c/Users/Rob/Dropbox/!Claude/SYSTEM/sync_context.py
+

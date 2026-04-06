@@ -1,0 +1,1994 @@
+{
+  "prompt_hash": "996cd1a93fc04414",
+  "results": {
+    "1 Knob Fuzz V2 - 1966": {
+      "score": 74.28571428571429,
+      "total_ref_qty": 14,
+      "total_found_qty": 20,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "8.2k",
+          "found_value": "820R",
+          "component_type": "resistor",
+          "reference_designator": "R4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47k",
+          "found_value": "2.2k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "6.8n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "22u",
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "BC107",
+          "found_value": "BC109",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "150k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:06:00.845810+00:00"
+    },
+    "1 Knob Fuzz V2 - CS Fuzz Box": {
+      "score": 59.999999999999986,
+      "total_ref_qty": 14,
+      "total_found_qty": 20,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "820R",
+          "found_value": "1K",
+          "component_type": "resistor",
+          "reference_designator": "R3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2.2k",
+          "found_value": "8.2K",
+          "component_type": "resistor",
+          "reference_designator": "R4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "150k",
+          "found_value": "47K",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "100n",
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "220n",
+          "found_value": "220p",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "220p",
+          "found_value": "22u",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10u",
+          "found_value": "6.8n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "BC109",
+          "found_value": "BC107",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:06:18.761045+00:00"
+    },
+    "1 Knob Fuzz V2 - Doom Fuzz": {
+      "score": 55.33333333333332,
+      "total_ref_qty": 15,
+      "total_found_qty": 20,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "18k",
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "120k",
+          "found_value": "2.2k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "470p",
+          "found_value": "220p",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47p",
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10u",
+          "found_value": "47u",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "100u",
+          "found_value": null,
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "BC548",
+          "found_value": "BC109",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2N5089",
+          "found_value": "BC108",
+          "component_type": "transistor",
+          "reference_designator": "Q2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "150k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:06:34.426283+00:00"
+    },
+    "1 Knob Fuzz V2 - Meathead": {
+      "score": 57.333333333333336,
+      "total_ref_qty": 15,
+      "total_found_qty": 21,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "18k",
+          "found_value": "10K",
+          "component_type": "resistor",
+          "reference_designator": "R2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "120k",
+          "found_value": "2.2K",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "22n",
+          "found_value": "220p",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "470p",
+          "found_value": "47p",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47p",
+          "found_value": "10\u00b5F",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10u",
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2N3904",
+          "found_value": "BC109",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "BC182B",
+          "found_value": "BC108",
+          "component_type": "transistor",
+          "reference_designator": "Q2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "150K",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:06:56.713480+00:00"
+    },
+    "1 Knob Fuzz V2 - Meathead Dark": {
+      "score": 57.333333333333336,
+      "total_ref_qty": 15,
+      "total_found_qty": 21,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "18k",
+          "found_value": "10K",
+          "component_type": "resistor",
+          "reference_designator": "R2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "120k",
+          "found_value": "2.2K",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "470n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "100n",
+          "found_value": "220p",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "470p",
+          "found_value": "47p",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "47p",
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10u",
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2N3904",
+          "found_value": "BC109",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "BC182B",
+          "found_value": "BC108",
+          "component_type": "transistor",
+          "reference_designator": "Q2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "150K",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:07:23.899858+00:00"
+    },
+    "1 Knob Fuzz V2 - Ritual": {
+      "score": 68.57142857142857,
+      "total_ref_qty": 14,
+      "total_found_qty": 21,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2k",
+          "found_value": "2.2K",
+          "component_type": "resistor",
+          "reference_designator": "R4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "680n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "150p",
+          "found_value": "220p",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "100u",
+          "found_value": "47p",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "2N2222A",
+          "found_value": "BC109",
+          "component_type": "transistor",
+          "reference_designator": "Q1,Q2",
+          "score_impact": -1.4
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47u",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "BC108",
+          "component_type": "transistor",
+          "reference_designator": "Q2",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:07:41.574774+00:00"
+    },
+    "Aeon Drive 2023": {
+      "score": 69.61538461538463,
+      "total_ref_qty": 26,
+      "total_found_qty": 30,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1k",
+          "found_value": "3k3",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "330R",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R9",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "3k3",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R10",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "220n",
+          "found_value": "47\u00b5",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "47u",
+          "found_value": null,
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1N4148",
+          "found_value": "1N914/1N4148",
+          "component_type": "diode",
+          "reference_designator": "D1,D2,D3,D4",
+          "score_impact": -2.8
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "4558",
+          "found_value": "4558/TL072",
+          "component_type": "ic",
+          "reference_designator": "IC1",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:08:00.389454+00:00"
+    },
+    "Afterblaster v2 2021": {
+      "score": 100.0,
+      "total_ref_qty": 11,
+      "total_found_qty": 15,
+      "discrepancies": [],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:08:15.932024+00:00"
+    },
+    "American Fuzz v5 2021": {
+      "score": 94.06249999999999,
+      "total_ref_qty": 32,
+      "total_found_qty": 36,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1k",
+          "found_value": "22k",
+          "component_type": "resistor",
+          "reference_designator": "R7",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "22k",
+          "found_value": "47k",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "470k",
+          "component_type": "resistor",
+          "reference_designator": "R10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100p",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100p",
+          "component_type": "capacitor",
+          "reference_designator": "C9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C11",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:08:36.239767+00:00"
+    },
+    "Bass OD v2 2021": {
+      "score": 96.42857142857137,
+      "total_ref_qty": 28,
+      "total_found_qty": 32,
+      "discrepancies": [
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "33k",
+          "component_type": "resistor",
+          "reference_designator": "R4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1M",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "33k",
+          "component_type": "resistor",
+          "reference_designator": "R7",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1M",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k",
+          "component_type": "resistor",
+          "reference_designator": "R9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k",
+          "component_type": "resistor",
+          "reference_designator": "R11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "22u",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "22u",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:08:57.442499+00:00"
+    },
+    "BazzFuss (Bulk Fuzz) V3": {
+      "score": 58.57142857142858,
+      "total_ref_qty": 14,
+      "total_found_qty": 21,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "220nF",
+          "found_value": "22uF",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "100nF",
+          "found_value": "22uF",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1nF",
+          "found_value": "22uF",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "22uF",
+          "found_value": "3",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1N4001",
+          "found_value": "1+1k2",
+          "component_type": "diode",
+          "reference_designator": "D2",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "B5K",
+          "found_value": "B100K",
+          "component_type": "potentiometer",
+          "reference_designator": "GAIN",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "A100K",
+          "found_value": "B85K",
+          "component_type": "potentiometer",
+          "reference_designator": "VOLUME",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LED",
+          "found_value": "LED+",
+          "component_type": "led",
+          "reference_designator": "LED1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1.4k",
+          "component_type": "resistor",
+          "reference_designator": "R3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100k",
+          "component_type": "resistor",
+          "reference_designator": "R3,R4",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "SOURCE LIMITED",
+      "cached_at": "2026-03-09T20:09:19.297256+00:00"
+    },
+    "Black Dog v2 2022": {
+      "score": 81.29629629629629,
+      "total_ref_qty": 54,
+      "total_found_qty": 58,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "220k",
+          "found_value": "130R",
+          "component_type": "resistor",
+          "reference_designator": "R12",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "22k",
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R13",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1M",
+          "found_value": "62k",
+          "component_type": "resistor",
+          "reference_designator": "R14",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "130R",
+          "found_value": "1k8",
+          "component_type": "resistor",
+          "reference_designator": "R15",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "3k3",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R16,R17",
+          "score_impact": -2.0
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "10k",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R18,R19",
+          "score_impact": -2.0
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "62k",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R20",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "100k",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R21",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "1k8",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "R22",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47n",
+          "component_type": "capacitor",
+          "reference_designator": "C10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "22u",
+          "component_type": "capacitor",
+          "reference_designator": "C14",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:09:50.517740+00:00"
+    },
+    "Buff N Blend v2 2021": {
+      "score": 77.99999999999999,
+      "total_ref_qty": 15,
+      "total_found_qty": 18,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10k",
+          "found_value": "100k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "100k",
+          "found_value": "1k8",
+          "component_type": "resistor",
+          "reference_designator": "R6,R7",
+          "score_impact": -1.4
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "1k8",
+          "found_value": null,
+          "component_type": "resistor",
+          "reference_designator": "CLR",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "potentiometer",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:10:05.679075+00:00"
+    },
+    "ColorTone Supa Tonebender v4 2022": {
+      "score": 95.57692307692302,
+      "total_ref_qty": 52,
+      "total_found_qty": 56,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "Bi-Color CA LED",
+          "component_type": "led",
+          "reference_designator": "D3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "8k2",
+          "component_type": "resistor",
+          "reference_designator": "R13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100R",
+          "component_type": "resistor",
+          "reference_designator": "R17",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "33k",
+          "component_type": "resistor",
+          "reference_designator": "R19",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "470k",
+          "component_type": "resistor",
+          "reference_designator": "R20",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100k",
+          "component_type": "resistor",
+          "reference_designator": "R21",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "560p",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C7",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "560p",
+          "component_type": "capacitor",
+          "reference_designator": "C9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C14",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1N34A",
+          "component_type": "diode",
+          "reference_designator": "D5,D6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "A100k",
+          "component_type": "potentiometer",
+          "reference_designator": "VOL",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:10:36.921350+00:00"
+    },
+    "Dart V2": {
+      "score": 94.16666666666667,
+      "total_ref_qty": 12,
+      "total_found_qty": 18,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "10M",
+          "found_value": "100K",
+          "component_type": "resistor",
+          "reference_designator": "",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:10:50.278518+00:00"
+    },
+    "Emerald Ring": {
+      "score": 94.79999999999997,
+      "total_ref_qty": 25,
+      "total_found_qty": 29,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "BiColor CA LED",
+          "component_type": "led",
+          "reference_designator": "D3",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "68k",
+          "component_type": "resistor",
+          "reference_designator": "R9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "22k",
+          "component_type": "resistor",
+          "reference_designator": "R11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R12",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47n",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47n",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "2N5088",
+          "component_type": "transistor",
+          "reference_designator": "Q3",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:11:11.966224+00:00"
+    },
+    "Marsha Tone v4 2022": {
+      "score": 89.21052631578942,
+      "total_ref_qty": 38,
+      "total_found_qty": 45,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LED",
+          "found_value": "5mm Red LED",
+          "component_type": "led",
+          "reference_designator": "D1,D2",
+          "score_impact": -1.4
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "Status",
+          "found_value": null,
+          "component_type": "led",
+          "reference_designator": "D5",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1M",
+          "component_type": "resistor",
+          "reference_designator": "R3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "2k2",
+          "component_type": "resistor",
+          "reference_designator": "R10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "jumper",
+          "component_type": "resistor",
+          "reference_designator": "R12",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "22k",
+          "component_type": "resistor",
+          "reference_designator": "R14",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100p",
+          "component_type": "capacitor",
+          "reference_designator": "C6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C7",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47n",
+          "component_type": "capacitor",
+          "reference_designator": "C10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1N4148",
+          "component_type": "diode",
+          "reference_designator": "D3,D4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "Bicolor CA",
+          "component_type": "diode",
+          "reference_designator": "D5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "TL072",
+          "component_type": "op-amp",
+          "reference_designator": "IC2",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "A100k",
+          "component_type": "potentiometer",
+          "reference_designator": "VOL",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:11:44.171597+00:00"
+    },
+    "One-Knob Fuzz v2 2021": {
+      "score": 100.0,
+      "total_ref_qty": 16,
+      "total_found_qty": 20,
+      "discrepancies": [],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:12:02.063367+00:00"
+    },
+    "PlexAmp": {
+      "score": 96.20689655172411,
+      "total_ref_qty": 29,
+      "total_found_qty": 33,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1k8",
+          "found_value": "470k",
+          "component_type": "resistor",
+          "reference_designator": "*CLR",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1N4001",
+          "component_type": "diode",
+          "reference_designator": "D3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1N914",
+          "component_type": "diode",
+          "reference_designator": "D4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k8-4k7",
+          "component_type": "resistor",
+          "reference_designator": "CLR x1",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:12:24.855849+00:00"
+    },
+    "Pump'd Up Tonebender v4": {
+      "score": 100.0,
+      "total_ref_qty": 28,
+      "total_found_qty": 32,
+      "discrepancies": [],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:12:44.422422+00:00"
+    },
+    "Ratticus V1 - Original": {
+      "score": 90.28571428571429,
+      "total_ref_qty": 35,
+      "total_found_qty": 39,
+      "discrepancies": [
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "option",
+          "found_value": null,
+          "component_type": "diode",
+          "reference_designator": "",
+          "score_impact": -2.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LM308 / OP07",
+          "found_value": "LM308",
+          "component_type": "ic",
+          "reference_designator": "",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPDT ON/OFF/ON",
+          "found_value": "SPDT",
+          "component_type": "switch",
+          "reference_designator": "",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:13:06.549365+00:00"
+    },
+    "Ratticus V1 - Reissue": {
+      "score": 90.28571428571429,
+      "total_ref_qty": 35,
+      "total_found_qty": 38,
+      "discrepancies": [
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "option",
+          "found_value": null,
+          "component_type": "diode",
+          "reference_designator": "",
+          "score_impact": -2.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LM308 / OP07",
+          "found_value": "LM308",
+          "component_type": "ic",
+          "reference_designator": "",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPDT ON/OFF/ON",
+          "found_value": "3PDT",
+          "component_type": "switch",
+          "reference_designator": "",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:13:29.325289+00:00"
+    },
+    "Ratticus V1 - Turbo": {
+      "score": 99.73684210526315,
+      "total_ref_qty": 38,
+      "total_found_qty": 41,
+      "discrepancies": [
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "ON/OFF/ON",
+          "component_type": "switch",
+          "reference_designator": "SW2",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:13:56.013811+00:00"
+    },
+    "Ratticus V1 - Ver 2": {
+      "score": 91.66666666666666,
+      "total_ref_qty": 36,
+      "total_found_qty": 43,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "OPTION",
+          "found_value": "optional",
+          "component_type": "diode",
+          "reference_designator": "",
+          "score_impact": -1.4
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LM308 / OP07",
+          "found_value": "LM308",
+          "component_type": "ic",
+          "reference_designator": "",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPDT ON/OFF/ON",
+          "found_value": "SPDT",
+          "component_type": "switch",
+          "reference_designator": "",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "optional",
+          "component_type": "diode",
+          "reference_designator": "D4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "OP07",
+          "component_type": "op-amp",
+          "reference_designator": "U?",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:14:22.694902+00:00"
+    },
+    "Ratticus V1 - YDR": {
+      "score": 90.28571428571429,
+      "total_ref_qty": 35,
+      "total_found_qty": 39,
+      "discrepancies": [
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "option",
+          "found_value": null,
+          "component_type": "diode",
+          "reference_designator": "",
+          "score_impact": -2.0
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "LM308 / OP07",
+          "found_value": "LM308",
+          "component_type": "ic",
+          "reference_designator": "",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPDT ON/OFF/ON",
+          "found_value": "SPDT",
+          "component_type": "switch",
+          "reference_designator": "",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:14:47.002341+00:00"
+    },
+    "SBB (Alembic Stratoblaster Booster Replica)": {
+      "score": 99.375,
+      "total_ref_qty": 16,
+      "total_found_qty": 16,
+      "discrepancies": [],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:15:06.274760+00:00"
+    },
+    "SHO Nuff v4 2022": {
+      "score": 100.0,
+      "total_ref_qty": 17,
+      "total_found_qty": 21,
+      "discrepancies": [],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:15:24.358086+00:00"
+    },
+    "Stage 3 Booster 2020": {
+      "score": 79.33333333333336,
+      "total_ref_qty": 15,
+      "total_found_qty": 21,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1k8",
+          "found_value": "1k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "5mm Red LED",
+          "component_type": "led",
+          "reference_designator": "D1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPST",
+          "found_value": "SPDT",
+          "component_type": "switch",
+          "reference_designator": "SW1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "J113",
+          "found_value": "Q1",
+          "component_type": "transistor",
+          "reference_designator": "Q1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k",
+          "component_type": "resistor",
+          "reference_designator": "R5",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "33k",
+          "component_type": "resistor",
+          "reference_designator": "R6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "D1",
+          "component_type": "diode",
+          "reference_designator": "D1",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:15:42.676528+00:00"
+    },
+    "Stage 3 Booster v1": {
+      "score": 88.33333333333333,
+      "total_ref_qty": 12,
+      "total_found_qty": 16,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "CA Bi-colour LED",
+          "component_type": "led",
+          "reference_designator": "D1",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "SPST",
+          "found_value": "SPST Toggle",
+          "component_type": "switch",
+          "reference_designator": "SW1",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:16:00.383975+00:00"
+    },
+    "Sunburn V3": {
+      "score": 82.50000000000001,
+      "total_ref_qty": 12,
+      "total_found_qty": 18,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "4.7n",
+          "found_value": "100n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "missing",
+          "expected_value": "A100K",
+          "found_value": null,
+          "component_type": "potentiometer",
+          "reference_designator": "",
+          "score_impact": -1.0
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "LM386",
+          "component_type": "ic",
+          "reference_designator": "U1",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "47n",
+          "component_type": "capacitor",
+          "reference_designator": "C4",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1u",
+          "component_type": "capacitor",
+          "reference_designator": "C3",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1u",
+          "component_type": "capacitor",
+          "reference_designator": "C1",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "FAIL",
+      "cached_at": "2026-03-09T20:16:14.545260+00:00"
+    },
+    "Super Sonic v2": {
+      "score": 95.8536585365853,
+      "total_ref_qty": 41,
+      "total_found_qty": 45,
+      "discrepancies": [
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1M",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1M",
+          "component_type": "resistor",
+          "reference_designator": "R9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100k",
+          "component_type": "resistor",
+          "reference_designator": "R15",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "100k",
+          "component_type": "resistor",
+          "reference_designator": "R16",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10n",
+          "component_type": "capacitor",
+          "reference_designator": "C7",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10n",
+          "component_type": "capacitor",
+          "reference_designator": "C8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10n",
+          "component_type": "capacitor",
+          "reference_designator": "C9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1n",
+          "component_type": "capacitor",
+          "reference_designator": "C12",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10u",
+          "component_type": "capacitor",
+          "reference_designator": "C15",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1N34A",
+          "component_type": "diode",
+          "reference_designator": "D2",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "TL071",
+          "component_type": "op-amp",
+          "reference_designator": "IC2",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:16:43.450321+00:00"
+    },
+    "Three Time Champ": {
+      "score": 97.3076923076923,
+      "total_ref_qty": 26,
+      "total_found_qty": 30,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "Bi-color CA LED",
+          "component_type": "led",
+          "reference_designator": "D1",
+          "score_impact": -0.7
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:17:04.206883+00:00"
+    },
+    "Tone TwEQ v1 2020": {
+      "score": 96.42857142857137,
+      "total_ref_qty": 28,
+      "total_found_qty": 34,
+      "discrepancies": [
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k8",
+          "component_type": "resistor",
+          "reference_designator": "R6",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R8",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "3k6",
+          "component_type": "resistor",
+          "reference_designator": "R9",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R10",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R11",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10k",
+          "component_type": "resistor",
+          "reference_designator": "R12",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "1k8",
+          "component_type": "resistor",
+          "reference_designator": "R13",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C2",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "220n",
+          "component_type": "capacitor",
+          "reference_designator": "C7",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "56n",
+          "component_type": "capacitor",
+          "reference_designator": "C9",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:17:24.725590+00:00"
+    },
+    "WattAmp": {
+      "score": 96.34615384615383,
+      "total_ref_qty": 52,
+      "total_found_qty": 56,
+      "discrepancies": [
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "Status",
+          "found_value": "LED",
+          "component_type": "led",
+          "reference_designator": "LED",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "wrong_value",
+          "expected_value": "1k8",
+          "found_value": "1k8-4k7",
+          "component_type": "resistor",
+          "reference_designator": "*CLR",
+          "score_impact": -0.7
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "10n",
+          "component_type": "capacitor",
+          "reference_designator": "C12",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "2n2",
+          "component_type": "capacitor",
+          "reference_designator": "C17",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "B500K",
+          "component_type": "potentiometer",
+          "reference_designator": "TREB",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "BS170",
+          "component_type": "transistor",
+          "reference_designator": "Q2",
+          "score_impact": -0.1
+        },
+        {
+          "discrepancy_type": "extra",
+          "expected_value": null,
+          "found_value": "BS170",
+          "component_type": "transistor",
+          "reference_designator": "Q3",
+          "score_impact": -0.1
+        }
+      ],
+      "status_str": "PASS",
+      "cached_at": "2026-03-09T20:17:56.719076+00:00"
+    }
+  }
+}
