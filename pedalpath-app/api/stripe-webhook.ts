@@ -2,14 +2,17 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Strip whitespace/newlines — Vercel occasionally injects \n into secret values
+const STRIPE_SECRET   = (process.env.STRIPE_SECRET_KEY        || '').replace(/\s+/g, '');
+const SUPABASE_URL    = (process.env.VITE_SUPABASE_URL        || '').replace(/\s+/g, '');
+const SUPABASE_KEY    = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/\s+/g, '');
+const WEBHOOK_SECRET  = (process.env.STRIPE_WEBHOOK_SECRET    || '').replace(/\s+/g, '');
+
+const stripe = new Stripe(STRIPE_SECRET, {
   apiVersion: '2026-02-25.clover'
 });
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const config = {
   api: { bodyParser: false }
@@ -53,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const rawBody = await getRawBody(req);
-    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(rawBody, sig, WEBHOOK_SECRET);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).json({ error: `Webhook Error: ${err.message}` });
