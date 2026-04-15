@@ -57,6 +57,37 @@ export interface BOMData {
   confidence_score: number; // Overall confidence 0-100
 }
 
+// ── Build Guide Types ──────────────────────────────────────────────────────
+
+export type BuildMode = 'signal-flow' | 'build-order';
+export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export interface DifficultyFactor {
+  label: string;
+  points: number;
+}
+
+export interface DifficultyScore {
+  level: DifficultyLevel;
+  numericScore: number;
+  factors: DifficultyFactor[];
+}
+
+export interface TestCheckpoint {
+  afterSection: BomSection;
+  title: string;
+  instructions: string;
+  expectedResult: string;
+  voltageChecks?: { point: string; expected: string }[];
+}
+
+export interface PinVoltageRef {
+  partNumber: string;
+  pins: { pin: string; name: string; expectedV: string; tolerance?: string }[];
+  supplyVoltage: string;
+  circuitContext: string;
+}
+
 export interface SchematicAnalysisRequest {
   image_base64: string;
   image_type: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
