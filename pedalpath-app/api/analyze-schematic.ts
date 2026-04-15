@@ -115,6 +115,20 @@ STRICT COUNT RULE (read this first): Your output list length MUST equal the numb
    other → "axial"
 10. Return ONLY valid JSON. No markdown, no commentary.
 
+11. package_type — the VISUAL TAXONOMY KEY that maps this component to its SVG image file. This is separate from "package" (physical form factor). Use exactly one of these 18 values:
+   "resistor" | "capacitor-electrolytic" | "capacitor-ceramic" | "capacitor-film" | "led" | "transistor" | "ic" | "diode" | "potentiometer" | "switch" | "transformer" | "inductor" | "crystal" | "fuse" | "relay" | "connector" | "ferrite" | "generic"
+   Rules:
+   • resistor → always "resistor" (all resistors look the same physically — value is an annotation, not a visual difference)
+   • capacitor → choose based on package: electrolytic→"capacitor-electrolytic", ceramic-disc→"capacitor-ceramic", film/tantalum→"capacitor-film"
+   • transistor → always "transistor" (TO-92 and TO-18 are package variants, not visual taxonomy differences)
+   • ic/op-amp → always "ic"
+   • diode → always "diode"
+   • input-jack/output-jack/dc-jack → "connector"
+   • footswitch/switch → "switch"
+   • potentiometer → "potentiometer"
+   • led → "led"
+   • If none of the above match → "generic"
+
 Return this exact structure:
 
 {
@@ -123,6 +137,7 @@ Return this exact structure:
       "component_type": "resistor" | "capacitor" | "inductor" | "diode" | "transistor" | "ic" | "op-amp" | "input-jack" | "output-jack" | "dc-jack" | "footswitch" | "potentiometer" | "led" | "switch" | "other",
       "value": "<value as written on schematic, e.g. 10k, 100nF, 2N3904>",
       "package": "axial" | "electrolytic" | "ceramic-disc" | "film" | "tantalum" | "to92" | "to18" | "dip8" | "dip14" | "dip16" | "ts" | "barrel" | "alpha-round" | "stomp" | "led-5mm" | "led-3mm",
+      "package_type": "resistor" | "capacitor-electrolytic" | "capacitor-ceramic" | "capacitor-film" | "led" | "transistor" | "ic" | "diode" | "potentiometer" | "switch" | "transformer" | "inductor" | "crystal" | "fuse" | "relay" | "connector" | "ferrite" | "generic",
       "quantity": 1,
       "reference_designators": ["R1"],
       "confidence": 95,
@@ -156,6 +171,7 @@ interface OffBoardComponent {
   component_type: string;
   value: string;
   package: string;
+  package_type: string;
   quantity: number;
   reference_designators: string[];
   confidence: number;
@@ -168,6 +184,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     component_type: 'input-jack',
     value: '1/4" Mono Jack',
     package: 'ts',
+    package_type: 'connector',
     quantity: 1,
     reference_designators: ['J_IN'],
     confidence: 99,
@@ -178,6 +195,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     component_type: 'output-jack',
     value: '1/4" Mono Jack',
     package: 'ts',
+    package_type: 'connector',
     quantity: 1,
     reference_designators: ['J_OUT'],
     confidence: 99,
@@ -188,6 +206,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     component_type: 'dc-jack',
     value: '2.1mm Barrel Jack (center-negative)',
     package: 'barrel',
+    package_type: 'connector',
     quantity: 1,
     reference_designators: ['J_DC'],
     confidence: 99,
@@ -198,6 +217,7 @@ const OFF_BOARD_DEFAULTS: OffBoardComponent[] = [
     component_type: 'footswitch',
     value: '3PDT',
     package: 'stomp',
+    package_type: 'switch',
     quantity: 1,
     reference_designators: ['FS1'],
     confidence: 99,
@@ -212,6 +232,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
     component_type: 'led',
     value: '5mm Red LED',
     package: 'led-5mm',
+    package_type: 'led',
     quantity: 1,
     reference_designators: ['LED1'],
     confidence: 90,
@@ -222,6 +243,7 @@ const OFF_BOARD_LED_PAIR: OffBoardComponent[] = [
     component_type: 'resistor',
     value: '4.7k',
     package: 'axial',
+    package_type: 'resistor',
     quantity: 1,
     reference_designators: ['R_CLR'],
     confidence: 90,

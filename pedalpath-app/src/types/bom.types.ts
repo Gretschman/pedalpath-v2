@@ -32,6 +32,7 @@ export interface BOMComponent {
   notes?: string;
   verified?: boolean; // User confirmed accuracy
   package?: string;  // "axial" | "electrolytic" | "ceramic-disc" | "film" | "tantalum" | "to92" | "to18" | "dip8" | "dip14" | "dip16" | "ts" | "barrel" | "alpha-round" | "stomp" | "led-5mm" | "led-3mm"
+  package_type?: string; // Visual taxonomy key → SVG selector: "resistor" | "capacitor-electrolytic" | "capacitor-ceramic" | "capacitor-film" | "led" | "transistor" | "ic" | "diode" | "potentiometer" | "switch" | "transformer" | "inductor" | "crystal" | "fuse" | "relay" | "connector" | "ferrite" | "generic"
   material?: string; // "Ge" for germanium transistors
 }
 
